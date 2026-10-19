@@ -1,0 +1,13 @@
+node_modules/
+.expo/
+dist/
+web-build/
+.turbo/
+*.log
+.env
+.env.*
+!.env.example
+ios/
+android/
+supabase/.temp/
+.DS_Store
