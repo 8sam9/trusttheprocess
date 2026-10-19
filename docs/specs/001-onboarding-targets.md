@@ -158,3 +158,6 @@ Each has a recommended default. If you approve the spec without answers, the def
 10. **Units default from locale (AC 15).** **Default:** imperial for US, Liberia and Myanmar locales, otherwise metric. Confirm, or default everyone to metric.
 11. **Analytics gating.** Do goal and `floor_applied` properties need an analytics opt-in under your privacy position? **Default:** treat them as allowed because they are coarse enums with no numbers, and let the security-privacy reviewer confirm.
 12. **Is the legal basis text for consent ready?** The consent copy (AC 8) needs your privacy policy wording and a link. **Default:** the architect and designer use placeholder text and a link to a privacy page that you supply before beta.
+
+---
+**GATE 1 — approved by Samuele, 2026-10-19 19:59 CEST: "approve as is".** All 32 acceptance criteria in scope; all open questions resolved with the PM's recommended defaults (orchestrator's suggested cuts declined).
