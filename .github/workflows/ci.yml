@@ -14,11 +14,11 @@ jobs:
     name: Lint, typecheck, unit tests, web build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
         with:
-          node-version: 22
+          node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm format:check
@@ -35,10 +35,9 @@ jobs:
     name: Migrations + pgTAP (RLS)
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: supabase/setup-cli@v1
-        with:
-          version: latest
+      - uses: actions/checkout@v7
+      # No version pinned: setup-cli v3 uses the version in pnpm-lock.yaml, same as local dev.
+      - uses: supabase/setup-cli@v3
       - run: supabase db start
       - run: supabase test db
       - name: Lint SQL
