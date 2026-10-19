@@ -3,7 +3,7 @@
 ## 1. Tools (macOS)
 | Tool | Install | Check |
 |---|---|---|
-| Node 22+ | `brew install node@22` (or nvm, see `.nvmrc`) | `node -v` |
+| Node 24 LTS (22+ works) | `brew install node@24` (or nvm, see `.nvmrc`) | `node -v` |
 | pnpm | `corepack enable` | `pnpm -v` |
 | Docker Desktop | https://www.docker.com/products/docker-desktop/ (needed by local Supabase) | `docker ps` |
 | Supabase CLI | installed by `pnpm install` (run via `pnpm exec supabase`), or `brew install supabase/tap/supabase` | `pnpm exec supabase -v` |
