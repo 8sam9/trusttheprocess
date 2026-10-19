@@ -6,7 +6,7 @@
 - Auth (magic link, Apple, Google), profile, account deletion
 - packages/shared nutrition math (BMR/TDEE/macros) with tests
 
-## Design foundations (parallel with Milestone 0)
+## Design foundations (parallel with Milestone 0) — Track Day v1 accepted 2026-10-19, see docs/design/DESIGN_SYSTEM.md
 - Name and visual direction (2–3 directions → pick one)
 - Design system v1 → docs/design/DESIGN_SYSTEM.md + packages/ui tokens
 - Key flow mockups: onboarding, today's diary, add-food sheet (search/barcode/text), food detail, weight

@@ -1,5 +1,5 @@
 import { render, screen, userEvent } from '@testing-library/react-native';
-import { Button, Choice } from './ui';
+import { Button, Choice, LaneBar, Text } from './ui';
 
 describe('Button', () => {
   it('calls onPress and exposes an accessible label', async () => {
@@ -39,5 +39,20 @@ describe('Choice', () => {
     expect(screen.getByRole('radio', { name: 'Metric' })).toBeSelected();
     await user.press(screen.getByRole('radio', { name: 'Imperial' }));
     expect(onChange).toHaveBeenCalledWith('imperial');
+  });
+});
+
+describe('LaneBar', () => {
+  it('exposes progress to screen readers, clamped to 0–100', async () => {
+    await render(<LaneBar value={1.4} label="Calories eaten" />);
+    const bar = screen.getByRole('progressbar', { name: 'Calories eaten' });
+    expect(bar.props.accessibilityValue).toEqual({ min: 0, max: 100, now: 100 });
+  });
+});
+
+describe('Text', () => {
+  it('marks display and title variants as headers', async () => {
+    await render(<Text variant="display">Today</Text>);
+    expect(screen.getByRole('header', { name: 'Today' })).toBeOnTheScreen();
   });
 });

@@ -51,7 +51,7 @@ export default function SettingsScreen() {
     return (
       <Screen>
         {profile.isError ? (
-          <Text variant="error">Couldn’t load your profile.</Text>
+          <Text tone="danger">Couldn’t load your profile.</Text>
         ) : (
           <ActivityIndicator />
         )}
@@ -88,9 +88,11 @@ function SettingsForm({ row, session }: { row: ProfileRow; session: Session }) {
 
   return (
     <Screen>
-      <Text variant="caption">Signed in as {session.user.email ?? 'your account'}</Text>
+      <Text variant="label" tone="muted">
+        Signed in as {session.user.email ?? 'your account'}
+      </Text>
 
-      <Text variant="title">Profile</Text>
+      <Text variant="display">Profile</Text>
       <TextField
         label="Name (optional)"
         value={form.displayName}
@@ -151,13 +153,19 @@ function SettingsForm({ row, session }: { row: ProfileRow; session: Session }) {
       />
 
       {update.isError ? (
-        <Text variant="error">Please check the highlighted values and try again.</Text>
+        <Text tone="danger">Please check the highlighted values and try again.</Text>
       ) : null}
-      {saved ? <Text accessibilityLiveRegion="polite">Saved ✓</Text> : null}
+      {saved ? (
+        <Text tone="accent" accessibilityLiveRegion="polite">
+          Saved ✓
+        </Text>
+      ) : null}
       <Button label="Save" onPress={save} loading={update.isPending} />
 
-      <Text variant="title">Privacy</Text>
-      <Text>
+      <Text variant="title" style={{ marginTop: space.lg }}>
+        Privacy
+      </Text>
+      <Text variant="bodyRegular" tone="muted">
         To track food and weight we store health-related data. It is never sold or shown to
         advertisers, and you can withdraw consent at any time.
       </Text>
@@ -168,7 +176,9 @@ function SettingsForm({ row, session }: { row: ProfileRow; session: Session }) {
         onPress={() => consent.mutate(!hasConsent)}
       />
 
-      <Text variant="title">Account</Text>
+      <Text variant="title" style={{ marginTop: space.lg }}>
+        Account
+      </Text>
       <Button label="Sign out" variant="secondary" onPress={() => void signOut()} />
       {!confirmDelete ? (
         <Button label="Delete account" variant="danger" onPress={() => setConfirmDelete(true)} />
@@ -178,7 +188,7 @@ function SettingsForm({ row, session }: { row: ProfileRow; session: Session }) {
             This permanently deletes your account and all your data. This can’t be undone.
           </Text>
           {deleteAccount.isError ? (
-            <Text variant="error">Deletion failed. Please try again.</Text>
+            <Text tone="danger">Deletion failed. Please try again.</Text>
           ) : null}
           <Button
             label="Yes, delete everything"
