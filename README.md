@@ -7,11 +7,12 @@ A fast, honest calorie & macro tracker for iOS, Android and web, built with a te
 - How agents build it: [docs/WORKFLOW.md](docs/WORKFLOW.md) · Roadmap: [docs/ROADMAP.md](docs/ROADMAP.md)
 - Experiment log: [docs/experiments/agent-log.md](docs/experiments/agent-log.md)
 
-## Getting started (after Milestone 0)
-Requires Node 22+, pnpm (`corepack enable`), Supabase CLI, EAS CLI, and Claude Code.
+## Getting started
+See [docs/SETUP.md](docs/SETUP.md). Short version:
 ```
 pnpm install
-supabase start
+pnpm db:start && pnpm db:test
+cp .env.example apps/mobile/.env.local   # add the publishable key
 pnpm dev
 ```
-Open the folder in Claude Code and run `/feature "<idea>"`.
+Then open the folder in Claude Code and run `/feature "<idea>"`.

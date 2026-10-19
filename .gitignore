@@ -11,3 +11,6 @@ ios/
 android/
 supabase/.temp/
 .DS_Store
+.env.local
+supabase/functions/.env
+coverage/

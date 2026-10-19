@@ -1,0 +1,8 @@
+node_modules
+dist
+.expo
+pnpm-lock.yaml
+supabase/.temp
+*.md
+supabase/templates
+apps/mobile/dist

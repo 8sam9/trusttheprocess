@@ -1,6 +1,6 @@
 # Roadmap
 
-## Milestone 0 — Foundations (week 1)
+## Milestone 0 — Foundations (week 1) — scaffolded 2026-10-19, see docs/SETUP.md
 - Monorepo scaffold, Expo app runs on iOS/Android/web, Supabase project + local dev (`supabase start`)
 - CI: lint, typecheck, unit tests, pgTAP; EAS dev builds
 - Auth (magic link, Apple, Google), profile, account deletion

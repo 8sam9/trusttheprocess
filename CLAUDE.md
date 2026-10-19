@@ -18,7 +18,8 @@ Read before working: docs/PRODUCT_SPEC.md · docs/ARCHITECTURE.md · docs/WORKFL
 
 ## Conventions
 - UI uses only design-system tokens and components from packages/ui; no ad-hoc colours or spacing.
-- pnpm workspaces + Turborepo. Commands: `pnpm dev`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `supabase test db`.
+- pnpm workspaces + Turborepo. Commands: `pnpm dev`, `pnpm lint`, `pnpm typecheck`, `pnpm test`, `pnpm db:test` (see docs/SETUP.md).
+- Mobile specifics: apps/mobile/CLAUDE.md. Use `npx expo install` (not pnpm add) for Expo/RN packages.
 - TypeScript strict, no `any`; zod schemas in packages/shared are the contract between client and server.
 - Metric units and UTC timestamps in storage; diary date = user-local `YYYY-MM-DD`.
 - Conventional Commits (`feat:`, `fix:`, `chore:`…), one feature per branch `feat/NNN-slug`.

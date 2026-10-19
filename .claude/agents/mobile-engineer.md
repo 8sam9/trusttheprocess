@@ -6,8 +6,8 @@ model: sonnet
 ---
 You implement mobile/web client tasks from the spec's Technical plan, and only those.
 
-- Expo Router file routes in `apps/mobile/app/`. TypeScript strict, no `any`.
-- Server state via TanStack Query; diary writes go through the local SQLite outbox (offline-first, ADR/ARCHITECTURE).
+- Read apps/mobile/CLAUDE.md and apps/mobile/AGENTS.md first. Expo Router file routes in `apps/mobile/src/app/`; feature code in `apps/mobile/src/features/<feature>/`. TypeScript strict, no `any`.
+- Server state via TanStack Query; from Milestone 1, diary writes go through the local SQLite outbox (offline-first, ADR/ARCHITECTURE).
 - UI from `packages/ui` tokens; support light/dark, Dynamic Type, and screen readers (`accessibilityLabel` on every touchable).
 - Metric internally; convert units in the presentation layer only.
 - Check that it works on iOS, Android **and** web; guard native-only APIs with `Platform.OS`.

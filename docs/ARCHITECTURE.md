@@ -3,7 +3,7 @@
 ## Overview
 ```
 ┌──────────────── apps/mobile (Expo, iOS/Android/Web) ────────────────┐
-│ Expo Router · TypeScript strict · NativeWind · TanStack Query       │
+│ Expo Router · TypeScript strict · @ttp/ui tokens · TanStack Query   │
 │ Local SQLite (expo-sqlite + Drizzle) → offline diary + outbox sync  │
 │ expo-camera (barcode) · expo-audio (voice) · HealthKit/HealthConnect│
 └───────────────┬──────────────────────────────────────┬──────────────┘
@@ -22,7 +22,7 @@
 
 ## Monorepo layout (pnpm workspaces + Turborepo)
 ```
-apps/mobile/            Expo app (also builds the web target)
+apps/mobile/            Expo app (also builds the web target); routes in apps/mobile/src/app
 packages/shared/        zod schemas, types, nutrition math (BMR/TDEE, macros) — pure TS, 100% unit tested
 packages/ui/            design tokens + shared components
 supabase/migrations/    SQL migrations (source of truth for schema)
@@ -35,13 +35,19 @@ docs/                   spec, ADRs, feature specs, experiment log
 ## Key choices (see docs/decisions)
 | Concern | Choice | Why |
 |---|---|---|
-| Client | Expo SDK (latest stable), Expo Router | One codebase, OTA updates via EAS Update |
+| Client | Expo SDK 58, Expo Router (src/app), React Native 0.88 | One codebase, OTA updates via EAS Update |
 | Backend | Supabase | Postgres + auth + storage + functions with no servers to run; easy to self-host later |
 | AI | Claude API via edge function, tool-use structured output validated by zod | Keys never on device; output is typed |
 | Offline | Local SQLite + outbox queue, last-write-wins per entry | Diary must work with no signal |
 | Payments | RevenueCat | One entitlement model across App Store / Play / Stripe |
 | Observability | Sentry (crash/perf), PostHog EU (product analytics, no PII) | |
 | CI/CD | GitHub Actions → EAS Build/Submit; web via `expo export` → Vercel | |
+
+## Auth (Milestone 0)
+- Email **6-digit code** (OTP), not magic links: it works the same on iOS, Android and web, with no deep-link edge cases.
+- Sign in with Apple (native, iOS) → `signInWithIdToken`. Google → OAuth (PKCE) in an auth-session browser.
+- A `profiles` row is created by a trigger on `auth.users`. Health-data consent is set only through `give_health_data_consent()`.
+- Account deletion: `delete-account` edge function → `auth.admin.deleteUser` → everything cascades.
 
 ## Core data model (initial)
 - `profiles` (user_id, sex, birth_year, height_cm, activity_level, goal, units, locale)
