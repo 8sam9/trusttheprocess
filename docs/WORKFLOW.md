@@ -12,7 +12,11 @@ runs the pipeline and hands each stage to a specialist in `.claude/agents/`. Sta
 ```
  idea ─► [product-manager] ─► spec ─► 🧑 GATE 1 approve spec
                                          │
-                       [architect] ◄─────┘   tech plan + ADR + task split
+                  [product-designer] ◄───┘   flows, screens, states, copy, a11y
+                           │
+                    🧑 GATE 2 approve design  (+ mockups made with the Design tool when useful)
+                           │
+                       [architect]           tech plan + ADR + task split
                            │
                ┌───────────┴───────────┐     (parallel, separate git worktrees)
      [backend-engineer]        [mobile-engineer]
@@ -21,13 +25,13 @@ runs the pipeline and hands each stage to a specialist in `.claude/agents/`. Sta
                            │ pass
           [security-privacy-reviewer] + [code-reviewer]   (fresh context, never saw the work being written)
                            │
-                    🧑 GATE 2 merge PR
+                    🧑 GATE 3 merge PR
                            │
                    [release-manager]  (on /ship)
 ```
 
 ## Artifacts per feature
-`docs/specs/NNN-<slug>.md` holds everything: the PM section, then the architect's plan, then the QA report and review notes.
+`docs/specs/NNN-<slug>.md` holds everything: Product (PM) → Design (designer) → Technical plan (architect) → QA report → reviews.
 One feature = one branch `feat/NNN-<slug>` = one PR.
 
 ## Definition of Done
@@ -36,6 +40,7 @@ One feature = one branch `feat/NNN-<slug>` = one PR.
 - [ ] RLS tests for any new table
 - [ ] No secrets in client bundle; new env vars documented in `.env.example`
 - [ ] Analytics events from spec implemented
+- [ ] UI matches the approved Design section (all states implemented, copy verbatim)
 - [ ] Accessibility labels on new interactive elements
 - [ ] Spec updated with what actually shipped
 

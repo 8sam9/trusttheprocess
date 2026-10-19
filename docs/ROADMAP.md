@@ -6,6 +6,12 @@
 - Auth (magic link, Apple, Google), profile, account deletion
 - packages/shared nutrition math (BMR/TDEE/macros) with tests
 
+## Design foundations (parallel with Milestone 0)
+- Name and visual direction (2–3 directions → pick one)
+- Design system v1 → docs/design/DESIGN_SYSTEM.md + packages/ui tokens
+- Key flow mockups: onboarding, today's diary, add-food sheet (search/barcode/text), food detail, weight
+- Usability check: log a full day in < 60 s on the mockups
+
 ## Milestone 1 — MVP / closed beta (weeks 2–5)  → PRODUCT_SPEC §4
 001 onboarding & targets · 002 food DB import (USDA + OFF) · 003 food search & diary
 004 barcode scan · 005 recents/favorites/copy meal · 006 custom food & quick add
