@@ -1,4 +1,4 @@
-import { fontSize, fontWeight, minTouch, radius, space } from '@ttp/ui';
+import { ctaHeight, minTouch, radius, space, type as typeScale, type TypeVariant } from '@ttp/ui';
 import type { ReactNode } from 'react';
 import {
   ActivityIndicator,
@@ -14,13 +14,13 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useColors } from '@/lib/theme';
 
 /**
- * Milestone 0 primitives built only from design tokens.
- * They will be restyled when the design system lands; screens should not need to change.
+ * Track Day primitives. Built only from @ttp/ui tokens (docs/design/DESIGN_SYSTEM.md).
+ * Screens compose these; they never hard-code colours, sizes or font names.
  */
 
 export function Screen({ children, scroll = true }: { children: ReactNode; scroll?: boolean }) {
   const c = useColors();
-  const content = <View style={{ padding: space.xl, gap: space.lg }}>{children}</View>;
+  const content = <View style={{ padding: space.lg, gap: space.md }}>{children}</View>;
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: c.background }}>
       {scroll ? <ScrollView keyboardShouldPersistTaps="handled">{content}</ScrollView> : content}
@@ -28,21 +28,28 @@ export function Screen({ children, scroll = true }: { children: ReactNode; scrol
   );
 }
 
-type Variant = 'body' | 'title' | 'headline' | 'caption' | 'error';
+type Tone = 'default' | 'muted' | 'accent' | 'danger' | 'warning';
 
-export function Text({ variant = 'body', style, ...rest }: TextProps & { variant?: Variant }) {
+export function Text({
+  variant = 'body',
+  tone = 'default',
+  style,
+  ...rest
+}: TextProps & { variant?: TypeVariant; tone?: Tone }) {
   const c = useColors();
-  const map = {
-    body: { fontSize: fontSize.body, color: c.text },
-    caption: { fontSize: fontSize.caption, color: c.textMuted },
-    title: { fontSize: fontSize.title, color: c.text, fontWeight: fontWeight.bold },
-    headline: { fontSize: fontSize.headline, color: c.text, fontWeight: fontWeight.bold },
-    error: { fontSize: fontSize.body, color: c.danger },
-  } as const;
+  const color = {
+    default: c.text,
+    muted: c.textMuted,
+    accent: c.accentText,
+    danger: c.danger,
+    warning: c.warningText,
+  }[tone];
+  const isHeader = variant === 'display' || variant === 'headline' || variant === 'title';
   return (
     <RNText
-      accessibilityRole={variant === 'headline' || variant === 'title' ? 'header' : undefined}
-      style={[map[variant], style]}
+      accessibilityRole={isHeader ? 'header' : undefined}
+      maxFontSizeMultiplier={variant === 'numberXL' ? 1.4 : undefined}
+      style={[typeScale[variant], { color }, style]}
       {...rest}
     />
   );
@@ -66,9 +73,9 @@ export function Button({
   accessibilityHint,
 }: ButtonProps) {
   const c = useColors();
-  const bg = variant === 'primary' ? c.accent : variant === 'danger' ? c.danger : c.surface;
-  const fg = variant === 'secondary' ? c.text : c.onAccent;
   const inactive = disabled || loading;
+  const isPrimary = variant === 'primary';
+  const fg = isPrimary ? c.onAccent : variant === 'danger' ? c.danger : c.text;
   return (
     <Pressable
       accessibilityRole="button"
@@ -78,19 +85,22 @@ export function Button({
       disabled={inactive}
       onPress={onPress}
       style={({ pressed }) => ({
-        minHeight: minTouch,
-        borderRadius: radius.md,
-        backgroundColor: bg,
+        minHeight: isPrimary ? ctaHeight : minTouch + 8,
+        borderRadius: radius.button,
+        backgroundColor: isPrimary ? c.accent : 'transparent',
+        borderWidth: variant === 'secondary' ? 1.5 : 0,
+        borderColor: c.border,
         alignItems: 'center',
         justifyContent: 'center',
-        paddingHorizontal: space.lg,
-        opacity: inactive ? 0.5 : pressed ? 0.8 : 1,
+        paddingHorizontal: space.md,
+        opacity: inactive ? 0.45 : pressed ? 0.8 : 1,
+        transform: [{ scale: pressed ? 0.98 : 1 }],
       })}
     >
       {loading ? (
         <ActivityIndicator color={fg} />
       ) : (
-        <RNText style={{ color: fg, fontSize: fontSize.body, fontWeight: fontWeight.medium }}>
+        <RNText style={[isPrimary ? typeScale.button : typeScale.body, { color: fg }]}>
           {label}
         </RNText>
       )}
@@ -106,28 +116,33 @@ export function TextField({
   const c = useColors();
   return (
     <View style={{ gap: space.xs }}>
-      <Text variant="caption">{label}</Text>
+      <Text variant="label" tone="muted">
+        {label}
+      </Text>
       <TextInput
         accessibilityLabel={label}
         placeholderTextColor={c.textMuted}
-        style={{
-          minHeight: minTouch,
-          borderWidth: 1,
-          borderColor: error ? c.danger : c.border,
-          borderRadius: radius.md,
-          paddingHorizontal: space.md,
-          color: c.text,
-          backgroundColor: c.surface,
-          fontSize: fontSize.body,
-        }}
+        style={[
+          typeScale.bodyRegular,
+          {
+            minHeight: 52,
+            borderWidth: 1.5,
+            borderColor: error ? c.danger : c.border,
+            borderRadius: radius.input,
+            paddingHorizontal: space.sm + 2,
+            color: c.text,
+            backgroundColor: c.surface,
+            fontSize: 17,
+          },
+        ]}
         {...rest}
       />
-      {error ? <Text variant="error">{error}</Text> : null}
+      {error ? <Text tone="danger">{error}</Text> : null}
     </View>
   );
 }
 
-/** Segmented single choice (units, sex, goal…). */
+/** Single choice shown as chips; the selected chip gets the accent outline (Track Day "radio card"). */
 export function Choice<T extends string>({
   label,
   value,
@@ -142,8 +157,10 @@ export function Choice<T extends string>({
   const c = useColors();
   return (
     <View style={{ gap: space.xs }} accessibilityRole="radiogroup" accessibilityLabel={label}>
-      <Text variant="caption">{label}</Text>
-      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.sm }}>
+      <Text variant="label" tone="muted">
+        {label}
+      </Text>
+      <View style={{ flexDirection: 'row', flexWrap: 'wrap', gap: space.xs }}>
         {options.map((o) => {
           const selected = o.value === value;
           return (
@@ -155,21 +172,95 @@ export function Choice<T extends string>({
               onPress={() => onChange(o.value)}
               style={{
                 minHeight: minTouch,
-                paddingHorizontal: space.md,
+                paddingHorizontal: space.sm,
                 justifyContent: 'center',
-                borderRadius: radius.pill,
-                borderWidth: 1,
-                borderColor: selected ? c.accent : c.border,
-                backgroundColor: selected ? c.accent : 'transparent',
+                borderRadius: radius.chip,
+                borderWidth: selected ? 2 : 1.5,
+                borderColor: selected ? c.accentText : c.border, // accentText keeps 3:1 contrast in light mode
+                backgroundColor: c.surface,
               }}
             >
-              <RNText style={{ color: selected ? c.onAccent : c.text, fontSize: fontSize.body }}>
+              <RNText
+                style={[
+                  selected ? typeScale.body : typeScale.bodyRegular,
+                  { color: c.text, fontSize: 15 },
+                ]}
+              >
                 {o.label}
               </RNText>
             </Pressable>
           );
         })}
       </View>
+    </View>
+  );
+}
+
+/** Brand mark: "TTP" in display type, volt. Decorative next to the full name, so hidden from screen readers. */
+export function BrandMark({ size = 24 }: { size?: number }) {
+  const c = useColors();
+  return (
+    <RNText
+      accessibilityElementsHidden
+      importantForAccessibility="no-hide-descendants"
+      style={[
+        typeScale.display,
+        { fontSize: size, lineHeight: size * 1.1, color: c.accentText, textTransform: 'none' },
+      ]}
+    >
+      TTP
+    </RNText>
+  );
+}
+
+/** Segmented "lane" progress bar used for daily calories. */
+export function LaneBar({
+  value,
+  segments = 10,
+  label,
+}: {
+  value: number;
+  segments?: number;
+  label: string;
+}) {
+  const c = useColors();
+  const clamped = Math.max(0, Math.min(1, value));
+  const filled = Math.round(clamped * segments);
+  return (
+    <View
+      accessible
+      accessibilityRole="progressbar"
+      accessibilityLabel={label}
+      accessibilityValue={{ min: 0, max: 100, now: Math.round(clamped * 100) }}
+      style={{ flexDirection: 'row', gap: 4 }}
+    >
+      {Array.from({ length: segments }, (_, i) => (
+        <View
+          key={i}
+          style={{
+            flex: 1,
+            height: 10,
+            borderRadius: 2,
+            backgroundColor: i < filled ? c.accent : c.trackEmpty,
+          }}
+        />
+      ))}
+    </View>
+  );
+}
+
+export function Card({ children }: { children: ReactNode }) {
+  const c = useColors();
+  return (
+    <View
+      style={{
+        backgroundColor: c.surface,
+        borderRadius: radius.card,
+        padding: space.lg,
+        gap: space.sm,
+      }}
+    >
+      {children}
     </View>
   );
 }

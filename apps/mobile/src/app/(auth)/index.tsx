@@ -1,8 +1,8 @@
 import * as AppleAuthentication from 'expo-apple-authentication';
+import { radius, space } from '@ttp/ui';
 import { useEffect, useState } from 'react';
-import { useColorScheme, View } from 'react-native';
-import { space } from '@ttp/ui';
-import { Button, Screen, Text, TextField } from '@/components/ui';
+import { View } from 'react-native';
+import { BrandMark, Button, Screen, Text, TextField } from '@/components/ui';
 import {
   EMAIL_RE,
   friendlyAuthError,
@@ -12,8 +12,15 @@ import {
   signInWithGoogle,
   verifyEmailCode,
 } from '@/features/auth/signIn';
+import { useScheme } from '@/lib/theme';
 
 type Step = { kind: 'email' } | { kind: 'code'; email: string };
+
+const promises = [
+  'Log a meal in seconds: type, scan or say it',
+  'Barcode scanning free, forever',
+  'No ads. Your data stays yours.',
+] as const;
 
 export default function SignInScreen() {
   const [step, setStep] = useState<Step>({ kind: 'email' });
@@ -22,7 +29,7 @@ export default function SignInScreen() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const [appleAvailable, setAppleAvailable] = useState(false);
-  const scheme = useColorScheme();
+  const scheme = useScheme();
 
   useEffect(() => {
     isAppleSignInAvailable()
@@ -43,14 +50,36 @@ export default function SignInScreen() {
   }
 
   const emailValid = EMAIL_RE.test(email.trim());
+  const requestCode = () =>
+    run(async () => {
+      await sendEmailCode(email.trim());
+      setStep({ kind: 'code', email: email.trim() });
+    });
 
   return (
     <Screen>
-      <Text variant="headline">Welcome</Text>
-      <Text>Track what you eat in seconds. Sign in or create an account. It’s free.</Text>
+      <BrandMark size={28} />
+      <Text
+        variant="numberXL"
+        accessibilityRole="header"
+        style={{ textTransform: 'uppercase', marginTop: space.sm }}
+      >
+        {'Trust\nthe\nprocess'}
+      </Text>
+
+      <View style={{ gap: space.sm, marginVertical: space.md }}>
+        {promises.map((p, i) => (
+          <View key={p} style={{ flexDirection: 'row', gap: space.sm, alignItems: 'center' }}>
+            <Text variant="number" tone="accent" style={{ fontSize: 18 }}>
+              {String(i + 1).padStart(2, '0')}
+            </Text>
+            <Text>{p}</Text>
+          </View>
+        ))}
+      </View>
 
       {step.kind === 'email' ? (
-        <View style={{ gap: space.md }}>
+        <View style={{ gap: space.sm }}>
           <TextField
             label="Email"
             value={email}
@@ -61,28 +90,17 @@ export default function SignInScreen() {
             textContentType="emailAddress"
             placeholder="you@example.com"
             returnKeyType="send"
-            onSubmitEditing={() =>
-              emailValid &&
-              run(async () => {
-                await sendEmailCode(email.trim());
-                setStep({ kind: 'code', email: email.trim() });
-              })
-            }
+            onSubmitEditing={() => emailValid && requestCode()}
           />
           <Button
-            label="Email me a sign-in code"
+            label="Email me a code"
             disabled={!emailValid}
             loading={busy}
-            onPress={() =>
-              run(async () => {
-                await sendEmailCode(email.trim());
-                setStep({ kind: 'code', email: email.trim() });
-              })
-            }
+            onPress={requestCode}
           />
         </View>
       ) : (
-        <View style={{ gap: space.md }}>
+        <View style={{ gap: space.sm }}>
           <Text>We sent a 6-digit code to {step.email}.</Text>
           <TextField
             label="Code"
@@ -111,12 +129,12 @@ export default function SignInScreen() {
       )}
 
       {error ? (
-        <Text variant="error" accessibilityLiveRegion="polite">
+        <Text tone="danger" accessibilityLiveRegion="polite">
           {error}
         </Text>
       ) : null}
 
-      <Text variant="caption" style={{ textAlign: 'center' }}>
+      <Text variant="label" tone="muted" style={{ textAlign: 'center' }}>
         or
       </Text>
 
@@ -128,8 +146,8 @@ export default function SignInScreen() {
               ? AppleAuthentication.AppleAuthenticationButtonStyle.WHITE
               : AppleAuthentication.AppleAuthenticationButtonStyle.BLACK
           }
-          cornerRadius={10}
-          style={{ height: 48 }}
+          cornerRadius={radius.button}
+          style={{ height: 54 }}
           onPress={() => run(signInWithApple)}
         />
       ) : null}
@@ -140,9 +158,8 @@ export default function SignInScreen() {
         disabled={busy}
       />
 
-      <Text variant="caption">
-        By continuing you agree to the Terms and Privacy Policy. We never sell your data and there
-        are no ads.
+      <Text variant="small" tone="muted" style={{ textAlign: 'center' }}>
+        By continuing you agree to the Terms and Privacy Policy.
       </Text>
     </Screen>
   );

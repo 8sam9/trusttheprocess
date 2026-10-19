@@ -31,10 +31,20 @@
       "expo-status-bar",
       "expo-sqlite",
       "expo-web-browser",
-      "expo-apple-authentication"
+      "expo-apple-authentication",
+      "expo-font",
+      [
+        "expo-splash-screen",
+        {
+          "backgroundColor": "#0B0D0C",
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 160
+        }
+      ]
     ],
     "experiments": {
       "typedRoutes": true
-    }
+    },
+    "backgroundColor": "#0B0D0C"
   }
 }
