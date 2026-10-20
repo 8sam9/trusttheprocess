@@ -21,6 +21,8 @@ jobs:
           node-version: 24
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      - name: Generated pgTAP cases are up to date
+        run: pnpm gen:pgtap:check
       - run: pnpm format:check
       - run: pnpm lint
       - run: pnpm typecheck

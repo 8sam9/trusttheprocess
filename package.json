@@ -16,6 +16,8 @@
     "db:start": "supabase start",
     "db:reset": "supabase db reset",
     "db:test": "supabase test db",
+    "gen:pgtap": "node packages/shared/scripts/gen-pgtap-cases.mjs",
+    "gen:pgtap:check": "node packages/shared/scripts/gen-pgtap-cases.mjs --check",
     "db:types": "supabase gen types typescript --local > packages/shared/src/db.types.ts"
   },
   "devDependencies": {
