@@ -859,6 +859,8 @@ Layers: **unit** (vitest in `tools/food-import` or `packages/shared`), **pipelin
 - **ARCHITECTURE.md:** done in this stage (data model, "operator-run imports").
 
 ## T14. Needs a human decision (defaults applied)
+**Decided (human, 2026-10-20 19:50): H1–H6 defaults accepted, T13 doc fixes approved (B8 applies them). 002a is built on this branch (`feat/002-food-db-import`); 002b gets its own branch after 002a merges.**
+
 - **H1: Real fixture records.** The agent environment can't download from the USDA or OFF hosts. **Default:** engineers build upstream-shaped synthetic records (from the documented schemas and OFF's GitHub test data) so B4 to B6 can proceed. Before 002a QA, you run `pnpm food:cut-fixture` once on your machine with real downloads (about 30 min, about 4 GB disk) so the golden USDA rows are real.
 - **H2: OFF scan counts rank USDA Branded** for the budget. The values are never stored on USDA rows, so OFF stays separable. **Default:** yes.
 - **H3: OFF tier criterion.** `en:nutrition-facts-completed` turns out to be set for nearly every product with entered nutrition, so most OFF rows will be `brand`. **Default:** implement as decided at Gate 1, report the share, and revisit after the first full run. The alternative is `brand` only when the as-sold set's source is `manufacturer`.
