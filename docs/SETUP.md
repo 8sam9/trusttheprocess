@@ -22,6 +22,8 @@ pnpm dev                      # then press w (web), i (iOS simulator) or scan th
 Sign in with any email. The 6-digit code lands in the local mail catcher (Mailpit): http://127.0.0.1:54324.
 Supabase Studio (database UI): http://127.0.0.1:54323.
 
+**Privacy policy URL:** set `EXPO_PUBLIC_PRIVACY_URL` (in `.env.local` and per EAS environment). Unset in development, the consent link goes to a placeholder and the console warns; a production build without it shows "Privacy policy coming soon" instead of a link.
+
 **Testing on a real phone:** the phone can't reach `127.0.0.1` on your Mac. Set `EXPO_PUBLIC_SUPABASE_URL=http://<your-mac-LAN-IP>:54321` in `apps/mobile/.env.local`.
 
 ## 3. Everyday commands
@@ -43,3 +45,4 @@ pnpm exec supabase functions serve         # run edge functions locally
 2. Deploy functions: `pnpm exec supabase functions deploy delete-account`.
 3. `npx eas-cli@latest init` in `apps/mobile`, set the `EXPO_PUBLIC_*` variables per EAS environment.
 4. Push the repo to GitHub; CI (`.github/workflows/ci.yml`) runs on every PR.
+5. **Spec 001 migration (`20261020090000_onboarding_targets`)** resets `onboarding_completed_at` for all profiles, so it refuses to run if any profile is already completed. Only if you have confirmed that is acceptable (pre-launch data only), opt in for the session: `PGOPTIONS='-c ttp.allow_prelaunch_reset=on' psql "$DB_URL" -f supabase/migrations/20261020090000_onboarding_targets.sql`, or temporarily `alter database postgres set ttp.allow_prelaunch_reset = 'on';` before `supabase db push` and `alter database postgres reset ttp.allow_prelaunch_reset;` afterwards. Never set it once real users exist.

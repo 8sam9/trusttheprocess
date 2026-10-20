@@ -4,6 +4,9 @@
 --
 -- PRE-LAUNCH ONLY: step 3 clears onboarding_completed_at on all existing profiles and step 2 narrows
 -- column grants. A human must confirm before this runs against any shared or remote database.
+-- Step 3 refuses to run (RAISE) if any profile is already completed, unless the session sets
+-- ttp.allow_prelaunch_reset = 'on'. Fresh local/CI databases have no completed rows and need nothing.
+-- To run it intentionally on a hosted database, see docs/SETUP.md section 5.
 --
 -- Export / deletion inventory (F15, AC 30). New personal data introduced here:
 --   profiles.goal_option, profiles.weight_kg, profiles.weight_recorded_on, and every column of daily_targets.
@@ -35,7 +38,16 @@ revoke update (sex, birth_year, height_cm, activity_level, goal, weekly_rate_kg,
   on table public.profiles from authenticated;
 
 -- 3. Invariant "completed <=> has a targets row". No targets exist yet, so no existing row can be completed.
-update public.profiles set onboarding_completed_at = null where onboarding_completed_at is not null;
+-- Guarded: on a database with real completed users this would silently send them back through onboarding.
+do $$
+begin
+  if exists (select 1 from public.profiles where onboarding_completed_at is not null)
+    and coalesce(current_setting('ttp.allow_prelaunch_reset', true), '') <> 'on' then
+    raise exception 'refusing to reset onboarding_completed_at: completed profiles exist; set ttp.allow_prelaunch_reset=on to confirm (docs/SETUP.md section 5)';
+  end if;
+  update public.profiles set onboarding_completed_at = null where onboarding_completed_at is not null;
+end;
+$$;
 
 -- 4. Effective-dated targets. Written only by apply_targets(); never recomputed (AC 23).
 create table public.daily_targets (
@@ -117,6 +129,7 @@ declare
   v_age integer;
   v_floor integer;
   v_date date;
+  v_latest date;
   v_targets public.daily_targets;
 begin
   if v_uid is null then
@@ -145,9 +158,18 @@ begin
     raise exception 'invalid_input';
   end if;
 
-  if not exists (select 1 from pg_catalog.pg_timezone_names where name = p_timezone) then
+  -- Text lengths mirror the column checks / ApplyTargetsArgs, so constraint errors (with row DETAIL) can't be
+  -- triggered from well-typed input.
+  if char_length(p_formula_version) not between 1 and 32 or char_length(p_timezone) not between 1 and 64 then
     raise exception 'invalid_input';
   end if;
+
+  -- Cheap zone check (Postgres accepts IANA links such as Europe/Kyiv); unknown zones raise 22023.
+  begin
+    perform now() at time zone p_timezone;
+  exception when invalid_parameter_value then
+    raise exception 'invalid_input';
+  end;
 
   -- Same UTC calendar-year rule as ageInYears() in @ttp/shared.
   v_age := extract(year from now() at time zone 'UTC')::integer - p_birth_year;
@@ -156,7 +178,11 @@ begin
   end if;
   if v_age > 110
     or p_height_cm not between 100 and 250
-    or p_weight_kg not between 30 and 350 then
+    or p_weight_kg not between 30 and 350
+    or p_bmr not between 500 and 5000
+    or p_maintenance_kcal < p_bmr * 1.2 - 1
+    or p_maintenance_kcal > 12000
+    or p_calculated_kcal > 12000 then
     raise exception 'invalid_input';
   end if;
 
@@ -194,6 +220,12 @@ begin
 
   -- "Applies from today" in the user's own zone (AC 26).
   v_date := (now() at time zone p_timezone)::date;
+  -- No backdating: never earlier than the user's latest row (a westward move re-dates today's edit to that
+  -- row, i.e. a same-day replace, instead of rewriting history).
+  select max(effective_from) into v_latest from public.daily_targets where user_id = v_uid;
+  if v_latest is not null and v_date < v_latest then
+    v_date := v_latest;
+  end if;
 
   update public.profiles set
     sex = p_sex,
@@ -213,9 +245,6 @@ begin
     onboarding_completed_at = coalesce(onboarding_completed_at, now())
   where user_id = v_uid
   returning * into v_profile;
-
-  -- Rows dated after the new "today" (the user moved to an earlier timezone) are superseded.
-  delete from public.daily_targets where user_id = v_uid and effective_from > v_date;
 
   insert into public.daily_targets (
     user_id, effective_from, kcal, protein_g, carbs_g, fat_g, calculated_kcal, floor_applied, bmr,

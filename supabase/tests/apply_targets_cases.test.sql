@@ -2,7 +2,7 @@
 -- packages/shared/src/__fixtures__/apply-targets-cases.json. Do not edit; run `pnpm gen:pgtap`.
 -- Each fixture case runs through public.apply_targets() as one authenticated user.
 begin;
-select plan(51);
+select plan(66);
 
 insert into auth.users (id, email) values ('77777777-7777-7777-7777-777777777777', 'fixture@example.com');
 
@@ -1535,6 +1535,456 @@ select throws_ok($q$
     p_formula_version => 'msj-1'
   )
 $q$, 'P0001', 'macro_mismatch', 'protein above 35 percent of calories');
+
+-- bmr 499 invalid
+reset role;
+update public.profiles set health_data_consent_at = now(), onboarding_completed_at = null where user_id = '77777777-7777-7777-7777-777777777777';
+delete from public.daily_targets where user_id = '77777777-7777-7777-7777-777777777777';
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"77777777-7777-7777-7777-777777777777","role":"authenticated"}', true);
+select throws_ok($q$
+  select public.apply_targets(
+    p_give_consent => false,
+    p_goal_option => 'lose_fat'::public.goal_option,
+    p_sex => 'female'::public.biological_sex,
+    p_birth_year => (extract(year from now() at time zone 'UTC')::integer - 30)::smallint,
+    p_height_cm => 165,
+    p_weight_kg => 65,
+    p_activity_level => 'light'::public.activity_level,
+    p_weekly_rate_kg => 0.5,
+    p_units => 'metric'::public.unit_system,
+    p_timezone => 'Europe/Rome',
+    p_kcal => 1330,
+    p_protein_g => 104,
+    p_carbs_g => 129,
+    p_fat_g => 44,
+    p_calculated_kcal => 1330,
+    p_floor_applied => false,
+    p_bmr => 499,
+    p_maintenance_kcal => 1884,
+    p_formula_version => 'msj-1'
+  )
+$q$, 'P0001', 'invalid_input', 'bmr 499 invalid');
+
+-- bmr 500 ok
+reset role;
+update public.profiles set health_data_consent_at = now(), onboarding_completed_at = null where user_id = '77777777-7777-7777-7777-777777777777';
+delete from public.daily_targets where user_id = '77777777-7777-7777-7777-777777777777';
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"77777777-7777-7777-7777-777777777777","role":"authenticated"}', true);
+select lives_ok($q$
+  select public.apply_targets(
+    p_give_consent => false,
+    p_goal_option => 'lose_fat'::public.goal_option,
+    p_sex => 'female'::public.biological_sex,
+    p_birth_year => (extract(year from now() at time zone 'UTC')::integer - 30)::smallint,
+    p_height_cm => 165,
+    p_weight_kg => 65,
+    p_activity_level => 'light'::public.activity_level,
+    p_weekly_rate_kg => 0.5,
+    p_units => 'metric'::public.unit_system,
+    p_timezone => 'Europe/Rome',
+    p_kcal => 1330,
+    p_protein_g => 104,
+    p_carbs_g => 129,
+    p_fat_g => 44,
+    p_calculated_kcal => 1330,
+    p_floor_applied => false,
+    p_bmr => 500,
+    p_maintenance_kcal => 1884,
+    p_formula_version => 'msj-1'
+  )
+$q$, 'bmr 500 ok');
+
+-- bmr 5000 ok
+reset role;
+update public.profiles set health_data_consent_at = now(), onboarding_completed_at = null where user_id = '77777777-7777-7777-7777-777777777777';
+delete from public.daily_targets where user_id = '77777777-7777-7777-7777-777777777777';
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"77777777-7777-7777-7777-777777777777","role":"authenticated"}', true);
+select lives_ok($q$
+  select public.apply_targets(
+    p_give_consent => false,
+    p_goal_option => 'lose_fat'::public.goal_option,
+    p_sex => 'female'::public.biological_sex,
+    p_birth_year => (extract(year from now() at time zone 'UTC')::integer - 30)::smallint,
+    p_height_cm => 165,
+    p_weight_kg => 65,
+    p_activity_level => 'light'::public.activity_level,
+    p_weekly_rate_kg => 0.5,
+    p_units => 'metric'::public.unit_system,
+    p_timezone => 'Europe/Rome',
+    p_kcal => 1330,
+    p_protein_g => 104,
+    p_carbs_g => 129,
+    p_fat_g => 44,
+    p_calculated_kcal => 1330,
+    p_floor_applied => false,
+    p_bmr => 5000,
+    p_maintenance_kcal => 6000,
+    p_formula_version => 'msj-1'
+  )
+$q$, 'bmr 5000 ok');
+
+-- bmr 5001 invalid
+reset role;
+update public.profiles set health_data_consent_at = now(), onboarding_completed_at = null where user_id = '77777777-7777-7777-7777-777777777777';
+delete from public.daily_targets where user_id = '77777777-7777-7777-7777-777777777777';
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"77777777-7777-7777-7777-777777777777","role":"authenticated"}', true);
+select throws_ok($q$
+  select public.apply_targets(
+    p_give_consent => false,
+    p_goal_option => 'lose_fat'::public.goal_option,
+    p_sex => 'female'::public.biological_sex,
+    p_birth_year => (extract(year from now() at time zone 'UTC')::integer - 30)::smallint,
+    p_height_cm => 165,
+    p_weight_kg => 65,
+    p_activity_level => 'light'::public.activity_level,
+    p_weekly_rate_kg => 0.5,
+    p_units => 'metric'::public.unit_system,
+    p_timezone => 'Europe/Rome',
+    p_kcal => 1330,
+    p_protein_g => 104,
+    p_carbs_g => 129,
+    p_fat_g => 44,
+    p_calculated_kcal => 1330,
+    p_floor_applied => false,
+    p_bmr => 5001,
+    p_maintenance_kcal => 6100,
+    p_formula_version => 'msj-1'
+  )
+$q$, 'P0001', 'invalid_input', 'bmr 5001 invalid');
+
+-- maintenance 1642 below bmr x1.2 minus 1
+reset role;
+update public.profiles set health_data_consent_at = now(), onboarding_completed_at = null where user_id = '77777777-7777-7777-7777-777777777777';
+delete from public.daily_targets where user_id = '77777777-7777-7777-7777-777777777777';
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"77777777-7777-7777-7777-777777777777","role":"authenticated"}', true);
+select throws_ok($q$
+  select public.apply_targets(
+    p_give_consent => false,
+    p_goal_option => 'lose_fat'::public.goal_option,
+    p_sex => 'female'::public.biological_sex,
+    p_birth_year => (extract(year from now() at time zone 'UTC')::integer - 30)::smallint,
+    p_height_cm => 165,
+    p_weight_kg => 65,
+    p_activity_level => 'light'::public.activity_level,
+    p_weekly_rate_kg => 0.5,
+    p_units => 'metric'::public.unit_system,
+    p_timezone => 'Europe/Rome',
+    p_kcal => 1330,
+    p_protein_g => 104,
+    p_carbs_g => 129,
+    p_fat_g => 44,
+    p_calculated_kcal => 1330,
+    p_floor_applied => false,
+    p_bmr => 1370,
+    p_maintenance_kcal => 1642,
+    p_formula_version => 'msj-1'
+  )
+$q$, 'P0001', 'invalid_input', 'maintenance 1642 below bmr x1.2 minus 1');
+
+-- maintenance 1643 at bmr x1.2 minus 1 ok
+reset role;
+update public.profiles set health_data_consent_at = now(), onboarding_completed_at = null where user_id = '77777777-7777-7777-7777-777777777777';
+delete from public.daily_targets where user_id = '77777777-7777-7777-7777-777777777777';
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"77777777-7777-7777-7777-777777777777","role":"authenticated"}', true);
+select lives_ok($q$
+  select public.apply_targets(
+    p_give_consent => false,
+    p_goal_option => 'lose_fat'::public.goal_option,
+    p_sex => 'female'::public.biological_sex,
+    p_birth_year => (extract(year from now() at time zone 'UTC')::integer - 30)::smallint,
+    p_height_cm => 165,
+    p_weight_kg => 65,
+    p_activity_level => 'light'::public.activity_level,
+    p_weekly_rate_kg => 0.5,
+    p_units => 'metric'::public.unit_system,
+    p_timezone => 'Europe/Rome',
+    p_kcal => 1330,
+    p_protein_g => 104,
+    p_carbs_g => 129,
+    p_fat_g => 44,
+    p_calculated_kcal => 1330,
+    p_floor_applied => false,
+    p_bmr => 1370,
+    p_maintenance_kcal => 1643,
+    p_formula_version => 'msj-1'
+  )
+$q$, 'maintenance 1643 at bmr x1.2 minus 1 ok');
+
+-- maintenance 12000 ok
+reset role;
+update public.profiles set health_data_consent_at = now(), onboarding_completed_at = null where user_id = '77777777-7777-7777-7777-777777777777';
+delete from public.daily_targets where user_id = '77777777-7777-7777-7777-777777777777';
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"77777777-7777-7777-7777-777777777777","role":"authenticated"}', true);
+select lives_ok($q$
+  select public.apply_targets(
+    p_give_consent => false,
+    p_goal_option => 'lose_fat'::public.goal_option,
+    p_sex => 'female'::public.biological_sex,
+    p_birth_year => (extract(year from now() at time zone 'UTC')::integer - 30)::smallint,
+    p_height_cm => 165,
+    p_weight_kg => 65,
+    p_activity_level => 'light'::public.activity_level,
+    p_weekly_rate_kg => 0.5,
+    p_units => 'metric'::public.unit_system,
+    p_timezone => 'Europe/Rome',
+    p_kcal => 1330,
+    p_protein_g => 104,
+    p_carbs_g => 129,
+    p_fat_g => 44,
+    p_calculated_kcal => 1330,
+    p_floor_applied => false,
+    p_bmr => 1370,
+    p_maintenance_kcal => 12000,
+    p_formula_version => 'msj-1'
+  )
+$q$, 'maintenance 12000 ok');
+
+-- maintenance 12001 invalid
+reset role;
+update public.profiles set health_data_consent_at = now(), onboarding_completed_at = null where user_id = '77777777-7777-7777-7777-777777777777';
+delete from public.daily_targets where user_id = '77777777-7777-7777-7777-777777777777';
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"77777777-7777-7777-7777-777777777777","role":"authenticated"}', true);
+select throws_ok($q$
+  select public.apply_targets(
+    p_give_consent => false,
+    p_goal_option => 'lose_fat'::public.goal_option,
+    p_sex => 'female'::public.biological_sex,
+    p_birth_year => (extract(year from now() at time zone 'UTC')::integer - 30)::smallint,
+    p_height_cm => 165,
+    p_weight_kg => 65,
+    p_activity_level => 'light'::public.activity_level,
+    p_weekly_rate_kg => 0.5,
+    p_units => 'metric'::public.unit_system,
+    p_timezone => 'Europe/Rome',
+    p_kcal => 1330,
+    p_protein_g => 104,
+    p_carbs_g => 129,
+    p_fat_g => 44,
+    p_calculated_kcal => 1330,
+    p_floor_applied => false,
+    p_bmr => 1370,
+    p_maintenance_kcal => 12001,
+    p_formula_version => 'msj-1'
+  )
+$q$, 'P0001', 'invalid_input', 'maintenance 12001 invalid');
+
+-- calculated 12000 ok
+reset role;
+update public.profiles set health_data_consent_at = now(), onboarding_completed_at = null where user_id = '77777777-7777-7777-7777-777777777777';
+delete from public.daily_targets where user_id = '77777777-7777-7777-7777-777777777777';
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"77777777-7777-7777-7777-777777777777","role":"authenticated"}', true);
+select lives_ok($q$
+  select public.apply_targets(
+    p_give_consent => false,
+    p_goal_option => 'lose_fat'::public.goal_option,
+    p_sex => 'female'::public.biological_sex,
+    p_birth_year => (extract(year from now() at time zone 'UTC')::integer - 30)::smallint,
+    p_height_cm => 165,
+    p_weight_kg => 65,
+    p_activity_level => 'light'::public.activity_level,
+    p_weekly_rate_kg => 0.5,
+    p_units => 'metric'::public.unit_system,
+    p_timezone => 'Europe/Rome',
+    p_kcal => 12000,
+    p_protein_g => 1000,
+    p_carbs_g => 2000,
+    p_fat_g => 0,
+    p_calculated_kcal => 12000,
+    p_floor_applied => false,
+    p_bmr => 1370,
+    p_maintenance_kcal => 1884,
+    p_formula_version => 'msj-1'
+  )
+$q$, 'calculated 12000 ok');
+
+-- calculated 12001 invalid
+reset role;
+update public.profiles set health_data_consent_at = now(), onboarding_completed_at = null where user_id = '77777777-7777-7777-7777-777777777777';
+delete from public.daily_targets where user_id = '77777777-7777-7777-7777-777777777777';
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"77777777-7777-7777-7777-777777777777","role":"authenticated"}', true);
+select throws_ok($q$
+  select public.apply_targets(
+    p_give_consent => false,
+    p_goal_option => 'lose_fat'::public.goal_option,
+    p_sex => 'female'::public.biological_sex,
+    p_birth_year => (extract(year from now() at time zone 'UTC')::integer - 30)::smallint,
+    p_height_cm => 165,
+    p_weight_kg => 65,
+    p_activity_level => 'light'::public.activity_level,
+    p_weekly_rate_kg => 0.5,
+    p_units => 'metric'::public.unit_system,
+    p_timezone => 'Europe/Rome',
+    p_kcal => 12001,
+    p_protein_g => 1000,
+    p_carbs_g => 2000,
+    p_fat_g => 0,
+    p_calculated_kcal => 12001,
+    p_floor_applied => false,
+    p_bmr => 1370,
+    p_maintenance_kcal => 1884,
+    p_formula_version => 'msj-1'
+  )
+$q$, 'P0001', 'invalid_input', 'calculated 12001 invalid');
+
+-- formula version 32 chars ok
+reset role;
+update public.profiles set health_data_consent_at = now(), onboarding_completed_at = null where user_id = '77777777-7777-7777-7777-777777777777';
+delete from public.daily_targets where user_id = '77777777-7777-7777-7777-777777777777';
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"77777777-7777-7777-7777-777777777777","role":"authenticated"}', true);
+select lives_ok($q$
+  select public.apply_targets(
+    p_give_consent => false,
+    p_goal_option => 'lose_fat'::public.goal_option,
+    p_sex => 'female'::public.biological_sex,
+    p_birth_year => (extract(year from now() at time zone 'UTC')::integer - 30)::smallint,
+    p_height_cm => 165,
+    p_weight_kg => 65,
+    p_activity_level => 'light'::public.activity_level,
+    p_weekly_rate_kg => 0.5,
+    p_units => 'metric'::public.unit_system,
+    p_timezone => 'Europe/Rome',
+    p_kcal => 1330,
+    p_protein_g => 104,
+    p_carbs_g => 129,
+    p_fat_g => 44,
+    p_calculated_kcal => 1330,
+    p_floor_applied => false,
+    p_bmr => 1370,
+    p_maintenance_kcal => 1884,
+    p_formula_version => 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+  )
+$q$, 'formula version 32 chars ok');
+
+-- formula version 33 chars invalid
+reset role;
+update public.profiles set health_data_consent_at = now(), onboarding_completed_at = null where user_id = '77777777-7777-7777-7777-777777777777';
+delete from public.daily_targets where user_id = '77777777-7777-7777-7777-777777777777';
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"77777777-7777-7777-7777-777777777777","role":"authenticated"}', true);
+select throws_ok($q$
+  select public.apply_targets(
+    p_give_consent => false,
+    p_goal_option => 'lose_fat'::public.goal_option,
+    p_sex => 'female'::public.biological_sex,
+    p_birth_year => (extract(year from now() at time zone 'UTC')::integer - 30)::smallint,
+    p_height_cm => 165,
+    p_weight_kg => 65,
+    p_activity_level => 'light'::public.activity_level,
+    p_weekly_rate_kg => 0.5,
+    p_units => 'metric'::public.unit_system,
+    p_timezone => 'Europe/Rome',
+    p_kcal => 1330,
+    p_protein_g => 104,
+    p_carbs_g => 129,
+    p_fat_g => 44,
+    p_calculated_kcal => 1330,
+    p_floor_applied => false,
+    p_bmr => 1370,
+    p_maintenance_kcal => 1884,
+    p_formula_version => 'xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx'
+  )
+$q$, 'P0001', 'invalid_input', 'formula version 33 chars invalid');
+
+-- formula version empty invalid
+reset role;
+update public.profiles set health_data_consent_at = now(), onboarding_completed_at = null where user_id = '77777777-7777-7777-7777-777777777777';
+delete from public.daily_targets where user_id = '77777777-7777-7777-7777-777777777777';
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"77777777-7777-7777-7777-777777777777","role":"authenticated"}', true);
+select throws_ok($q$
+  select public.apply_targets(
+    p_give_consent => false,
+    p_goal_option => 'lose_fat'::public.goal_option,
+    p_sex => 'female'::public.biological_sex,
+    p_birth_year => (extract(year from now() at time zone 'UTC')::integer - 30)::smallint,
+    p_height_cm => 165,
+    p_weight_kg => 65,
+    p_activity_level => 'light'::public.activity_level,
+    p_weekly_rate_kg => 0.5,
+    p_units => 'metric'::public.unit_system,
+    p_timezone => 'Europe/Rome',
+    p_kcal => 1330,
+    p_protein_g => 104,
+    p_carbs_g => 129,
+    p_fat_g => 44,
+    p_calculated_kcal => 1330,
+    p_floor_applied => false,
+    p_bmr => 1370,
+    p_maintenance_kcal => 1884,
+    p_formula_version => ''
+  )
+$q$, 'P0001', 'invalid_input', 'formula version empty invalid');
+
+-- time zone alias Europe/Kyiv ok
+reset role;
+update public.profiles set health_data_consent_at = now(), onboarding_completed_at = null where user_id = '77777777-7777-7777-7777-777777777777';
+delete from public.daily_targets where user_id = '77777777-7777-7777-7777-777777777777';
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"77777777-7777-7777-7777-777777777777","role":"authenticated"}', true);
+select lives_ok($q$
+  select public.apply_targets(
+    p_give_consent => false,
+    p_goal_option => 'lose_fat'::public.goal_option,
+    p_sex => 'female'::public.biological_sex,
+    p_birth_year => (extract(year from now() at time zone 'UTC')::integer - 30)::smallint,
+    p_height_cm => 165,
+    p_weight_kg => 65,
+    p_activity_level => 'light'::public.activity_level,
+    p_weekly_rate_kg => 0.5,
+    p_units => 'metric'::public.unit_system,
+    p_timezone => 'Europe/Kyiv',
+    p_kcal => 1330,
+    p_protein_g => 104,
+    p_carbs_g => 129,
+    p_fat_g => 44,
+    p_calculated_kcal => 1330,
+    p_floor_applied => false,
+    p_bmr => 1370,
+    p_maintenance_kcal => 1884,
+    p_formula_version => 'msj-1'
+  )
+$q$, 'time zone alias Europe/Kyiv ok');
+
+-- time zone alias America/Nuuk ok
+reset role;
+update public.profiles set health_data_consent_at = now(), onboarding_completed_at = null where user_id = '77777777-7777-7777-7777-777777777777';
+delete from public.daily_targets where user_id = '77777777-7777-7777-7777-777777777777';
+set local role authenticated;
+select set_config('request.jwt.claims', '{"sub":"77777777-7777-7777-7777-777777777777","role":"authenticated"}', true);
+select lives_ok($q$
+  select public.apply_targets(
+    p_give_consent => false,
+    p_goal_option => 'lose_fat'::public.goal_option,
+    p_sex => 'female'::public.biological_sex,
+    p_birth_year => (extract(year from now() at time zone 'UTC')::integer - 30)::smallint,
+    p_height_cm => 165,
+    p_weight_kg => 65,
+    p_activity_level => 'light'::public.activity_level,
+    p_weekly_rate_kg => 0.5,
+    p_units => 'metric'::public.unit_system,
+    p_timezone => 'America/Nuuk',
+    p_kcal => 1330,
+    p_protein_g => 104,
+    p_carbs_g => 129,
+    p_fat_g => 44,
+    p_calculated_kcal => 1330,
+    p_floor_applied => false,
+    p_bmr => 1370,
+    p_maintenance_kcal => 1884,
+    p_formula_version => 'msj-1'
+  )
+$q$, 'time zone alias America/Nuuk ok');
 
 select * from finish();
 rollback;

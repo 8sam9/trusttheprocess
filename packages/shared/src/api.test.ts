@@ -5,6 +5,7 @@ import {
   ApplyTargetsResult,
   CachedGate,
   buildApplyTargetsArgs,
+  safeTimeZone,
 } from './api';
 import cases from './__fixtures__/apply-targets-cases.json';
 import { applyManualKcal, explainTargets } from './targets';
@@ -213,5 +214,16 @@ describe('ApplyTargetsResult and CachedGate', () => {
     expect(CachedGate.safeParse({ ...gate, v: 2 }).success).toBe(false);
     expect(CachedGate.safeParse({ ...gate, cachedAt: 'yesterday' }).success).toBe(false);
     expect(CachedGate.safeParse('garbage').success).toBe(false);
+  });
+});
+
+describe('safeTimeZone', () => {
+  it('passes accepted zones through, including IANA links', () => {
+    expect(safeTimeZone('Europe/Rome')).toBe('Europe/Rome');
+    expect(safeTimeZone('Europe/Kyiv')).toBe('Europe/Kyiv');
+  });
+  it('falls back to UTC for unknown or missing zones', () => {
+    expect(safeTimeZone('Not/AZone')).toBe('UTC');
+    expect(safeTimeZone(undefined)).toBe('UTC');
   });
 });

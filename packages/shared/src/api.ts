@@ -34,6 +34,20 @@ export const ApplyTargetsErrorCode = z.enum([
 ]);
 export type ApplyTargetsErrorCode = z.infer<typeof ApplyTargetsErrorCode>;
 
+/** Sanity bounds also enforced by apply_targets (keep in sync with the migration). */
+const BMR_RANGE = { min: 500, max: 5000 } as const;
+const MAINTENANCE_MIN_FACTOR = 1.2;
+const KCAL_DB_MAX = 12000;
+
+/**
+ * Returns tz when this runtime's Intl accepts it, else 'UTC'. Use it when reading the device zone so a
+ * runtime-specific name never reaches the server; the server itself never rewrites a zone. Postgres accepts
+ * IANA links (e.g. Europe/Kyiv, America/Nuuk).
+ */
+export function safeTimeZone(tz: string | null | undefined): string {
+  return tz && isKnownTimeZone(tz) ? tz : 'UTC';
+}
+
 function isKnownTimeZone(tz: string): boolean {
   try {
     new Intl.DateTimeFormat('en-US', { timeZone: tz });
@@ -60,7 +74,7 @@ export const ApplyTargetsArgs = z
     p_activity_level: ActivityLevel,
     p_weekly_rate_kg: z.number(),
     p_units: UnitSystem,
-    p_timezone: z.string().min(1).max(64),
+    p_timezone: z.string(),
     p_kcal: z.int(),
     p_protein_g: z.int(),
     p_carbs_g: z.int(),
@@ -69,12 +83,20 @@ export const ApplyTargetsArgs = z
     p_floor_applied: z.boolean(),
     p_bmr: z.int(),
     p_maintenance_kcal: z.int(),
-    p_formula_version: z.string().min(1).max(32),
+    p_formula_version: z.string(),
   })
   .superRefine((a, ctx) => {
     const fail = (code: ApplyTargetsErrorCode, path: string) =>
       ctx.addIssue({ code: 'custom', message: code, path: [path] });
 
+    if (
+      a.p_formula_version.length < 1 ||
+      a.p_formula_version.length > 32 ||
+      a.p_timezone.length < 1 ||
+      a.p_timezone.length > 64
+    ) {
+      return fail('invalid_input', 'p_formula_version');
+    }
     if (!isKnownTimeZone(a.p_timezone)) return fail('invalid_input', 'p_timezone');
     const age = new Date().getUTCFullYear() - a.p_birth_year;
     if (age < MIN_AGE_YEARS) return fail('under_min_age', 'p_birth_year');
@@ -83,7 +105,12 @@ export const ApplyTargetsArgs = z
       a.p_height_cm < HEIGHT_CM.min ||
       a.p_height_cm > HEIGHT_CM.max ||
       a.p_weight_kg < WEIGHT_KG.min ||
-      a.p_weight_kg > WEIGHT_KG.max
+      a.p_weight_kg > WEIGHT_KG.max ||
+      a.p_bmr < BMR_RANGE.min ||
+      a.p_bmr > BMR_RANGE.max ||
+      a.p_maintenance_kcal < a.p_bmr * MAINTENANCE_MIN_FACTOR - 1 ||
+      a.p_maintenance_kcal > KCAL_DB_MAX ||
+      a.p_calculated_kcal > KCAL_DB_MAX
     ) {
       return fail('invalid_input', age > MAX_AGE_YEARS ? 'p_birth_year' : 'p_height_cm');
     }
