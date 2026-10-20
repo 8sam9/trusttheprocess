@@ -18,6 +18,12 @@
 007 weight log · 008 natural-language logging (N1) · 009 data-quality badges (N5) · 010 offline sync (N9)
 → TestFlight + Play internal testing, 20–50 beta users
 
+### Backlog — must ship before the closed beta
+| Feature | Spec | Status | When |
+|---|---|---|---|
+| 001a consent withdrawal & data erasure | [docs/specs/001a-consent-withdrawal-data-erasure.md](specs/001a-consent-withdrawal-data-erasure.md) | Spec approved (Gate 1, 2026-10-20) · not started | Last item before beta. **Beta blocker:** beta users are real people giving health data |
+| 011 food data sources (attribution) page | — (moved out of 002, see AC 44) | Not started | Before beta. **Beta blocker:** the Open Food Facts licence requires visible credit; no OFF-derived food may be shown until it ships |
+
 ## Milestone 2 — Public launch v1.0 (weeks 6–10)
 Water, exercise, Health sync, recipes, macro/per-meal goals, fasting, export, photo + voice logging,
 "Fix my day", adaptive TDEE, widgets, Pro subscription (RevenueCat), progress reports.
