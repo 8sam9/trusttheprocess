@@ -5,3 +5,7 @@ export const env = {
 };
 
 export const isConfigured = env.supabaseUrl.length > 0 && env.supabaseKey.length > 0;
+
+/** Privacy policy page. A placeholder until the legal text is supplied (spec OQ 12). */
+export const privacyUrl =
+  process.env.EXPO_PUBLIC_PRIVACY_URL ?? 'https://example.com/privacy-policy-placeholder';

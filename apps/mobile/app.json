@@ -40,7 +40,8 @@
           "image": "./assets/splash-icon.png",
           "imageWidth": 160
         }
-      ]
+      ],
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true

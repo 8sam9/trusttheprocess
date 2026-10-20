@@ -1,5 +1,5 @@
 import { render, screen, userEvent } from '@testing-library/react-native';
-import { Button, Choice, LaneBar, Text } from './ui';
+import { Button, Choice, LaneBar, Text } from '.';
 
 describe('Button', () => {
   it('calls onPress and exposes an accessible label', async () => {
@@ -36,7 +36,7 @@ describe('Choice', () => {
         onChange={onChange}
       />,
     );
-    expect(screen.getByRole('radio', { name: 'Metric' })).toBeSelected();
+    expect(screen.getByRole('radio', { name: 'Metric' })).toBeChecked();
     await user.press(screen.getByRole('radio', { name: 'Imperial' }));
     expect(onChange).toHaveBeenCalledWith('imperial');
   });

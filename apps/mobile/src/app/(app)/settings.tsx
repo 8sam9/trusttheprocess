@@ -1,47 +1,27 @@
-import {
-  ACTIVITY_MULTIPLIER,
-  type ActivityLevel,
-  type BiologicalSex,
-  type ProfileRow,
-  type UnitSystem,
-} from '@ttp/shared';
+import { type ProfileRow, type UnitSystem } from '@ttp/shared';
 import { space } from '@ttp/ui';
+import type { Session } from '@supabase/supabase-js';
 import { useState } from 'react';
 import { ActivityIndicator, View } from 'react-native';
 import { Button, Choice, Screen, Text, TextField } from '@/components/ui';
 import { signOut } from '@/features/auth/signIn';
-import {
-  useDeleteAccount,
-  useHealthConsent,
-  useProfile,
-  useUpdateProfile,
-} from '@/features/profile/api';
-import { formFromRow, updateFromForm, type ProfileForm } from '@/features/profile/form';
-import type { Session } from '@supabase/supabase-js';
+import { useHealthConsent, useProfile, useUpdateProfile } from '@/features/profile/api';
+import { formFromRow, updateFromForm } from '@/features/profile/form';
+import { toSaveFailure, useApplyTargets, useCurrentTargets } from '@/features/targets/api';
+import { DailyTargetsCard } from '@/features/targets/components/DailyTargetsCard';
+import { DeleteAccountSection } from '@/features/targets/components/DeleteAccountSection';
+import { TargetsSheet } from '@/features/targets/components/TargetsSheet';
+import { copy } from '@/features/targets/copy';
+import { draftFromProfile } from '@/features/targets/draft';
+import { argsForPlan } from '@/features/targets/save';
 import { useAuth } from '@/lib/auth';
+import { track } from '@/lib/analytics';
+import { deviceTimeZone } from '@/lib/locale';
 
 const unitOptions = [
-  { value: 'metric', label: 'Metric (kg, cm)' },
-  { value: 'imperial', label: 'Imperial (lb, ft)' },
+  { value: 'metric', label: copy.labels.metric },
+  { value: 'imperial', label: copy.labels.imperial },
 ] as const satisfies readonly { value: UnitSystem; label: string }[];
-
-const sexOptions = [
-  { value: 'female', label: 'Female' },
-  { value: 'male', label: 'Male' },
-  { value: 'unspecified', label: 'Prefer not to say' },
-] as const satisfies readonly { value: BiologicalSex; label: string }[];
-
-const activityLabels: Record<ActivityLevel, string> = {
-  sedentary: 'Mostly sitting',
-  light: 'Lightly active',
-  moderate: 'Moderately active',
-  active: 'Very active',
-  very_active: 'Athlete',
-};
-const activityOptions = (Object.keys(ACTIVITY_MULTIPLIER) as ActivityLevel[]).map((v) => ({
-  value: v,
-  label: activityLabels[v],
-}));
 
 export default function SettingsScreen() {
   const { session } = useAuth();
@@ -51,7 +31,10 @@ export default function SettingsScreen() {
     return (
       <Screen>
         {profile.isError ? (
-          <Text tone="danger">Couldn’t load your profile.</Text>
+          <>
+            <Text tone="danger">Couldn’t load your profile.</Text>
+            <Button label="Try again" onPress={() => void profile.refetch()} />
+          </>
         ) : (
           <ActivityIndicator />
         )}
@@ -65,26 +48,24 @@ export default function SettingsScreen() {
 function SettingsForm({ row, session }: { row: ProfileRow; session: Session }) {
   const update = useUpdateProfile();
   const consent = useHealthConsent();
-  const deleteAccount = useDeleteAccount();
-  const [form, setForm] = useState<ProfileForm>(() => formFromRow(row));
-  const [confirmDelete, setConfirmDelete] = useState(false);
+  const apply = useApplyTargets();
+  const targets = useCurrentTargets();
+  const [name, setName] = useState(() => formFromRow(row).displayName);
   const [saved, setSaved] = useState(false);
+  const [editing, setEditing] = useState(false);
+  const [applied, setApplied] = useState(false);
 
-  const set = <K extends keyof ProfileForm>(key: K, value: ProfileForm[K]) => {
+  const save = (changes: { displayName?: string; units?: UnitSystem }) => {
     setSaved(false);
-    setForm({ ...form, [key]: value });
-  };
-
-  const save = () =>
+    const form = { ...formFromRow(row), ...changes };
     update.mutate(
-      {
-        userId: session.user.id,
-        changes: updateFromForm(form, Intl.DateTimeFormat().resolvedOptions().timeZone),
-      },
+      { userId: session.user.id, changes: updateFromForm(form, deviceTimeZone()) },
       { onSuccess: () => setSaved(true) },
     );
+  };
 
   const hasConsent = !!row.health_data_consent_at;
+  const stored = targets.row;
 
   return (
     <Screen>
@@ -92,75 +73,54 @@ function SettingsForm({ row, session }: { row: ProfileRow; session: Session }) {
         Signed in as {session.user.email ?? 'your account'}
       </Text>
 
+      {row.onboarding_completed_at && stored ? (
+        <>
+          <DailyTargetsCard
+            profile={row}
+            row={stored}
+            onEdit={() => {
+              track({ name: 'targets_adjust_opened', source: 'settings' });
+              setApplied(false);
+              setEditing(true);
+            }}
+          />
+          {applied ? (
+            <Text tone="accent" accessibilityLiveRegion="polite">
+              {copy.newTargetsInEffect}
+            </Text>
+          ) : null}
+        </>
+      ) : null}
+
       <Text variant="display">Profile</Text>
       <TextField
         label="Name (optional)"
-        value={form.displayName}
-        onChangeText={(t) => set('displayName', t)}
+        value={name}
+        onChangeText={(t) => {
+          setSaved(false);
+          setName(t);
+        }}
+        onBlur={() => {
+          if (name.trim() !== (row.display_name ?? '')) save({ displayName: name });
+        }}
         maxLength={50}
       />
       <Choice
-        label="Units"
-        value={form.units}
+        label={copy.labels.units}
+        value={row.units}
         options={unitOptions}
-        onChange={(v) => set('units', v)}
+        onChange={(v) => {
+          if (v !== row.units) save({ units: v });
+        }}
       />
-      <Choice
-        label="Sex (used only to estimate your energy needs)"
-        value={form.sex}
-        options={sexOptions}
-        onChange={(v) => set('sex', v)}
-      />
-      <TextField
-        label="Year of birth"
-        value={form.birthYear}
-        onChangeText={(t) => set('birthYear', t)}
-        keyboardType="number-pad"
-        maxLength={4}
-      />
-      {form.units === 'metric' ? (
-        <TextField
-          label="Height (cm)"
-          value={form.heightCm}
-          onChangeText={(t) => set('heightCm', t)}
-          keyboardType="decimal-pad"
-        />
-      ) : (
-        <View style={{ flexDirection: 'row', gap: space.md }}>
-          <View style={{ flex: 1 }}>
-            <TextField
-              label="Height (ft)"
-              value={form.heightFt}
-              onChangeText={(t) => set('heightFt', t)}
-              keyboardType="number-pad"
-            />
-          </View>
-          <View style={{ flex: 1 }}>
-            <TextField
-              label="(in)"
-              value={form.heightIn}
-              onChangeText={(t) => set('heightIn', t)}
-              keyboardType="number-pad"
-            />
-          </View>
-        </View>
-      )}
-      <Choice
-        label="Activity level"
-        value={form.activityLevel}
-        options={activityOptions}
-        onChange={(v) => set('activityLevel', v)}
-      />
-
       {update.isError ? (
         <Text tone="danger">Please check the highlighted values and try again.</Text>
       ) : null}
       {saved ? (
         <Text tone="accent" accessibilityLiveRegion="polite">
-          Saved ✓
+          {copy.saved}
         </Text>
       ) : null}
-      <Button label="Save" onPress={save} loading={update.isPending} />
 
       <Text variant="title" style={{ marginTop: space.lg }}>
         Privacy
@@ -179,26 +139,39 @@ function SettingsForm({ row, session }: { row: ProfileRow; session: Session }) {
       <Text variant="title" style={{ marginTop: space.lg }}>
         Account
       </Text>
-      <Button label="Sign out" variant="secondary" onPress={() => void signOut()} />
-      {!confirmDelete ? (
-        <Button label="Delete account" variant="danger" onPress={() => setConfirmDelete(true)} />
-      ) : (
-        <View style={{ gap: space.sm }}>
-          <Text>
-            This permanently deletes your account and all your data. This can’t be undone.
-          </Text>
-          {deleteAccount.isError ? (
-            <Text tone="danger">Deletion failed. Please try again.</Text>
-          ) : null}
-          <Button
-            label="Yes, delete everything"
-            variant="danger"
-            loading={deleteAccount.isPending}
-            onPress={() => deleteAccount.mutate()}
-          />
-          <Button label="Cancel" variant="secondary" onPress={() => setConfirmDelete(false)} />
-        </View>
-      )}
+      <Button label={copy.signOut} variant="secondary" onPress={() => void signOut()} />
+      <View style={{ gap: space.sm }}>
+        <DeleteAccountSection />
+      </View>
+
+      {editing && stored ? (
+        <TargetsSheet
+          mode="settings"
+          seed={draftFromProfile(row, stored, null)}
+          stored={{
+            kcal: stored.kcal,
+            proteinG: stored.protein_g,
+            carbsG: stored.carbs_g,
+            fatG: stored.fat_g,
+            isCustom: stored.is_custom,
+          }}
+          hasConsent={hasConsent}
+          onClose={() => setEditing(false)}
+          onApply={async (_draft, plan, opts) => {
+            try {
+              await apply.mutateAsync(
+                argsForPlan(plan, { timezone: deviceTimeZone(), giveConsent: opts.giveConsent }),
+              );
+              setApplied(true);
+              return 'ok';
+            } catch (error) {
+              const kind = toSaveFailure(error);
+              track({ name: 'onboarding_save_failed', reason: kind, stage: 'final_save' });
+              return kind;
+            }
+          }}
+        />
+      ) : null}
     </Screen>
   );
 }

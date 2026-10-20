@@ -33,7 +33,7 @@ describe('profile form', () => {
     expect(update.display_name).toBeNull();
   });
 
-  it('shows imperial values from a metric row', () => {
-    expect(formFromRow(row)).toMatchObject({ heightFt: '5', heightIn: '11' });
+  it('reads only the name and units from a row', () => {
+    expect(formFromRow(row)).toEqual({ displayName: 'Sam', units: 'metric' });
   });
 });

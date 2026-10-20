@@ -1,12 +1,17 @@
 import { ProfileUpdate, type ProfileRow } from '@ttp/shared';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useAuth } from '@/lib/auth';
+import { gateCache } from '@/lib/gateCache';
 import { supabase } from '@/lib/supabase';
 
-const profileKey = ['profile'] as const;
+/** Query keys include the user id so one account's data can never be served to another. */
+export const profileKey = (uid: string | undefined) => ['profile', uid] as const;
 
 export function useProfile() {
+  const uid = useAuth().session?.user.id;
   return useQuery({
-    queryKey: profileKey,
+    queryKey: profileKey(uid),
+    enabled: !!uid,
     queryFn: async (): Promise<ProfileRow> => {
       // RLS returns only the caller's row.
       const { data, error } = await supabase.from('profiles').select('*').single();
@@ -30,12 +35,13 @@ export function useUpdateProfile() {
       if (error) throw error;
       return data as ProfileRow;
     },
-    onSuccess: (row) => qc.setQueryData(profileKey, row),
+    onSuccess: (row, input) => qc.setQueryData(profileKey(input.userId), row),
   });
 }
 
 export function useHealthConsent() {
   const qc = useQueryClient();
+  const uid = useAuth().session?.user.id;
   return useMutation({
     mutationFn: async (give: boolean) => {
       const { error } = await supabase.rpc(
@@ -43,18 +49,22 @@ export function useHealthConsent() {
       );
       if (error) throw error;
     },
-    onSuccess: () => qc.invalidateQueries({ queryKey: profileKey }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: profileKey(uid) }),
   });
 }
 
 export function useDeleteAccount() {
   const qc = useQueryClient();
+  const uid = useAuth().session?.user.id;
   return useMutation({
     mutationFn: async () => {
       const { error } = await supabase.functions.invoke('delete-account', { method: 'POST' });
       if (error) throw error;
       await supabase.auth.signOut({ scope: 'local' });
     },
-    onSuccess: () => qc.clear(),
+    onSuccess: () => {
+      if (uid) gateCache.clear(uid);
+      qc.clear();
+    },
   });
 }

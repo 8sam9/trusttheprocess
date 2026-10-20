@@ -120,3 +120,9 @@ export const type = {
 } as const satisfies Record<string, TextStyleToken>;
 
 export type TypeVariant = keyof typeof type;
+
+/** Motion durations in ms. Rule: with Reduce Motion on, replace movement with an instant change or a cross-fade of at most 100 ms. */
+export const motion = { fast: 120, base: 200, stagger: 60 } as const;
+
+/** Font scale at or above which layouts reflow (MacroTrio stacks, footers unpin, tagline hides). */
+export const largeTextScale = 1.5;
