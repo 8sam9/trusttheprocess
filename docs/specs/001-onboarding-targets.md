@@ -1199,3 +1199,111 @@ Not automatable here: real screen-reader output, Dynamic Type layout at AX5/200%
 - `pnpm --filter @ttp/shared typecheck` and `lint`: clean.
 - Root `pnpm typecheck`: 3/3 tasks passed. Root `pnpm test`: shared 120 passed, mobile 8 passed. Root `pnpm lint`: clean.
 - Not run (out of scope for C1): `pnpm db:test` (no migration yet).
+
+---
+
+# QA report
+
+QA stage, 2026-10-20, branch `feat/001-onboarding-targets` at a495050 (plus one new test file, uncommitted). Tester did not write the code. Product code untouched.
+
+## Commands
+
+| Command | Result |
+|---|---|
+| `pnpm lint` | PASS, 0 errors. 9 warnings (`no-require-imports` in the `targets/*.test.tsx` files, pre-existing). |
+| `pnpm typecheck` | PASS, 3/3 packages. |
+| `pnpm test` | PASS. shared: 7 files, 120 tests. mobile: 17 suites, 261 tests (255 before QA, +6 added by QA). |
+| `pnpm format:check` | PASS. |
+| `pnpm gen:pgtap:check` | PASS, 51 cases up to date. |
+| pgTAP via the stand-in harness (`/var/tmp/pgsim/run-repo.sh`: Postgres 16 + pgTAP + minimal auth stub, both migrations applied, 5 test files) | PASS, 131 `ok`, 0 `not ok`. The stub is not real Supabase: real GoTrue, PostgREST and `supabase db lint` run only in CI, so grant behaviour via PostgREST is unverified here. |
+| Web export + Playwright (Chromium 390x844, dark and light, Supabase mocked with `page.route`) | Ran, 16 scenarios, see Exploratory below. |
+
+## AC to test map
+
+Abbreviations: `onb` = `apps/mobile/src/features/targets/onboarding.test.tsx`, `adj` = `adjust.test.tsx`, `set` = `settings.test.tsx`, `gate` = `gate.test.tsx`, `tgt` = `packages/shared/src/targets.test.ts`, `api` = `packages/shared/src/api.test.ts`, `ui` = `apps/mobile/src/components/ui/ui.test.tsx`, pgTAP files under `supabase/tests/`. "Browser" = the Playwright exploratory run.
+
+| AC | Test(s) | Result |
+|---|---|---|
+| 1 Onboarding required | `gate` S0 tests; `onb` "shows onboarding instead of Today and cannot be bypassed"; `profiles_rls` #14 (completion only via RPC). Browser: first sign-in lands on consent. | PASS |
+| 2 Completed skip | `onb` "skips onboarding for a completed user"; `gate` "opens to Today offline from the device cache", "server always wins"; `gateCache.test.ts`. | PASS (two-device case MANUAL, see below) |
+| 3 Prefill | `onb` "prefills a partial profile and says so"; `draft.test.ts` | PASS |
+| 4 Goal choices | `onb` "offers exactly four goals, none preselected, and will not continue without one". Browser: four cards. | PASS |
+| 5 Goal mapping | `tgt` "maps the four goal options"; `onb` it.each "maps %s to %s and stores rate %s"; `draft.test.ts`; `apply_targets_cases` + `apply_targets.test.sql` (profiles_goal_option constraint) | PASS |
+| 6 Back keeps answers | `onb` "keeps earlier answers when going back and forward" | PASS |
+| 7 Pace only when relevant | `onb` "skips the pace step for maintain goals", "requires a pace for lose or gain"; `draft.test.ts`; fixture case maintain with rate != 0. Browser: Fuel performance skips pace, step shows 5 of 5. | PASS |
+| 8 Consent before data | `onb` "sends nothing before the final save", "records consent with the save"; `apply_targets.test.sql` consent_required; `profiles_rls` #9-#15 (direct writes 42501). Browser: only `GET profiles` before Let's go. | PASS |
+| 9 Declining | `onb` "declining shows reconsider, sign out and delete account, with zero network calls". Browser: 3 actions, no calls, two-step delete confirm. | PASS |
+| 10 Withdrawable | `set` "notes when consent is off", "asks for consent first; declining keeps targets", "agreeing applies with give_consent true"; `profiles_rls` #17-#19. Browser: consent page inside the Edit sheet works, decline makes 0 calls. | PASS (with bugs 1 and 3 on that path) |
+| 11 Atomic save | `onb` "LET'S GO saves once", "a double tap makes one save", "save failures keep the answers"; `apply_targets.test.sql` rollback and single completion timestamp. Browser: 500 then retry succeeded, answers kept, 2 apply calls. | PASS |
+| 12 Minimum age 16 | `onb` "stops an under-16 user, stores nothing", "resets what the server already holds", "keeps a pending reset"; `api` fixture ages 15/16; `reset_onboarding.test.sql`. Browser: birth year 2015 shows "SEE YOU AT 16", reset RPC called once, "I typed the wrong year" returns to consent. | PASS |
+| 13 Plausible ranges | `onb` "shows inline range errors in the user units and blocks CONTINUE"; `validate.test.ts`; `aboutValidation.test.tsx`. Browser: 0, 1e9, -5, 1800, "abc", 20-digit values all blocked with the D4 copy. | PASS |
+| 14 Imperial entry | `onb` "converts imperial entry to metric for the save, and shows imperial everywhere after"; `units.test.ts`. Browser: 5 ft 5 in / 143.3 lb sent as 165.1 cm / 65 kg, pace 0.5 lb sent as 0.23, Settings shows "5 ft 5 in · 143.3 lb". | PASS |
+| 15 Units default | `tgt` defaultUnitsForRegion (US/LR/MM); `onb` "defaults units from the device region and converts what is typed", "metric is the default elsewhere". Browser: en-US starts imperial, round trip metric/imperial restores 5/5/143.3. | PASS |
+| 16 Minors and low-BMI guard | `onb` under 18 / low BMI / adult / "drops a stored Lose fat" (no BMI or weight-status word asserted); `tgt` isLoseGoalGuarded 17/18, BMI 18.4/18.5; `apply_targets_cases` lose_goal_unavailable. Browser: born 2009, Lose fat dashed with NOT AVAILABLE and the note. | PASS (nit: card drops its description, see N3) |
+| 17 Worked example | `tgt` exact numbers; fixture case. Browser: 1,330 / 104 / 129 / 44, maintenance 1,884, BMR 1,370 (female 1996, 165 cm, 65 kg, lightly active, lose 0.5). | PASS |
+| 18 Macro consistency | `tgt` "keeps macro energy within the tolerance for a grid of inputs"; `apply_targets_cases` macro_mismatch +-10/11 | PASS |
+| 19 Reveal shows the maths | `onb` "shows the targets and the maths in reading order"; `derive.test.ts`. Browser: rows 1,884 / -550 / 1,330 with "Rounded to the nearest 10 kcal". | PASS |
+| 20 Floor explained | `onb` "floor: states the minimum in plain language", "floor at or above maintenance uses the second message"; `tgt`; `apply_targets_cases` below_floor 1199/1499. Browser: female 152 cm, 48 kg, sedentary, custom 0.75 gives 1,200, SAFETY MINIMUM tag, C-f1 copy, "ABOUT 0.1 KG A WEEK AT THIS TARGET", "Deficit at the safety minimum -143". | PASS |
+| 21 Reveal actions | `onb` Let's go test; `adj` "opens without any network call", "edits the goal on a pushed page". Browser: Adjust opens with 0 network calls; Let's go lands on Today. | PASS |
+| 22 Manual calorie adjustment | `adj` floor snap + C-j4, 6,000 cap, protein cap message, "Use calculated"; `tgt` applyManualKcal/manualKcalBounds; `apply_targets_cases` above_cap 6000/6001. | PASS |
+| 23 No silent recalculation | `gate` "never changes stored targets with the passing of time"; `tgt` "does not change when the clock moves"; `apply_targets.test.sql` (no trigger or job on `daily_targets`). | PASS |
+| 24 Entry point in Settings | `set` "shows the stored numbers, inputs, tags and effective date", "is absent when the user has not onboarded". Browser: card matches D S9. | PASS |
+| 25 Preview before apply | `set` "starts inactive with no change, then previews old to new and applies", "cancelling or discarding makes no call". Browser: Apply inactive until a change; preview shows 1,330 -> 1,570 with maths; discard confirm works. | PASS |
+| 26 Applies from today | `tgt` localDateIn / targetForDate; `set` C-ed2 date line; `apply_targets.test.sql` timezone, same-day upsert, future rows. Browser: Today picks the right row for Pacific/Kiritimati, Pacific/Pago_Pago and Europe/Rome around the UTC date line. | PASS |
+| 27 Persistence across devices | `gate` "shows the stored server row on a new device without computing anything"; `daily_targets_rls.test.sql`. | PASS for rendering; true two-device sign-in MANUAL (needs two real sessions) |
+| 28 Offline during steps | `onb` "sends nothing before the final save". Browser: all steps and reveal worked with no calls. Browser with the whole context set offline: steps not yet visited rendered blank (web only, lazy route chunks, see bug 5). | PASS on native logic; web gap in bug 5 |
+| 29 Offline at save | `onb` offline/server/validation failure tests; `api.test.ts` toSaveFailure; `set` offline/server. Browser: aborted fetch gives "You're offline, so we couldn't save your plan yet. Your answers are still here." with TRY AGAIN, retry works. In the Edit sheet the message exists but is below the fold (bug 1). | PASS for onboarding; FAIL visibility in Settings sheet (bug 1) |
+| 30 Delete and export | `daily_targets_rls.test.sql` #13/#14 (cascade, other users untouched); `profiles_rls.test.sql` #24; export inventory in T2. Real `delete-account` edge function MANUAL (not runnable here); F15 does not exist yet. | PASS (schema); MANUAL (function) |
+| 31 Accessibility | `ui` roles, progressbar "Step n of 5", Notice live regions, Stepper adjustable, 56 pt buttons; NEW `touchTargets.test.tsx` (chips >= 44, RadioCard >= 64, stepper/close/back >= 44). Browser: radio state not exposed on web (bug 2). Screen reader output, AX5 / 200% Dynamic Type, iPhone SE width at AX5: MANUAL (no device, no screen reader here). | FAIL on web (bug 2); MANUAL for native screen readers and large text |
+| 32 Analytics | `onb` "emits one event per action with only enum properties", "records a declined consent"; `adj`, `set` event assertions; `analytics.test.ts` (shared and mobile) reject extra and numeric props. All 11 events are asserted somewhere. | PASS |
+| 33 Custom pace | `onb` custom pace block; `api` 0.009/0.01/1.5/1.51; `apply_targets_cases` rate cases. Browser: 0.01, 1.5 and "1,2" accepted; 0.009, 0, "abc", 1.6 blocked with "Enter a pace between 0.01 and 1.5 kg a week." | PASS |
+| 34 Above 0.75 | `onb` "0.75 is not amber, 0.76 is ... the user can still continue". Browser: 1.0 shows the amber outline and "Faster than we recommend..." as `role=alert aria-live=polite`, Continue still works, floor applies on top. Announcement heard: MANUAL. | PASS (announcement MANUAL) |
+| 35 0.75 Notice | `onb` "always shows the 0.75 recommendation"; `adj` "shows the 0.75 recommendation on the Pace page". Browser: shown on every pace screen (imperial reads "1.65 lb", see N2). | PASS |
+
+## Exploratory findings (real browser)
+
+Screenshots are in `/tmp/claude-0/qa-001/`. Walk: sign in -> consent -> about you -> goal -> activity -> pace -> game plan -> Adjust -> Let's go -> Today -> Settings -> Edit targets (activity) -> preview -> apply. Result: correct numbers everywhere (1,330 / 104 / 129 / 44 on the reveal, Today and Settings; after the activity edit 1,570 / 104 / 171 / 52), copy matches D4 on every screen compared, no page errors, no unexpected console errors (only the browser's own "Failed to load resource" for the deliberate 500 and aborted requests). No horizontal overflow at 320 px in light mode. Contrast looked fine in dark and light.
+
+What was checked and is fine: floor and custom-pace copy, SEE YOU AT 16 flow including the reset RPC, declined consent screen, save failure and retry on the reveal, timezone row selection, extremes in About you (0 kg, 0 cm, 1e9, negatives, letters, year 1800 and 9999), imperial round trip, units autosave in Settings ("1.1 lb a week"), Settings consent-off line, discard confirm.
+
+Not testable here: real offline (Playwright `setOffline` with `page.route` makes routed requests hang, so offline save was simulated by aborting the `apply_targets` request), midnight rollover (Playwright fake clock stalls the app; covered by unit tests of `localDateIn` and `targetForDate`), page reload on a deep route (the static `http.server` returns 404 for non-root paths, a harness limit, not a bug), Dynamic Type, real screen readers, haptics, Maestro flows (none present in `apps/mobile/.maestro/`, no simulator), real two-device sync.
+
+Screenshots worth a look: `01-consent`, `03-about-filled`, `07-plan`, `08-adjust`, `09-today`, `10-settings`, `21-pace-custom-1.0`, `26-custom-1.6-after-continue`, `30-under16`, `40-save-fail`, `51-floor-plan`, `90-guard-goal`, `111-consent-in-sheet`, `130-apply-fail`, `123-light-320-floor-plan`.
+
+## Bugs
+
+| # | Severity | Owner | Summary |
+|---|---|---|---|
+| 1 | major | mobile | Edit/Adjust sheet error and notice messages render below the fold, so the user sees no feedback. |
+| 2 | major | mobile | On web no radio (Choice chips, RadioCards) exposes its selected state (`aria-checked` missing). |
+| 3 | minor | mobile | Consent page opened inside the Edit sheet is titled "ABOUT YOU". |
+| 4 | minor | mobile | About 0.6 s blank screen after tapping I AGREE (route passes through `/onboarding/goal`). |
+| 5 | minor | mobile | Web: offline mid-flow, steps not yet visited render blank (lazy route chunks). |
+| 6 | minor | mobile | The Custom pace input is half hidden under the pinned footer right after selecting Custom. |
+| 7 | minor | mobile | A stored 0.5 kg/week pace shows as "Custom" in the Edit sheet once units are imperial. |
+
+**Bug 1 (major, mobile).** Steps: Settings > Edit targets > Activity > Moderately active > DONE; make `apply_targets` fail (500 or aborted); tap APPLY FROM TODAY. Same for: Edit targets with consent withdrawn > Apply > NO THANKS. Expected (C-ed7 / C-ed6, AC 29, AC 10): a visible inline notice "We couldn't save your new targets just now. Your changes are still here." Actual: the primary button turns to TRY AGAIN, but the notice is in the sheet's scroll content at y=996 on an 844 px viewport, outside the visible area and not scrolled into view (`130-apply-fail.png`). The consent-declined notice is the same. Screen reader users get the live region, sighted users get only the changed button label. On the onboarding reveal the notice sits above the footer and is visible (`40-save-fail.png`), so only the sheet is affected. Fix: pin notices above the sheet footer, or scroll them into view.
+
+**Bug 2 (major, mobile).** Steps: open the web build, tab to Units or Sex or any goal card; inspect the radios. Expected (D5, D7, AC 31): selected radio exposes `checked` (`aria-checked=true`). Actual: radios carry `role=radio` and a label but no `aria-checked` on any of them (`accessibilityState={{ checked }}` is dropped by react-native-web 0.21; `aria-disabled` does work). The selected chip is distinguished only by border weight and colour, which violates "colour is never the only signal" for the chips (cards also show a check icon). Native is covered by jest (`toBeChecked`); web is not. Marker test: `it.failing` in `apps/mobile/src/components/ui/touchTargets.test.tsx`, remove the marker when fixed. Fix: also pass `aria-checked` on the Pressable.
+
+**Bug 3 (minor, mobile).** Edit targets with consent off > Apply. Expected: the page title reflects the consent step. Actual: header reads "ABOUT YOU" with a back chevron (`111-consent-in-sheet.png`). The statement paragraph is also partly clipped behind the pinned buttons.
+
+**Bug 4 (minor, mobile).** Tap I AGREE on the consent screen. Expected: About you appears at once. Actual: the page is blank for about 0.6 s (measured 0 chars of text for ~600 ms, URL passes through `/onboarding/goal` then `/onboarding/about-you`). Other step transitions do not show this.
+
+**Bug 5 (minor, mobile).** Web only. Load About you, go offline, continue. Expected (AC 28): steps work offline. Actual: Goal worked (already loaded), Activity rendered blank because `activity-*.js` is a lazily loaded chunk that failed to fetch. Native bundles are not affected. Fix: prefetch the onboarding chunks, or disable async routes for the onboarding group.
+
+**Bug 6 (minor, mobile).** Pace step, tap the CUSTOM card. Expected (D5 2.4.11): the revealed input is visible. Actual: the input sits at y=734..786 under the footer at y=744, partly covered, and is not focused. It scrolls into view once clicked.
+
+**Bug 7 (minor, mobile).** Complete onboarding in metric with Moderate 0.5 kg, switch Units to Imperial in Settings, open Edit targets. Expected: the Pace row reads like the Settings card ("Moderate"). Actual: "Custom · 1.1 lb a week", because 0.5 kg does not match the imperial preset 0.45 kg. Apply stays inactive, so no data is changed.
+
+Nits (not counted): N1 the Stepper shows "1570" while everything else shows "1,570"; N2 the imperial recommendation reads "no more than 1.65 lb a week" (exact conversion of 0.75 kg, an odd number next to the 0.5 / 1 / 1.5 lb presets); N3 the unavailable Lose fat card drops its description instead of showing it muted (D2 S3); N4 the Sheet renders two nested `role=dialog` elements on web; N5 after CONTINUE with an invalid custom pace, focus lands on the CONTINUE button, not the invalid field (D2 says move to the first invalid field).
+
+## Tests added by QA
+
+`apps/mobile/src/components/ui/touchTargets.test.tsx` (6 tests): AC 31 touch targets (Choice chips >= 44, RadioCard >= 64 including unavailable, Stepper buttons and ListRow, Sheet Close and Back) and one `it.failing` marker for bug 2. All other ACs already had tests; no further gap was automatable.
+
+## Verdict
+
+Two major bugs (error feedback invisible in the Edit sheet, radio state not exposed on web). Everything else passes.
+
+QA: FAIL (7 bugs)
