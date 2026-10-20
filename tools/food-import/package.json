@@ -5,13 +5,16 @@
   "type": "module",
   "description": "Operator-run importer for USDA FoodData Central and Open Food Facts (spec 002, ADR 0007).",
   "scripts": {
-    "lint": "eslint src test",
+    "lint": "eslint src test scripts",
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
-    "food-import": "tsx src/cli.ts"
+    "food-import": "tsx src/cli.ts",
+    "test:pipeline": "vitest run --config vitest.pipeline.config.ts",
+    "test:streaming": "vitest run test/streaming.test.ts"
   },
   "dependencies": {
     "@ttp/shared": "workspace:*",
+    "pg": "^8.23.1",
     "stream-json": "^3.7.0",
     "uuid": "^14.0.0",
     "yauzl": "^3.4.0",
@@ -20,6 +23,7 @@
   "devDependencies": {
     "@eslint/js": "^9.39.0",
     "@types/node": "^26.6.5",
+    "@types/pg": "^8.23.1",
     "@types/yauzl": "^2.10.3",
     "eslint": "^9.39.0",
     "tsx": "^4.23.0",

@@ -28,6 +28,21 @@ describe('target safety (T5.2)', () => {
     expect(() => resolveTarget({ target: 'local', confirmRemote: REF }, {})).toThrow(TargetError);
   });
 
+  it('accepts a loopback override of the local URL and refuses any other host', () => {
+    const url = 'postgresql://postgres@127.0.0.1:54399/ttp';
+    const t = resolveTarget(
+      { target: 'local', confirmRemote: null },
+      { FOOD_IMPORT_LOCAL_DATABASE_URL: url },
+    );
+    expect(t).toEqual({ kind: 'local', connectionString: url, host: '127.0.0.1' });
+    expect(() =>
+      resolveTarget(
+        { target: 'local', confirmRemote: null },
+        { FOOD_IMPORT_LOCAL_DATABASE_URL: 'postgresql://postgres@10.0.0.5:5432/postgres' },
+      ),
+    ).toThrow(/non-loopback/);
+  });
+
   it('refuses a non-loopback host for the local target', () => {
     expect(() => assertLoopback('postgresql://postgres:postgres@10.0.0.5:54322/postgres')).toThrow(
       /non-loopback/,

@@ -1,0 +1,752 @@
+{
+  "SurveyFoods": [
+    {
+      "fdcId": 9000120,
+      "description": "Ham, prosciutto",
+      "dataType": "Survey (FNDDS)",
+      "publicationDate": "10/31/2024",
+      "foodNutrients": [
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1008,
+            "number": "208",
+            "name": "synthetic 208",
+            "rank": 1,
+            "unitName": "KCAL"
+          },
+          "amount": 233
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1003,
+            "number": "203",
+            "name": "synthetic 203",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 27
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1004,
+            "number": "204",
+            "name": "synthetic 204",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 13
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1005,
+            "number": "205",
+            "name": "synthetic 205",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 0.3
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1079,
+            "number": "291",
+            "name": "synthetic 291",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 0
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 2000,
+            "number": "269.3",
+            "name": "synthetic 269.3",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 0
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1258,
+            "number": "606",
+            "name": "synthetic 606",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 4.5
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1093,
+            "number": "307",
+            "name": "synthetic 307",
+            "rank": 1,
+            "unitName": "MG"
+          },
+          "amount": 2300
+        }
+      ],
+      "foodPortions": [
+        {
+          "portionDescription": "1 slice",
+          "gramWeight": 14,
+          "sequenceNumber": 1
+        }
+      ],
+      "foodCode": "28100100",
+      "x_synthetic": "golden-placeholder",
+      "x_note": "SYNTHETIC placeholder: approximate values written by hand, NOT USDA data. Replaced by pnpm food:cut-fixture."
+    },
+    {
+      "fdcId": 9000121,
+      "description": "Gnocchi, potato",
+      "dataType": "Survey (FNDDS)",
+      "publicationDate": "10/31/2024",
+      "foodNutrients": [
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1008,
+            "number": "208",
+            "name": "synthetic 208",
+            "rank": 1,
+            "unitName": "KCAL"
+          },
+          "amount": 133
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1003,
+            "number": "203",
+            "name": "synthetic 203",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 3
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1004,
+            "number": "204",
+            "name": "synthetic 204",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 0.8
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1005,
+            "number": "205",
+            "name": "synthetic 205",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 28
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1079,
+            "number": "291",
+            "name": "synthetic 291",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 1.5
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 2000,
+            "number": "269.3",
+            "name": "synthetic 269.3",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 0.8
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1258,
+            "number": "606",
+            "name": "synthetic 606",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 0.2
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1093,
+            "number": "307",
+            "name": "synthetic 307",
+            "rank": 1,
+            "unitName": "MG"
+          },
+          "amount": 350
+        }
+      ],
+      "foodPortions": [
+        {
+          "portionDescription": "1 cup",
+          "gramWeight": 140,
+          "sequenceNumber": 1
+        }
+      ],
+      "foodCode": "58100100",
+      "x_synthetic": "golden-placeholder",
+      "x_note": "SYNTHETIC placeholder: approximate values written by hand, NOT USDA data. Replaced by pnpm food:cut-fixture."
+    },
+    {
+      "fdcId": 9000122,
+      "description": "Risotto, with cheese",
+      "dataType": "Survey (FNDDS)",
+      "publicationDate": "10/31/2024",
+      "foodNutrients": [
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1008,
+            "number": "208",
+            "name": "synthetic 208",
+            "rank": 1,
+            "unitName": "KCAL"
+          },
+          "amount": 150
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1003,
+            "number": "203",
+            "name": "synthetic 203",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 3.2
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1004,
+            "number": "204",
+            "name": "synthetic 204",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 3.5
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1005,
+            "number": "205",
+            "name": "synthetic 205",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 26
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1079,
+            "number": "291",
+            "name": "synthetic 291",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 0.5
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 2000,
+            "number": "269.3",
+            "name": "synthetic 269.3",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 0.5
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1258,
+            "number": "606",
+            "name": "synthetic 606",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 1.8
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1093,
+            "number": "307",
+            "name": "synthetic 307",
+            "rank": 1,
+            "unitName": "MG"
+          },
+          "amount": 330
+        }
+      ],
+      "foodPortions": [
+        {
+          "portionDescription": "1 cup",
+          "gramWeight": 200,
+          "sequenceNumber": 1
+        }
+      ],
+      "foodCode": "58100200",
+      "x_synthetic": "golden-placeholder",
+      "x_note": "SYNTHETIC placeholder: approximate values written by hand, NOT USDA data. Replaced by pnpm food:cut-fixture."
+    },
+    {
+      "fdcId": 9000123,
+      "description": "Polenta",
+      "dataType": "Survey (FNDDS)",
+      "publicationDate": "10/31/2024",
+      "foodNutrients": [
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1008,
+            "number": "208",
+            "name": "synthetic 208",
+            "rank": 1,
+            "unitName": "KCAL"
+          },
+          "amount": 70
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1003,
+            "number": "203",
+            "name": "synthetic 203",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 1.5
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1004,
+            "number": "204",
+            "name": "synthetic 204",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 0.3
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1005,
+            "number": "205",
+            "name": "synthetic 205",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 15
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1079,
+            "number": "291",
+            "name": "synthetic 291",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 1
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 2000,
+            "number": "269.3",
+            "name": "synthetic 269.3",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 0.2
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1258,
+            "number": "606",
+            "name": "synthetic 606",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 0.05
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1093,
+            "number": "307",
+            "name": "synthetic 307",
+            "rank": 1,
+            "unitName": "MG"
+          },
+          "amount": 280
+        }
+      ],
+      "foodPortions": [
+        {
+          "portionDescription": "1 cup",
+          "gramWeight": 240,
+          "sequenceNumber": 1
+        }
+      ],
+      "foodCode": "58100300",
+      "x_synthetic": "golden-placeholder",
+      "x_note": "SYNTHETIC placeholder: approximate values written by hand, NOT USDA data. Replaced by pnpm food:cut-fixture."
+    },
+    {
+      "fdcId": 9000124,
+      "description": "Pizza, cheese, from restaurant or fast food, thin crust",
+      "dataType": "Survey (FNDDS)",
+      "publicationDate": "10/31/2024",
+      "foodNutrients": [
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1008,
+            "number": "208",
+            "name": "synthetic 208",
+            "rank": 1,
+            "unitName": "KCAL"
+          },
+          "amount": 266
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1003,
+            "number": "203",
+            "name": "synthetic 203",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 11.4
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1004,
+            "number": "204",
+            "name": "synthetic 204",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 10.4
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1005,
+            "number": "205",
+            "name": "synthetic 205",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 33
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1079,
+            "number": "291",
+            "name": "synthetic 291",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 2.1
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 2000,
+            "number": "269.3",
+            "name": "synthetic 269.3",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 3.6
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1258,
+            "number": "606",
+            "name": "synthetic 606",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 4.7
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1093,
+            "number": "307",
+            "name": "synthetic 307",
+            "rank": 1,
+            "unitName": "MG"
+          },
+          "amount": 598
+        }
+      ],
+      "foodPortions": [
+        {
+          "portionDescription": "1 slice",
+          "gramWeight": 107,
+          "sequenceNumber": 1
+        }
+      ],
+      "foodCode": "27546400",
+      "x_synthetic": "golden-placeholder",
+      "x_note": "SYNTHETIC placeholder: approximate values written by hand, NOT USDA data. Replaced by pnpm food:cut-fixture."
+    },
+    {
+      "fdcId": 9000125,
+      "description": "Biscotti",
+      "dataType": "Survey (FNDDS)",
+      "publicationDate": "10/31/2024",
+      "foodNutrients": [
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1008,
+            "number": "208",
+            "name": "synthetic 208",
+            "rank": 1,
+            "unitName": "KCAL"
+          },
+          "amount": 402
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1003,
+            "number": "203",
+            "name": "synthetic 203",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 8
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1004,
+            "number": "204",
+            "name": "synthetic 204",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 10
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1005,
+            "number": "205",
+            "name": "synthetic 205",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 70
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1079,
+            "number": "291",
+            "name": "synthetic 291",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 3
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 2000,
+            "number": "269.3",
+            "name": "synthetic 269.3",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 28
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1258,
+            "number": "606",
+            "name": "synthetic 606",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 3
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1093,
+            "number": "307",
+            "name": "synthetic 307",
+            "rank": 1,
+            "unitName": "MG"
+          },
+          "amount": 220
+        }
+      ],
+      "foodPortions": [
+        {
+          "portionDescription": "1 biscotto",
+          "gramWeight": 25,
+          "sequenceNumber": 1
+        }
+      ],
+      "foodCode": "53100200",
+      "x_synthetic": "golden-placeholder",
+      "x_note": "SYNTHETIC placeholder: approximate values written by hand, NOT USDA data. Replaced by pnpm food:cut-fixture."
+    },
+    {
+      "fdcId": 9000126,
+      "description": "Focaccia",
+      "dataType": "Survey (FNDDS)",
+      "publicationDate": "10/31/2024",
+      "foodNutrients": [
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1008,
+            "number": "208",
+            "name": "synthetic 208",
+            "rank": 1,
+            "unitName": "KCAL"
+          },
+          "amount": 256
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1003,
+            "number": "203",
+            "name": "synthetic 203",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 8.6
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1004,
+            "number": "204",
+            "name": "synthetic 204",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 6.5
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1005,
+            "number": "205",
+            "name": "synthetic 205",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 41
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1079,
+            "number": "291",
+            "name": "synthetic 291",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 2.2
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 2000,
+            "number": "269.3",
+            "name": "synthetic 269.3",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 1.5
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1258,
+            "number": "606",
+            "name": "synthetic 606",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 1.1
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1093,
+            "number": "307",
+            "name": "synthetic 307",
+            "rank": 1,
+            "unitName": "MG"
+          },
+          "amount": 560
+        }
+      ],
+      "foodPortions": [
+        {
+          "portionDescription": "1 piece",
+          "gramWeight": 60,
+          "sequenceNumber": 1
+        }
+      ],
+      "foodCode": "51100100",
+      "x_synthetic": "golden-placeholder",
+      "x_note": "SYNTHETIC placeholder: approximate values written by hand, NOT USDA data. Replaced by pnpm food:cut-fixture."
+    }
+  ],
+  "_fixture": {
+    "synthetic": true,
+    "upstreamRelease": "synthetic placeholders for FNDDS 2021-2023 (10/2024)",
+    "cutDate": "2026-10-20",
+    "licence": "Synthetic data written for this repository (see LICENCES.md). Not derived from any upstream database."
+  }
+}

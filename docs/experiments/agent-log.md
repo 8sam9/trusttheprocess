@@ -30,6 +30,7 @@ One row per pipeline stage. "Rework" = times the stage was re-run because a late
 | 2026-10-20 | 002a food DB (USDA core) | mobile-engineer → M1 food-data access module | sonnet | 4m43s | ~71k | 0 | 0 | 304 mobile tests (29 new incl. architecture grep); surfaced 3 RPC contract needs, relayed to the parallel SQL agent mid-run |
 | 2026-10-20 | 002a food DB (USDA core) | backend-engineer → B1–B2 schema, RLS, recompute_canonical, read RPCs | sonnet | 7m22s | ~133k | 0 | 0 | 318 pgTAP ok (163 new) on rebuilt PG16 stand-in; matched M1's contract; real Supabase PG17 only in CI |
 | 2026-10-20 | 002a food DB (USDA core) | backend-engineer → B3–B5 importer scaffold, rules, USDA readers | sonnet | 17m51s | ~176k | 0 | 0 | 122 tests; 50k-record streaming test flat at ~13 MB heap; all USDA shapes synthetic (H1); one mobile test flake under CPU load |
+| 2026-10-20 | 002a food DB (USDA core) | backend-engineer → B6–B8 engine, fixtures, golden list, cut-fixture, CI job, SETUP docs, PRODUCT_SPEC fix | sonnet | 31m29s | ~329k | 0 | 0 | 147 unit + 32 pipeline tests on stand-in, 318 pgTAP; 127 golden entries (25 IT) all synthetic until human runs cut-fixture (H1); size estimate 4.7× low on fixture (B12 calibrates); CI/gitleaks/PG17 untested here |
 
 ## Feature-level summary
 | Feature | Total time | Total tokens | Rework loops | Escaped bugs (30d) | Human time | Verdict |

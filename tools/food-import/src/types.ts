@@ -54,7 +54,9 @@ export interface FoodRef {
 /** What the normaliser decides for one upstream record. Rejected rows carry no values (never stored). */
 export type FoodOutcome =
   | { kind: 'candidate'; food: NormalisedFood }
-  | { kind: 'rejected'; ref: FoodRef; reason: RejectReason };
+  | { kind: 'rejected'; ref: FoodRef; reason: RejectReason }
+  /** Not stored and not a rule failure: selection (market, name language, discontinued, ...). Counted by reason. */
+  | { kind: 'skipped'; ref: FoodRef | null; reason: string };
 
 /** A record that did not match the pinned upstream shape; counted as `parse_error` (fails the run above 1%). */
 export interface ParseFailure {

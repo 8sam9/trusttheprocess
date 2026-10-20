@@ -5,6 +5,8 @@
 
 export const LOCAL_DATABASE_URL = 'postgresql://postgres:postgres@127.0.0.1:54322/postgres';
 export const REMOTE_ENV_VAR = 'FOOD_IMPORT_DATABASE_URL';
+/** Optional override of the local URL (for example a different port); still must be a loopback host. */
+export const LOCAL_ENV_VAR = 'FOOD_IMPORT_LOCAL_DATABASE_URL';
 export const IMPORTER_ROLE = 'food_importer';
 
 export class TargetError extends Error {
@@ -106,8 +108,13 @@ export function resolveTarget(
     if (opts.confirmRemote !== null) {
       throw new TargetError('--confirm-remote only makes sense with --target remote');
     }
-    assertLoopback(LOCAL_DATABASE_URL);
-    return { kind: 'local', connectionString: LOCAL_DATABASE_URL, host: '127.0.0.1' };
+    const local = env[LOCAL_ENV_VAR] || LOCAL_DATABASE_URL;
+    assertLoopback(local);
+    return {
+      kind: 'local',
+      connectionString: local,
+      host: parseUrl(local, LOCAL_ENV_VAR).hostname,
+    };
   }
 
   const raw = env[REMOTE_ENV_VAR];

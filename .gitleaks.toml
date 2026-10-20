@@ -1,0 +1,10 @@
+# Secrets scan configuration (CI step "Secrets scan (gitleaks)", spec 002 AC 40).
+title = "TrustTheProcess gitleaks config"
+
+[extend]
+useDefault = true
+
+# Fake credentials that tests need in order to prove that URLs are parsed and redacted. They are not secrets.
+[allowlist]
+description = "fake passwords used by tools/food-import tests"
+regexes = ['''s3cret''', '''hunter2''']

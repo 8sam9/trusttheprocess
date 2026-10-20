@@ -128,8 +128,8 @@ function parseRows(data: unknown): FoodRow[] {
 /** Rows by id, hidden ones included (a favourite or diary link keeps working). Empty input makes no call. */
 export async function getFoods(ids: readonly string[]): Promise<FoodRow[]> {
   if (ids.length === 0) return [];
-  const args = parseArgs(GetFoodsArgs, { p_ids: [...ids] });
-  return parseRows(await callRpc('get_foods', { ...args, p_include_off: includeOff }));
+  const args = parseArgs(GetFoodsArgs, { p_ids: [...ids], p_include_off: includeOff });
+  return parseRows(await callRpc('get_foods', args));
 }
 
 /**
@@ -139,8 +139,11 @@ export async function getFoods(ids: readonly string[]): Promise<FoodRow[]> {
 export async function lookupBarcode(raw: string): Promise<FoodRow | null> {
   const gtin = normaliseGtin(raw);
   if (!gtin.ok || gtin.restricted) return null;
-  const args = parseArgs(LookupBarcodeArgs, { p_gtin14: gtin.gtin14 });
-  const rows = parseRows(await callRpc('lookup_barcode', { ...args, p_include_off: includeOff }));
+  const args = parseArgs(LookupBarcodeArgs, {
+    p_gtin14: gtin.gtin14,
+    p_include_off: includeOff,
+  });
+  const rows = parseRows(await callRpc('lookup_barcode', args));
   return rows[0] ?? null;
 }
 
@@ -149,6 +152,7 @@ export async function searchFoods(query: string, limit?: number): Promise<FoodRo
   const args = parseArgs(SearchFoodsArgs, {
     p_query: query,
     ...(limit === undefined ? {} : { p_limit: limit }),
+    p_include_off: includeOff,
   });
-  return parseRows(await callRpc('search_foods', { ...args, p_include_off: includeOff }));
+  return parseRows(await callRpc('search_foods', args));
 }

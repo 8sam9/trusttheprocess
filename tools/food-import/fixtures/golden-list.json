@@ -1,0 +1,1054 @@
+[
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "1123",
+    "referenceName": "Egg, whole, raw, fresh",
+    "kcalRange": [122, 164],
+    "expectedServingLabel": "1 large",
+    "expectedServingGrams": [35, 65]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "9040",
+    "referenceName": "Bananas, raw",
+    "kcalRange": [76, 102],
+    "expectedServingLabel": "1 medium",
+    "expectedServingGrams": [82.6, 153.4]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "20044",
+    "referenceName": "Rice, white, long-grain, regular, enriched, cooked",
+    "kcalRange": [110, 150],
+    "expectedServingLabel": "1 cup",
+    "expectedServingGrams": [110.6, 205.4]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "5062",
+    "referenceName": "Chicken, broilers or fryers, breast, meat only, raw",
+    "kcalRange": [102, 138],
+    "expectedServingLabel": "1 breast",
+    "expectedServingGrams": [120.4, 223.6]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "1077",
+    "referenceName": "Milk, whole, 3.25% milkfat, with added vitamin D",
+    "kcalRange": [52, 70],
+    "expectedServingLabel": "1 cup",
+    "expectedServingGrams": [170.8, 317.2]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "4053",
+    "referenceName": "Oil, olive, salad or cooking",
+    "kcalRange": [751, 1017],
+    "expectedServingLabel": "1 tbsp",
+    "expectedServingGrams": [9.5, 17.6],
+    "group": "italian"
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "8120",
+    "referenceName": "Cereals, oats, regular and quick, not fortified, dry",
+    "kcalRange": [322, 436],
+    "expectedServingLabel": "1 cup",
+    "expectedServingGrams": [56.7, 105.3]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "18069",
+    "referenceName": "Bread, white, commercially prepared (includes soft bread crumbs)",
+    "kcalRange": [226, 306],
+    "expectedServingLabel": "1 slice",
+    "expectedServingGrams": [17.5, 32.5]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "9003",
+    "referenceName": "Apples, raw, with skin",
+    "kcalRange": [44, 60],
+    "expectedServingLabel": "1 medium",
+    "expectedServingGrams": [127.4, 236.6]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "1009",
+    "referenceName": "Cheese, cheddar",
+    "kcalRange": [343, 463],
+    "expectedServingLabel": "1 slice",
+    "expectedServingGrams": [19.6, 36.4]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "1001",
+    "referenceName": "Butter, salted",
+    "kcalRange": [609, 825],
+    "expectedServingLabel": "1 tbsp",
+    "expectedServingGrams": [9.9, 18.5]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "15236",
+    "referenceName": "Fish, salmon, Atlantic, farmed, raw",
+    "kcalRange": [177, 239],
+    "expectedServingLabel": "1 fillet",
+    "expectedServingGrams": [138.6, 257.4]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "11352",
+    "referenceName": "Potatoes, flesh and skin, raw",
+    "kcalRange": [65, 89],
+    "expectedServingLabel": "1 medium",
+    "expectedServingGrams": [149.1, 276.9]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "11090",
+    "referenceName": "Broccoli, raw",
+    "kcalRange": [26, 42],
+    "expectedServingLabel": "1 cup, chopped",
+    "expectedServingGrams": [63.7, 118.3]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "16070",
+    "referenceName": "Lentils, mature seeds, cooked, boiled, without salt",
+    "kcalRange": [99, 133],
+    "expectedServingLabel": "1 cup",
+    "expectedServingGrams": [138.6, 257.4]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "16098",
+    "referenceName": "Peanut butter, smooth style, with salt",
+    "kcalRange": [500, 676],
+    "expectedServingLabel": "2 tbsp",
+    "expectedServingGrams": [22.4, 41.6]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "14209",
+    "referenceName": "Beverages, coffee, brewed, prepared with tap water",
+    "kcalRange": [0, 9],
+    "expectedServingLabel": "1 cup",
+    "expectedServingGrams": [165.9, 308.1]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "11529",
+    "referenceName": "Tomatoes, red, ripe, raw, year round average",
+    "kcalRange": [10, 26],
+    "expectedServingLabel": "1 medium",
+    "expectedServingGrams": [86.1, 159.9]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "11124",
+    "referenceName": "Carrots, raw",
+    "kcalRange": [33, 49],
+    "expectedServingLabel": "1 medium",
+    "expectedServingGrams": [42.7, 79.3]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "11282",
+    "referenceName": "Onions, raw",
+    "kcalRange": [32, 48],
+    "expectedServingLabel": "1 medium",
+    "expectedServingGrams": [77, 143]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "11457",
+    "referenceName": "Spinach, raw",
+    "kcalRange": [15, 31],
+    "expectedServingLabel": "1 cup",
+    "expectedServingGrams": [21, 39]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "11205",
+    "referenceName": "Cucumber, with peel, raw",
+    "kcalRange": [7, 23],
+    "expectedServingLabel": "1 cup, sliced",
+    "expectedServingGrams": [72.8, 135.2]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "11251",
+    "referenceName": "Lettuce, cos or romaine, raw",
+    "kcalRange": [9, 25],
+    "expectedServingLabel": "1 cup, shredded",
+    "expectedServingGrams": [32.9, 61.1]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "9037",
+    "referenceName": "Avocados, raw, all commercial varieties",
+    "kcalRange": [136, 184],
+    "expectedServingLabel": "1 fruit",
+    "expectedServingGrams": [140.7, 261.3]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "9200",
+    "referenceName": "Oranges, raw, all commercial varieties",
+    "kcalRange": [39, 55],
+    "expectedServingLabel": "1 fruit",
+    "expectedServingGrams": [91.7, 170.3]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "9316",
+    "referenceName": "Strawberries, raw",
+    "kcalRange": [24, 40],
+    "expectedServingLabel": "1 cup, whole",
+    "expectedServingGrams": [100.8, 187.2]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "9050",
+    "referenceName": "Blueberries, raw",
+    "kcalRange": [48, 66],
+    "expectedServingLabel": "1 cup",
+    "expectedServingGrams": [103.6, 192.4]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "9132",
+    "referenceName": "Grapes, red or green (European type, such as Thompson seedless), raw",
+    "kcalRange": [59, 79],
+    "expectedServingLabel": "1 cup",
+    "expectedServingGrams": [105.7, 196.3]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "9266",
+    "referenceName": "Pineapple, raw, all varieties",
+    "kcalRange": [42, 58],
+    "expectedServingLabel": "1 cup, chunks",
+    "expectedServingGrams": [115.5, 214.5]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "9326",
+    "referenceName": "Watermelon, raw",
+    "kcalRange": [22, 38],
+    "expectedServingLabel": "1 cup, diced",
+    "expectedServingGrams": [106.4, 197.6]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "9176",
+    "referenceName": "Mangos, raw",
+    "kcalRange": [51, 69],
+    "expectedServingLabel": "1 cup, pieces",
+    "expectedServingGrams": [115.5, 214.5]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "9252",
+    "referenceName": "Pears, raw",
+    "kcalRange": [48, 66],
+    "expectedServingLabel": "1 medium",
+    "expectedServingGrams": [124.6, 231.4]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "9236",
+    "referenceName": "Peaches, yellow, raw",
+    "kcalRange": [31, 47],
+    "expectedServingLabel": "1 medium",
+    "expectedServingGrams": [105, 195]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "9148",
+    "referenceName": "Kiwifruit, green, raw",
+    "kcalRange": [52, 70],
+    "expectedServingLabel": "1 fruit",
+    "expectedServingGrams": [48.3, 89.7]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "11507",
+    "referenceName": "Sweet potato, raw, unprepared",
+    "kcalRange": [73, 99],
+    "expectedServingLabel": "1 medium",
+    "expectedServingGrams": [91, 169]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "11167",
+    "referenceName": "Corn, sweet, yellow, raw",
+    "kcalRange": [73, 99],
+    "expectedServingLabel": "1 ear",
+    "expectedServingGrams": [63, 117]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "11304",
+    "referenceName": "Peas, green, raw",
+    "kcalRange": [69, 93],
+    "expectedServingLabel": "1 cup",
+    "expectedServingGrams": [101.5, 188.5]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "11135",
+    "referenceName": "Cauliflower, raw",
+    "kcalRange": [17, 33],
+    "expectedServingLabel": "1 cup",
+    "expectedServingGrams": [74.9, 139.1]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "11821",
+    "referenceName": "Peppers, sweet, red, raw",
+    "kcalRange": [23, 39],
+    "expectedServingLabel": "1 medium",
+    "expectedServingGrams": [83.3, 154.7]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "11260",
+    "referenceName": "Mushrooms, white, raw",
+    "kcalRange": [14, 30],
+    "expectedServingLabel": "1 cup",
+    "expectedServingGrams": [49, 91]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "11215",
+    "referenceName": "Garlic, raw",
+    "kcalRange": [127, 171],
+    "expectedServingLabel": "1 clove",
+    "expectedServingGrams": [2.1, 3.9]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "11109",
+    "referenceName": "Cabbage, raw",
+    "kcalRange": [17, 33],
+    "expectedServingLabel": "1 cup, chopped",
+    "expectedServingGrams": [62.3, 115.7]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "11143",
+    "referenceName": "Celery, raw",
+    "kcalRange": [6, 22],
+    "expectedServingLabel": "1 stalk",
+    "expectedServingGrams": [28, 52]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "23557",
+    "referenceName": "Beef, ground, 85% lean meat / 15% fat, raw",
+    "kcalRange": [183, 247],
+    "expectedServingLabel": "3 oz",
+    "expectedServingGrams": [59.5, 110.5]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "10862",
+    "referenceName": "Pork, cured, bacon, cooked, pan-fried",
+    "kcalRange": [460, 622],
+    "expectedServingLabel": "1 slice",
+    "expectedServingGrams": [5.6, 10.4]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "5096",
+    "referenceName": "Chicken, broilers or fryers, thigh, meat only, raw",
+    "kcalRange": [103, 139],
+    "expectedServingLabel": "1 thigh",
+    "expectedServingGrams": [36.4, 67.6]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "5305",
+    "referenceName": "Turkey, ground, raw",
+    "kcalRange": [126, 170],
+    "expectedServingLabel": "3 oz",
+    "expectedServingGrams": [59.5, 110.5]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "15121",
+    "referenceName": "Fish, tuna, light, canned in water, drained solids",
+    "kcalRange": [99, 133],
+    "expectedServingLabel": "1 can",
+    "expectedServingGrams": [99.4, 184.6]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "15270",
+    "referenceName": "Crustaceans, shrimp, mixed species, raw",
+    "kcalRange": [72, 98],
+    "expectedServingLabel": "3 oz",
+    "expectedServingGrams": [59.5, 110.5]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "15015",
+    "referenceName": "Fish, cod, Atlantic, raw",
+    "kcalRange": [70, 94],
+    "expectedServingLabel": "1 fillet",
+    "expectedServingGrams": [161.7, 300.3]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "1124",
+    "referenceName": "Egg, white, raw, fresh",
+    "kcalRange": [44, 60],
+    "expectedServingLabel": "1 large",
+    "expectedServingGrams": [23.1, 42.9]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "1116",
+    "referenceName": "Yogurt, plain, whole milk",
+    "kcalRange": [52, 70],
+    "expectedServingLabel": "1 container",
+    "expectedServingGrams": [119, 221]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "1256",
+    "referenceName": "Yogurt, Greek, plain, nonfat",
+    "kcalRange": [50, 68],
+    "expectedServingLabel": "1 container",
+    "expectedServingGrams": [119, 221]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "1085",
+    "referenceName": "Milk, nonfat, fluid, with added vitamin A and vitamin D (fat free or skim)",
+    "kcalRange": [26, 42],
+    "expectedServingLabel": "1 cup",
+    "expectedServingGrams": [171.5, 318.5]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "1078",
+    "referenceName": "Milk, reduced fat, fluid, 2% milkfat, with added vitamin A and vitamin D",
+    "kcalRange": [42, 58],
+    "expectedServingLabel": "1 cup",
+    "expectedServingGrams": [170.8, 317.2]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "1053",
+    "referenceName": "Cream, fluid, heavy whipping",
+    "kcalRange": [289, 391],
+    "expectedServingLabel": "1 tbsp",
+    "expectedServingGrams": [10.4, 19.4]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "1017",
+    "referenceName": "Cheese, cream",
+    "kcalRange": [291, 393],
+    "expectedServingLabel": "1 tbsp",
+    "expectedServingGrams": [10.1, 18.9]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "1013",
+    "referenceName": "Cheese, cottage, lowfat, 2% milkfat",
+    "kcalRange": [69, 93],
+    "expectedServingLabel": "1 cup",
+    "expectedServingGrams": [158.2, 293.8]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "1019",
+    "referenceName": "Cheese, feta",
+    "kcalRange": [224, 304],
+    "expectedServingLabel": "1 oz",
+    "expectedServingGrams": [19.8, 36.9]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "1040",
+    "referenceName": "Cheese, swiss",
+    "kcalRange": [323, 437],
+    "expectedServingLabel": "1 slice",
+    "expectedServingGrams": [19.6, 36.4]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "20040",
+    "referenceName": "Rice, brown, long-grain, cooked",
+    "kcalRange": [95, 129],
+    "expectedServingLabel": "1 cup",
+    "expectedServingGrams": [136.5, 253.5]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "20137",
+    "referenceName": "Quinoa, cooked",
+    "kcalRange": [102, 138],
+    "expectedServingLabel": "1 cup",
+    "expectedServingGrams": [129.5, 240.5]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "20028",
+    "referenceName": "Couscous, cooked",
+    "kcalRange": [95, 129],
+    "expectedServingLabel": "1 cup",
+    "expectedServingGrams": [109.9, 204.1]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "18064",
+    "referenceName": "Bread, whole-wheat, commercially prepared",
+    "kcalRange": [214, 290],
+    "expectedServingLabel": "1 slice",
+    "expectedServingGrams": [19.6, 36.4]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "18007",
+    "referenceName": "Bagels, plain, enriched, with calcium propionate (includes onion, poppy, sesame)",
+    "kcalRange": [218, 296],
+    "expectedServingLabel": "1 bagel",
+    "expectedServingGrams": [73.5, 136.5]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "11674",
+    "referenceName": "Potatoes, boiled, cooked in skin, flesh, without salt",
+    "kcalRange": [74, 100],
+    "expectedServingLabel": "1 medium",
+    "expectedServingGrams": [95.2, 176.8]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "16015",
+    "referenceName": "Beans, black, mature seeds, cooked, boiled, without salt",
+    "kcalRange": [112, 152],
+    "expectedServingLabel": "1 cup",
+    "expectedServingGrams": [120.4, 223.6]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "12061",
+    "referenceName": "Nuts, almonds",
+    "kcalRange": [492, 666],
+    "expectedServingLabel": "1 oz",
+    "expectedServingGrams": [19.8, 36.9]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "12155",
+    "referenceName": "Nuts, walnuts, english",
+    "kcalRange": [556, 752],
+    "expectedServingLabel": "1 oz",
+    "expectedServingGrams": [19.8, 36.9]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "12087",
+    "referenceName": "Nuts, cashew nuts, raw",
+    "kcalRange": [470, 636],
+    "expectedServingLabel": "1 oz",
+    "expectedServingGrams": [19.8, 36.9]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "12006",
+    "referenceName": "Seeds, chia seeds, dried",
+    "kcalRange": [413, 559],
+    "expectedServingLabel": "1 oz",
+    "expectedServingGrams": [19.8, 36.9]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "12220",
+    "referenceName": "Seeds, flaxseed",
+    "kcalRange": [454, 614],
+    "expectedServingLabel": "1 tbsp",
+    "expectedServingGrams": [7.2, 13.4]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "19296",
+    "referenceName": "Honey",
+    "kcalRange": [258, 350],
+    "expectedServingLabel": "1 tbsp",
+    "expectedServingGrams": [14.7, 27.3]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "19335",
+    "referenceName": "Sugars, granulated",
+    "kcalRange": [329, 445],
+    "expectedServingLabel": "1 tsp",
+    "expectedServingGrams": [2.9, 5.5]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "11935",
+    "referenceName": "Catsup",
+    "kcalRange": [86, 116],
+    "expectedServingLabel": "1 tbsp",
+    "expectedServingGrams": [11.9, 22.1]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "4025",
+    "referenceName": "Salad dressing, mayonnaise, regular",
+    "kcalRange": [578, 782],
+    "expectedServingLabel": "1 tbsp",
+    "expectedServingGrams": [9.7, 17.9]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "16424",
+    "referenceName": "Soy sauce made from soy and wheat (shoyu)",
+    "kcalRange": [45, 61],
+    "expectedServingLabel": "1 tbsp",
+    "expectedServingGrams": [11.2, 20.8]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "16158",
+    "referenceName": "Hummus, commercial",
+    "kcalRange": [141, 191],
+    "expectedServingLabel": "1 tbsp",
+    "expectedServingGrams": [10.5, 19.5]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "16126",
+    "referenceName": "Tofu, raw, firm, prepared with calcium sulfate",
+    "kcalRange": [122, 166],
+    "expectedServingLabel": "1 piece",
+    "expectedServingGrams": [56.7, 105.3]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "19904",
+    "referenceName": "Candies, chocolate, dark, 70-85% cacao solids",
+    "kcalRange": [508, 688],
+    "expectedServingLabel": "1 oz",
+    "expectedServingGrams": [19.8, 36.9]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "19095",
+    "referenceName": "Ice creams, vanilla",
+    "kcalRange": [176, 238],
+    "expectedServingLabel": "0.5 cup",
+    "expectedServingGrams": [46.2, 85.8]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "19411",
+    "referenceName": "Snacks, potato chips, plain, salted",
+    "kcalRange": [456, 616],
+    "expectedServingLabel": "1 oz",
+    "expectedServingGrams": [19.8, 36.9]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "14429",
+    "referenceName": "Beverages, water, tap, drinking",
+    "kcalRange": [0, 8],
+    "expectedServingLabel": "1 cup",
+    "expectedServingGrams": [165.9, 308.1]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "14400",
+    "referenceName": "Beverages, carbonated, cola, regular",
+    "kcalRange": [33, 49],
+    "expectedServingLabel": "1 can",
+    "expectedServingGrams": [257.6, 478.4]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "14412",
+    "referenceName": "Beverages, carbonated, low calorie, cola or pepper-type, with aspartame, without caffeine",
+    "kcalRange": [0, 8],
+    "expectedServingLabel": "1 can",
+    "expectedServingGrams": [248.5, 461.5]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "9206",
+    "referenceName": "Orange juice, raw (includes from concentrate)",
+    "kcalRange": [37, 53],
+    "expectedServingLabel": "1 cup",
+    "expectedServingGrams": [173.6, 322.4]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "9016",
+    "referenceName": "Apple juice, canned or bottled, unsweetened, without added ascorbic acid",
+    "kcalRange": [38, 54],
+    "expectedServingLabel": "1 cup",
+    "expectedServingGrams": [173.6, 322.4]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "14003",
+    "referenceName": "Alcoholic beverage, beer, regular, all",
+    "kcalRange": [35, 51],
+    "expectedServingLabel": "1 can",
+    "expectedServingGrams": [249.2, 462.8]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "14096",
+    "referenceName": "Alcoholic beverage, wine, table, red",
+    "kcalRange": [72, 98],
+    "expectedServingLabel": "1 glass",
+    "expectedServingGrams": [102.9, 191.1]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "5009",
+    "referenceName": "Chicken, broilers or fryers, breast, meat only, cooked, roasted",
+    "kcalRange": [140, 190],
+    "expectedServingLabel": "1 breast",
+    "expectedServingGrams": [120.4, 223.6]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "1129",
+    "referenceName": "Egg, whole, cooked, hard-boiled",
+    "kcalRange": [132, 178],
+    "expectedServingLabel": "1 large",
+    "expectedServingGrams": [35, 65]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "8121",
+    "referenceName": "Cereals, oats, regular and quick and instant, unenriched, cooked with water (includes boiling and microwaving), without salt",
+    "kcalRange": [60, 82],
+    "expectedServingLabel": "1 cup",
+    "expectedServingGrams": [163.8, 304.2]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "11210",
+    "referenceName": "Eggplant, raw",
+    "kcalRange": [17, 33],
+    "expectedServingLabel": "1 cup, cubes",
+    "expectedServingGrams": [57.4, 106.6]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "11080",
+    "referenceName": "Beets, raw",
+    "kcalRange": [35, 51],
+    "expectedServingLabel": "1 cup",
+    "expectedServingGrams": [95.2, 176.8]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "11011",
+    "referenceName": "Asparagus, raw",
+    "kcalRange": [12, 28],
+    "expectedServingLabel": "1 spear",
+    "expectedServingGrams": [11.2, 20.8]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "11052",
+    "referenceName": "Beans, snap, green, raw",
+    "kcalRange": [23, 39],
+    "expectedServingLabel": "1 cup",
+    "expectedServingGrams": [70, 130]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "11252",
+    "referenceName": "Lettuce, iceberg (includes crisphead types), raw",
+    "kcalRange": [6, 22],
+    "expectedServingLabel": "1 cup, shredded",
+    "expectedServingGrams": [50.4, 93.6]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "10093",
+    "referenceName": "Pork, fresh, loin, whole, separable lean and fat, raw",
+    "kcalRange": [168, 228],
+    "expectedServingLabel": "3 oz",
+    "expectedServingGrams": [59.5, 110.5]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "23560",
+    "referenceName": "Beef, ground, 95% lean meat / 5% fat, raw",
+    "kcalRange": [116, 158],
+    "expectedServingLabel": "3 oz",
+    "expectedServingGrams": [59.5, 110.5]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "9021",
+    "referenceName": "Apricots, raw",
+    "kcalRange": [40, 56],
+    "expectedServingLabel": "1 fruit",
+    "expectedServingGrams": [24.5, 45.5]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "9087",
+    "referenceName": "Dates, deglet noor",
+    "kcalRange": [240, 324],
+    "expectedServingLabel": "1 date",
+    "expectedServingGrams": [5, 9.2]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "9181",
+    "referenceName": "Melons, cantaloupe, raw",
+    "kcalRange": [26, 42],
+    "expectedServingLabel": "1 cup, cubes",
+    "expectedServingGrams": [112, 208]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "9111",
+    "referenceName": "Grapefruit, raw, pink and red, all areas",
+    "kcalRange": [34, 50],
+    "expectedServingLabel": "1 fruit",
+    "expectedServingGrams": [215.6, 400.4]
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "20121",
+    "referenceName": "Pasta, cooked, enriched, without added salt",
+    "kcalRange": [134, 182],
+    "expectedServingLabel": "1 cup",
+    "expectedServingGrams": [86.8, 161.2],
+    "group": "italian"
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "20125",
+    "referenceName": "Spaghetti, whole-wheat, cooked",
+    "kcalRange": [105, 143],
+    "expectedServingLabel": "1 cup",
+    "expectedServingGrams": [98, 182],
+    "group": "italian"
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "20420",
+    "referenceName": "Pasta, dry, enriched",
+    "kcalRange": [315, 427],
+    "expectedServingLabel": "2 oz",
+    "expectedServingGrams": [39.2, 72.8],
+    "group": "italian"
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "1028",
+    "referenceName": "Cheese, mozzarella, whole milk",
+    "kcalRange": [255, 345],
+    "expectedServingLabel": "1 slice",
+    "expectedServingGrams": [19.6, 36.4],
+    "group": "italian"
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "1033",
+    "referenceName": "Cheese, parmesan, hard",
+    "kcalRange": [333, 451],
+    "expectedServingLabel": "1 tbsp",
+    "expectedServingGrams": [3.5, 6.5],
+    "group": "italian"
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "1036",
+    "referenceName": "Cheese, ricotta, whole milk",
+    "kcalRange": [148, 200],
+    "expectedServingLabel": "1 cup",
+    "expectedServingGrams": [172.2, 319.8],
+    "group": "italian"
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "1035",
+    "referenceName": "Cheese, provolone",
+    "kcalRange": [298, 404],
+    "expectedServingLabel": "1 slice",
+    "expectedServingGrams": [19.6, 36.4],
+    "group": "italian"
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "7071",
+    "referenceName": "Salami, Italian, pork",
+    "kcalRange": [361, 489],
+    "expectedServingLabel": "1 slice",
+    "expectedServingGrams": [6.3, 11.7],
+    "group": "italian"
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "7023",
+    "referenceName": "Mortadella, beef, pork",
+    "kcalRange": [264, 358],
+    "expectedServingLabel": "1 slice",
+    "expectedServingGrams": [10.5, 19.5],
+    "group": "italian",
+    "optional": true
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "11547",
+    "referenceName": "Tomato products, canned, puree, without salt added",
+    "kcalRange": [30, 46],
+    "expectedServingLabel": "1 cup",
+    "expectedServingGrams": [175, 325],
+    "group": "italian"
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "6169",
+    "referenceName": "Sauce, pesto, ready-to-serve",
+    "kcalRange": [355, 481],
+    "expectedServingLabel": "1 tbsp",
+    "expectedServingGrams": [11.2, 20.8],
+    "group": "italian",
+    "optional": true
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "14214",
+    "referenceName": "Beverages, coffee, brewed, espresso, restaurant-prepared",
+    "kcalRange": [1, 17],
+    "expectedServingLabel": "1 shot",
+    "expectedServingGrams": [21, 39],
+    "group": "italian"
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "11959",
+    "referenceName": "Arugula, raw",
+    "kcalRange": [17, 33],
+    "expectedServingLabel": "1 cup",
+    "expectedServingGrams": [14, 26],
+    "group": "italian"
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "11477",
+    "referenceName": "Squash, summer, zucchini, includes skin, raw",
+    "kcalRange": [9, 25],
+    "expectedServingLabel": "1 medium",
+    "expectedServingGrams": [137.2, 254.8],
+    "group": "italian"
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "16038",
+    "referenceName": "Beans, white, mature seeds, canned",
+    "kcalRange": [97, 131],
+    "expectedServingLabel": "1 cup",
+    "expectedServingGrams": [183.4, 340.6],
+    "group": "italian",
+    "optional": true
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "16057",
+    "referenceName": "Chickpeas (garbanzo beans, bengal gram), mature seeds, cooked, boiled, without salt",
+    "kcalRange": [139, 189],
+    "expectedServingLabel": "1 cup",
+    "expectedServingGrams": [114.8, 213.2],
+    "group": "italian"
+  },
+  {
+    "dataset": "usda_sr_legacy",
+    "sourceRef": "18999",
+    "referenceName": "Breadsticks, plain",
+    "kcalRange": [350, 474],
+    "expectedServingLabel": "1 breadstick",
+    "expectedServingGrams": [7, 13],
+    "group": "italian",
+    "optional": true
+  },
+  {
+    "dataset": "usda_fndds",
+    "sourceRef": "28100100",
+    "referenceName": "Ham, prosciutto",
+    "kcalRange": [198, 268],
+    "expectedServingLabel": "1 slice",
+    "expectedServingGrams": [9.8, 18.2],
+    "group": "italian",
+    "optional": true
+  },
+  {
+    "dataset": "usda_fndds",
+    "sourceRef": "58100100",
+    "referenceName": "Gnocchi, potato",
+    "kcalRange": [113, 153],
+    "expectedServingLabel": "1 cup",
+    "expectedServingGrams": [98, 182],
+    "group": "italian",
+    "optional": true
+  },
+  {
+    "dataset": "usda_fndds",
+    "sourceRef": "58100200",
+    "referenceName": "Risotto, with cheese",
+    "kcalRange": [127, 173],
+    "expectedServingLabel": "1 cup",
+    "expectedServingGrams": [140, 260],
+    "group": "italian",
+    "optional": true
+  },
+  {
+    "dataset": "usda_fndds",
+    "sourceRef": "58100300",
+    "referenceName": "Polenta",
+    "kcalRange": [59, 81],
+    "expectedServingLabel": "1 cup",
+    "expectedServingGrams": [168, 312],
+    "group": "italian",
+    "optional": true
+  },
+  {
+    "dataset": "usda_fndds",
+    "sourceRef": "27546400",
+    "referenceName": "Pizza, cheese, from restaurant or fast food, thin crust",
+    "kcalRange": [226, 306],
+    "expectedServingLabel": "1 slice",
+    "expectedServingGrams": [74.9, 139.1],
+    "group": "italian",
+    "optional": true
+  },
+  {
+    "dataset": "usda_fndds",
+    "sourceRef": "53100200",
+    "referenceName": "Biscotti",
+    "kcalRange": [342, 462],
+    "expectedServingLabel": "1 biscotto",
+    "expectedServingGrams": [17.5, 32.5],
+    "group": "italian",
+    "optional": true
+  },
+  {
+    "dataset": "usda_fndds",
+    "sourceRef": "51100100",
+    "referenceName": "Focaccia",
+    "kcalRange": [218, 294],
+    "expectedServingLabel": "1 piece",
+    "expectedServingGrams": [42, 78],
+    "group": "italian",
+    "optional": true
+  }
+]

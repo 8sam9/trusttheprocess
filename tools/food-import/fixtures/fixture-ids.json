@@ -1,0 +1,10 @@
+{
+  "goldenList": "golden-list.json",
+  "sample": { "usda_foundation": 40, "usda_sr_legacy": 100, "usda_fndds": 60 },
+  "downloadPage": "https://fdc.nal.usda.gov/download-datasets",
+  "fallbackUrls": {
+    "usda_foundation": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_foundation_food_json_2025-12-18.zip",
+    "usda_sr_legacy": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_sr_legacy_food_json_2018-04.zip",
+    "usda_fndds": "https://fdc.nal.usda.gov/fdc-datasets/FoodData_Central_survey_food_json_2024-10-31.zip"
+  }
+}

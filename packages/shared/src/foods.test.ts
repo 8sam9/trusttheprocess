@@ -188,3 +188,15 @@ describe('SearchFoodsArgs boundaries (limit 50, query 100)', () => {
     expect(SearchFoodsArgs.safeParse({ p_query: 'a'.repeat(101) }).success).toBe(false);
   });
 });
+
+describe('optional p_include_off on every RPC argument schema', () => {
+  it('accepts a boolean and rejects other types', () => {
+    expect(GetFoodsArgs.safeParse({ p_ids: ids(1), p_include_off: false }).success).toBe(true);
+    expect(
+      LookupBarcodeArgs.safeParse({ p_gtin14: '00036000291452', p_include_off: true }).success,
+    ).toBe(true);
+    expect(SearchFoodsArgs.safeParse({ p_query: 'egg', p_include_off: false }).success).toBe(true);
+    expect(GetFoodsArgs.safeParse({ p_ids: ids(1), p_include_off: 'no' }).success).toBe(false);
+    expect(SearchFoodsArgs.safeParse({ p_query: 'egg', p_include_off: 0 }).success).toBe(false);
+  });
+});

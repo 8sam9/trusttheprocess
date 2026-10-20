@@ -69,6 +69,10 @@ describe('CLI parsing', () => {
       command: 'cut-fixture',
     });
     expect(parseCli(['load-fixture'])).toEqual({ command: 'load-fixture' });
+    expect(parseCli(['release-check', '--', '--checks', 'golden'])).toMatchObject({
+      checks: ['golden'],
+    });
+    expect(parseCli(['cut-fixture'])).toEqual({ command: 'cut-fixture', from: null, ids: null });
     expect(parseCli([])).toEqual({ command: 'help' });
   });
 });

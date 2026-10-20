@@ -1,0 +1,1601 @@
+{
+  "FoundationFoods": [
+    {
+      "fdcId": 9100001,
+      "description": "Test energy from kilojoules only",
+      "dataType": "Foundation",
+      "publicationDate": "4/1/2025",
+      "foodNutrients": [
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1062,
+            "number": "268",
+            "name": "synthetic 268",
+            "rank": 1,
+            "unitName": "kJ"
+          },
+          "amount": 1000
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1003,
+            "number": "203",
+            "name": "synthetic 203",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 10
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1005,
+            "number": "205",
+            "name": "synthetic 205",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 50
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1004,
+            "number": "204",
+            "name": "synthetic 204",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 1.5
+        }
+      ],
+      "foodPortions": [],
+      "ndbNumber": "synthetic-kj-only",
+      "x_synthetic": "rule-row"
+    },
+    {
+      "fdcId": 9100002,
+      "description": "Test energy kcal and kilojoules both present",
+      "dataType": "Foundation",
+      "publicationDate": "4/1/2025",
+      "foodNutrients": [
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1008,
+            "number": "208",
+            "name": "synthetic 208",
+            "rank": 1,
+            "unitName": "KCAL"
+          },
+          "amount": 250
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1062,
+            "number": "268",
+            "name": "synthetic 268",
+            "rank": 1,
+            "unitName": "kJ"
+          },
+          "amount": 1046
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1003,
+            "number": "203",
+            "name": "synthetic 203",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 10
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1005,
+            "number": "205",
+            "name": "synthetic 205",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 50
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1004,
+            "number": "204",
+            "name": "synthetic 204",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 1.5
+        }
+      ],
+      "foodPortions": [],
+      "ndbNumber": "synthetic-kcal-and-kj",
+      "x_synthetic": "rule-row"
+    },
+    {
+      "fdcId": 9100003,
+      "description": "Test energy units disagree",
+      "dataType": "Foundation",
+      "publicationDate": "4/1/2025",
+      "foodNutrients": [
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1008,
+            "number": "208",
+            "name": "synthetic 208",
+            "rank": 1,
+            "unitName": "KCAL"
+          },
+          "amount": 100
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1062,
+            "number": "268",
+            "name": "synthetic 268",
+            "rank": 1,
+            "unitName": "kJ"
+          },
+          "amount": 800
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1003,
+            "number": "203",
+            "name": "synthetic 203",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 5
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1005,
+            "number": "205",
+            "name": "synthetic 205",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 12
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1004,
+            "number": "204",
+            "name": "synthetic 204",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 3.5
+        }
+      ],
+      "foodPortions": [],
+      "ndbNumber": "synthetic-kj-mismatch",
+      "x_synthetic": "rule-row"
+    },
+    {
+      "fdcId": 9100004,
+      "description": "Test unknown versus zero",
+      "dataType": "Foundation",
+      "publicationDate": "4/1/2025",
+      "foodNutrients": [
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1008,
+            "number": "208",
+            "name": "synthetic 208",
+            "rank": 1,
+            "unitName": "KCAL"
+          },
+          "amount": 87
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1003,
+            "number": "203",
+            "name": "synthetic 203",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 5
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1005,
+            "number": "205",
+            "name": "synthetic 205",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 10
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1004,
+            "number": "204",
+            "name": "synthetic 204",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 3
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1079,
+            "number": "291",
+            "name": "synthetic 291",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 0
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 2000,
+            "number": "269.3",
+            "name": "synthetic 269.3",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 0
+        }
+      ],
+      "foodPortions": [],
+      "ndbNumber": "synthetic-unknown-vs-zero",
+      "x_synthetic": "rule-row"
+    },
+    {
+      "fdcId": 9100005,
+      "description": "Test energy off by about a third",
+      "dataType": "Foundation",
+      "publicationDate": "4/1/2025",
+      "foodNutrients": [
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1008,
+            "number": "208",
+            "name": "synthetic 208",
+            "rank": 1,
+            "unitName": "KCAL"
+          },
+          "amount": 230
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1003,
+            "number": "203",
+            "name": "synthetic 203",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 10
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1005,
+            "number": "205",
+            "name": "synthetic 205",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 10
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1004,
+            "number": "204",
+            "name": "synthetic 204",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 10
+        }
+      ],
+      "foodPortions": [],
+      "ndbNumber": "synthetic-atwater-flag",
+      "x_synthetic": "rule-row"
+    },
+    {
+      "fdcId": 9100006,
+      "description": "Test alcohol skips the energy check",
+      "dataType": "Foundation",
+      "publicationDate": "4/1/2025",
+      "foodNutrients": [
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1008,
+            "number": "208",
+            "name": "synthetic 208",
+            "rank": 1,
+            "unitName": "KCAL"
+          },
+          "amount": 150
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1003,
+            "number": "203",
+            "name": "synthetic 203",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 0
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1005,
+            "number": "205",
+            "name": "synthetic 205",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 5
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1004,
+            "number": "204",
+            "name": "synthetic 204",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 0
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1018,
+            "number": "221",
+            "name": "synthetic 221",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 20
+        }
+      ],
+      "foodPortions": [],
+      "ndbNumber": "synthetic-alcohol",
+      "x_synthetic": "rule-row"
+    },
+    {
+      "fdcId": 9100007,
+      "description": "Test all zero like water",
+      "dataType": "Foundation",
+      "publicationDate": "4/1/2025",
+      "foodNutrients": [
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1008,
+            "number": "208",
+            "name": "synthetic 208",
+            "rank": 1,
+            "unitName": "KCAL"
+          },
+          "amount": 0
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1003,
+            "number": "203",
+            "name": "synthetic 203",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 0
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1005,
+            "number": "205",
+            "name": "synthetic 205",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 0
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1004,
+            "number": "204",
+            "name": "synthetic 204",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 0
+        }
+      ],
+      "foodPortions": [],
+      "ndbNumber": "synthetic-all-zero",
+      "x_synthetic": "rule-row"
+    },
+    {
+      "fdcId": 9100008,
+      "description": "Test energy from the Atwater estimate",
+      "dataType": "Foundation",
+      "publicationDate": "4/1/2025",
+      "foodNutrients": [
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 2047,
+            "number": "957",
+            "name": "synthetic 957",
+            "rank": 1,
+            "unitName": "KCAL"
+          },
+          "amount": 87
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1003,
+            "number": "203",
+            "name": "synthetic 203",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 5
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1005,
+            "number": "205",
+            "name": "synthetic 205",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 10
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1004,
+            "number": "204",
+            "name": "synthetic 204",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 3
+        }
+      ],
+      "foodPortions": [],
+      "ndbNumber": "synthetic-atwater-only",
+      "x_synthetic": "rule-row"
+    },
+    {
+      "fdcId": 9100009,
+      "description": "Test sugars above carbohydrate",
+      "dataType": "Foundation",
+      "publicationDate": "4/1/2025",
+      "foodNutrients": [
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1008,
+            "number": "208",
+            "name": "synthetic 208",
+            "rank": 1,
+            "unitName": "KCAL"
+          },
+          "amount": 87
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1003,
+            "number": "203",
+            "name": "synthetic 203",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 5
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1005,
+            "number": "205",
+            "name": "synthetic 205",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 10
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1004,
+            "number": "204",
+            "name": "synthetic 204",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 3
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 2000,
+            "number": "269.3",
+            "name": "synthetic 269.3",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 11
+        }
+      ],
+      "foodPortions": [],
+      "ndbNumber": "synthetic-sugars-over-carbs",
+      "x_synthetic": "rule-row"
+    },
+    {
+      "fdcId": 9100010,
+      "description": "Test saturated fat above fat",
+      "dataType": "Foundation",
+      "publicationDate": "4/1/2025",
+      "foodNutrients": [
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1008,
+            "number": "208",
+            "name": "synthetic 208",
+            "rank": 1,
+            "unitName": "KCAL"
+          },
+          "amount": 87
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1003,
+            "number": "203",
+            "name": "synthetic 203",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 5
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1005,
+            "number": "205",
+            "name": "synthetic 205",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 10
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1004,
+            "number": "204",
+            "name": "synthetic 204",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 3
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1258,
+            "number": "606",
+            "name": "synthetic 606",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 4
+        }
+      ],
+      "foodPortions": [],
+      "ndbNumber": "synthetic-satfat-over-fat",
+      "x_synthetic": "rule-row"
+    },
+    {
+      "fdcId": 9100011,
+      "description": "Test sodium far too high",
+      "dataType": "Foundation",
+      "publicationDate": "4/1/2025",
+      "foodNutrients": [
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1008,
+            "number": "208",
+            "name": "synthetic 208",
+            "rank": 1,
+            "unitName": "KCAL"
+          },
+          "amount": 87
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1003,
+            "number": "203",
+            "name": "synthetic 203",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 5
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1005,
+            "number": "205",
+            "name": "synthetic 205",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 10
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1004,
+            "number": "204",
+            "name": "synthetic 204",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 3
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1093,
+            "number": "307",
+            "name": "synthetic 307",
+            "rank": 1,
+            "unitName": "MG"
+          },
+          "amount": 45000
+        }
+      ],
+      "foodPortions": [],
+      "ndbNumber": "synthetic-sodium-implausible",
+      "x_synthetic": "rule-row"
+    },
+    {
+      "fdcId": 9100012,
+      "description": "Test missing fat",
+      "dataType": "Foundation",
+      "publicationDate": "4/1/2025",
+      "foodNutrients": [
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1008,
+            "number": "208",
+            "name": "synthetic 208",
+            "rank": 1,
+            "unitName": "KCAL"
+          },
+          "amount": 87
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1003,
+            "number": "203",
+            "name": "synthetic 203",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 5
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1005,
+            "number": "205",
+            "name": "synthetic 205",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 10
+        }
+      ],
+      "foodPortions": [],
+      "ndbNumber": "synthetic-missing-core",
+      "x_synthetic": "rule-row"
+    },
+    {
+      "fdcId": 9100013,
+      "description": "Test negative protein",
+      "dataType": "Foundation",
+      "publicationDate": "4/1/2025",
+      "foodNutrients": [
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1008,
+            "number": "208",
+            "name": "synthetic 208",
+            "rank": 1,
+            "unitName": "KCAL"
+          },
+          "amount": 87
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1003,
+            "number": "203",
+            "name": "synthetic 203",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": -1
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1005,
+            "number": "205",
+            "name": "synthetic 205",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 10
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1004,
+            "number": "204",
+            "name": "synthetic 204",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 3
+        }
+      ],
+      "foodPortions": [],
+      "ndbNumber": "synthetic-negative",
+      "x_synthetic": "rule-row"
+    },
+    {
+      "fdcId": 9100014,
+      "description": "Test protein over 100 grams",
+      "dataType": "Foundation",
+      "publicationDate": "4/1/2025",
+      "foodNutrients": [
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1008,
+            "number": "208",
+            "name": "synthetic 208",
+            "rank": 1,
+            "unitName": "KCAL"
+          },
+          "amount": 404
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1003,
+            "number": "203",
+            "name": "synthetic 203",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 101
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1005,
+            "number": "205",
+            "name": "synthetic 205",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 0
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1004,
+            "number": "204",
+            "name": "synthetic 204",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 0
+        }
+      ],
+      "foodPortions": [],
+      "ndbNumber": "synthetic-mass-single",
+      "x_synthetic": "rule-row"
+    },
+    {
+      "fdcId": 9100015,
+      "description": "Test macros add up to over 105 grams",
+      "dataType": "Foundation",
+      "publicationDate": "4/1/2025",
+      "foodNutrients": [
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1008,
+            "number": "208",
+            "name": "synthetic 208",
+            "rank": 1,
+            "unitName": "KCAL"
+          },
+          "amount": 554
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1003,
+            "number": "203",
+            "name": "synthetic 203",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 40
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1005,
+            "number": "205",
+            "name": "synthetic 205",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 40
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1004,
+            "number": "204",
+            "name": "synthetic 204",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 26
+        }
+      ],
+      "foodPortions": [],
+      "ndbNumber": "synthetic-mass-sum",
+      "x_synthetic": "rule-row"
+    },
+    {
+      "fdcId": 9100016,
+      "description": "Test energy above 905",
+      "dataType": "Foundation",
+      "publicationDate": "4/1/2025",
+      "foodNutrients": [
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1008,
+            "number": "208",
+            "name": "synthetic 208",
+            "rank": 1,
+            "unitName": "KCAL"
+          },
+          "amount": 910
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1003,
+            "number": "203",
+            "name": "synthetic 203",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 0
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1005,
+            "number": "205",
+            "name": "synthetic 205",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 0
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1004,
+            "number": "204",
+            "name": "synthetic 204",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 100
+        }
+      ],
+      "foodPortions": [],
+      "ndbNumber": "synthetic-energy-too-high",
+      "x_synthetic": "rule-row"
+    },
+    {
+      "fdcId": 9100017,
+      "description": "Test energy far from the macros",
+      "dataType": "Foundation",
+      "publicationDate": "4/1/2025",
+      "foodNutrients": [
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1008,
+            "number": "208",
+            "name": "synthetic 208",
+            "rank": 1,
+            "unitName": "KCAL"
+          },
+          "amount": 500
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1003,
+            "number": "203",
+            "name": "synthetic 203",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 0
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1005,
+            "number": "205",
+            "name": "synthetic 205",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 0
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1004,
+            "number": "204",
+            "name": "synthetic 204",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 5
+        }
+      ],
+      "foodPortions": [],
+      "ndbNumber": "synthetic-energy-implausible",
+      "x_synthetic": "rule-row"
+    },
+    {
+      "fdcId": 9100018,
+      "description": "   ",
+      "dataType": "Foundation",
+      "publicationDate": "4/1/2025",
+      "foodNutrients": [
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1008,
+            "number": "208",
+            "name": "synthetic 208",
+            "rank": 1,
+            "unitName": "KCAL"
+          },
+          "amount": 87
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1003,
+            "number": "203",
+            "name": "synthetic 203",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 5
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1005,
+            "number": "205",
+            "name": "synthetic 205",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 10
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1004,
+            "number": "204",
+            "name": "synthetic 204",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 3
+        }
+      ],
+      "foodPortions": [],
+      "ndbNumber": "synthetic-no-name",
+      "x_synthetic": "rule-row"
+    },
+    {
+      "fdcId": 9100019,
+      "description": "  Test   messy \t name  ",
+      "dataType": "Foundation",
+      "publicationDate": "4/1/2025",
+      "foodNutrients": [
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1008,
+            "number": "208",
+            "name": "synthetic 208",
+            "rank": 1,
+            "unitName": "KCAL"
+          },
+          "amount": 87
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1003,
+            "number": "203",
+            "name": "synthetic 203",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 5
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1005,
+            "number": "205",
+            "name": "synthetic 205",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 10
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1004,
+            "number": "204",
+            "name": "synthetic 204",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 3
+        }
+      ],
+      "foodPortions": [],
+      "ndbNumber": "synthetic-name-messy",
+      "x_synthetic": "rule-row"
+    },
+    {
+      "fdcId": 9100020,
+      "description": "TEST ALL CAPS FOOD",
+      "dataType": "Foundation",
+      "publicationDate": "4/1/2025",
+      "foodNutrients": [
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1008,
+            "number": "208",
+            "name": "synthetic 208",
+            "rank": 1,
+            "unitName": "KCAL"
+          },
+          "amount": 87
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1003,
+            "number": "203",
+            "name": "synthetic 203",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 5
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1005,
+            "number": "205",
+            "name": "synthetic 205",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 10
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1004,
+            "number": "204",
+            "name": "synthetic 204",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 3
+        }
+      ],
+      "foodPortions": [],
+      "ndbNumber": "synthetic-name-caps",
+      "x_synthetic": "rule-row"
+    },
+    {
+      "fdcId": 9100021,
+      "description": "Test many servings",
+      "dataType": "Foundation",
+      "publicationDate": "4/1/2025",
+      "foodNutrients": [
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1008,
+            "number": "208",
+            "name": "synthetic 208",
+            "rank": 1,
+            "unitName": "KCAL"
+          },
+          "amount": 87
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1003,
+            "number": "203",
+            "name": "synthetic 203",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 5
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1005,
+            "number": "205",
+            "name": "synthetic 205",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 10
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1004,
+            "number": "204",
+            "name": "synthetic 204",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 3
+        }
+      ],
+      "foodPortions": [
+        {
+          "amount": 1,
+          "gramWeight": 10,
+          "modifier": "size 1",
+          "sequenceNumber": 1,
+          "measureUnit": {
+            "name": "undetermined",
+            "abbreviation": "undetermined"
+          }
+        },
+        {
+          "amount": 1,
+          "gramWeight": 11,
+          "modifier": "size 2",
+          "sequenceNumber": 2,
+          "measureUnit": {
+            "name": "undetermined",
+            "abbreviation": "undetermined"
+          }
+        },
+        {
+          "amount": 1,
+          "gramWeight": 12,
+          "modifier": "size 3",
+          "sequenceNumber": 3,
+          "measureUnit": {
+            "name": "undetermined",
+            "abbreviation": "undetermined"
+          }
+        },
+        {
+          "amount": 1,
+          "gramWeight": 13,
+          "modifier": "size 4",
+          "sequenceNumber": 4,
+          "measureUnit": {
+            "name": "undetermined",
+            "abbreviation": "undetermined"
+          }
+        },
+        {
+          "amount": 1,
+          "gramWeight": 14,
+          "modifier": "size 5",
+          "sequenceNumber": 5,
+          "measureUnit": {
+            "name": "undetermined",
+            "abbreviation": "undetermined"
+          }
+        },
+        {
+          "amount": 1,
+          "gramWeight": 15,
+          "modifier": "size 6",
+          "sequenceNumber": 6,
+          "measureUnit": {
+            "name": "undetermined",
+            "abbreviation": "undetermined"
+          }
+        },
+        {
+          "amount": 1,
+          "gramWeight": 16,
+          "modifier": "size 7",
+          "sequenceNumber": 7,
+          "measureUnit": {
+            "name": "undetermined",
+            "abbreviation": "undetermined"
+          }
+        },
+        {
+          "amount": 1,
+          "gramWeight": 17,
+          "modifier": "size 8",
+          "sequenceNumber": 8,
+          "measureUnit": {
+            "name": "undetermined",
+            "abbreviation": "undetermined"
+          }
+        },
+        {
+          "amount": 1,
+          "gramWeight": 18,
+          "modifier": "size 9",
+          "sequenceNumber": 9,
+          "measureUnit": {
+            "name": "undetermined",
+            "abbreviation": "undetermined"
+          }
+        },
+        {
+          "amount": 1,
+          "gramWeight": 19,
+          "modifier": "size 10",
+          "sequenceNumber": 10,
+          "measureUnit": {
+            "name": "undetermined",
+            "abbreviation": "undetermined"
+          }
+        },
+        {
+          "amount": 1,
+          "gramWeight": 20,
+          "modifier": "size 11",
+          "sequenceNumber": 11,
+          "measureUnit": {
+            "name": "undetermined",
+            "abbreviation": "undetermined"
+          }
+        },
+        {
+          "amount": 1,
+          "gramWeight": 0,
+          "modifier": "zero weight",
+          "sequenceNumber": 12,
+          "measureUnit": {
+            "name": "undetermined",
+            "abbreviation": "undetermined"
+          }
+        },
+        {
+          "amount": 1,
+          "gramWeight": 6000,
+          "modifier": "too heavy",
+          "sequenceNumber": 13,
+          "measureUnit": {
+            "name": "undetermined",
+            "abbreviation": "undetermined"
+          }
+        },
+        {
+          "amount": 1,
+          "modifier": "no weight",
+          "sequenceNumber": 14,
+          "measureUnit": {
+            "name": "undetermined"
+          }
+        }
+      ],
+      "ndbNumber": "synthetic-servings-many",
+      "x_synthetic": "rule-row"
+    },
+    {
+      "fdcId": 9100022,
+      "description": "Test no usable servings",
+      "dataType": "Foundation",
+      "publicationDate": "4/1/2025",
+      "foodNutrients": [
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1008,
+            "number": "208",
+            "name": "synthetic 208",
+            "rank": 1,
+            "unitName": "KCAL"
+          },
+          "amount": 87
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1003,
+            "number": "203",
+            "name": "synthetic 203",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 5
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1005,
+            "number": "205",
+            "name": "synthetic 205",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 10
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1004,
+            "number": "204",
+            "name": "synthetic 204",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 3
+        }
+      ],
+      "foodPortions": [],
+      "ndbNumber": "synthetic-no-servings",
+      "x_synthetic": "rule-row"
+    },
+    {
+      "fdcId": 9100023,
+      "description": "Test changes in version two",
+      "dataType": "Foundation",
+      "publicationDate": "4/1/2025",
+      "foodNutrients": [
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1008,
+            "number": "208",
+            "name": "synthetic 208",
+            "rank": 1,
+            "unitName": "KCAL"
+          },
+          "amount": 87
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1003,
+            "number": "203",
+            "name": "synthetic 203",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 5
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1005,
+            "number": "205",
+            "name": "synthetic 205",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 10
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1004,
+            "number": "204",
+            "name": "synthetic 204",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 3
+        }
+      ],
+      "foodPortions": [],
+      "ndbNumber": "synthetic-update-me",
+      "x_synthetic": "rule-row"
+    },
+    {
+      "fdcId": 9100024,
+      "description": "Test removed in version two",
+      "dataType": "Foundation",
+      "publicationDate": "4/1/2025",
+      "foodNutrients": [
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1008,
+            "number": "208",
+            "name": "synthetic 208",
+            "rank": 1,
+            "unitName": "KCAL"
+          },
+          "amount": 87
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1003,
+            "number": "203",
+            "name": "synthetic 203",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 5
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1005,
+            "number": "205",
+            "name": "synthetic 205",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 10
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1004,
+            "number": "204",
+            "name": "synthetic 204",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 3
+        }
+      ],
+      "foodPortions": [],
+      "ndbNumber": "synthetic-remove-me",
+      "x_synthetic": "rule-row"
+    },
+    {
+      "fdcId": 9100025,
+      "description": "Test fails a rule in version two",
+      "dataType": "Foundation",
+      "publicationDate": "4/1/2025",
+      "foodNutrients": [
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1008,
+            "number": "208",
+            "name": "synthetic 208",
+            "rank": 1,
+            "unitName": "KCAL"
+          },
+          "amount": 87
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1003,
+            "number": "203",
+            "name": "synthetic 203",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 5
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1005,
+            "number": "205",
+            "name": "synthetic 205",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 10
+        },
+        {
+          "type": "FoodNutrient",
+          "nutrient": {
+            "id": 1004,
+            "number": "204",
+            "name": "synthetic 204",
+            "rank": 1,
+            "unitName": "G"
+          },
+          "amount": 3
+        }
+      ],
+      "foodPortions": [],
+      "ndbNumber": "synthetic-break-me",
+      "x_synthetic": "rule-row"
+    }
+  ],
+  "_fixture": {
+    "synthetic": true,
+    "upstreamRelease": "synthetic rule rows (permanent) + none yet cut",
+    "cutDate": "2026-10-20",
+    "licence": "Synthetic data written for this repository (see LICENCES.md). Not derived from any upstream database."
+  }
+}

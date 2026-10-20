@@ -82,6 +82,33 @@ describe('downloadFile', () => {
     expect(existsSync(`${out}.part`)).toBe(false);
   });
 
+  it('a USDA download works without a contact (it still names the app); OFF never does', async () => {
+    const seen: (string | null)[] = [];
+    const fetchImpl = ((_url: URL, init: RequestInit) => {
+      seen.push(new Headers(init.headers).get('user-agent'));
+      return Promise.resolve(body());
+    }) as unknown as typeof fetch;
+    await downloadFile({
+      url: 'https://fdc.nal.usda.gov/fdc-datasets/x.zip',
+      dataset: 'usda_foundation',
+      outPath: path.join(tmp(), 'x.zip'),
+      version: '0.1.0',
+      contact: undefined,
+      fetchImpl,
+    });
+    expect(seen[0]).toBe('TrustTheProcess-food-import/0.1.0');
+    await expect(
+      downloadFile({
+        url: DEFAULT_OFF_DUMP_URL,
+        dataset: 'off',
+        outPath: path.join(tmp(), 'y'),
+        version: '0.1.0',
+        contact: undefined,
+        fetchImpl,
+      }),
+    ).rejects.toThrow(/FOOD_IMPORT_CONTACT/);
+  });
+
   it('follows redirects only within the allowlist', async () => {
     let calls = 0;
     const fetchImpl = (() => {

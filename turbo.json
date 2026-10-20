@@ -3,7 +3,7 @@
   "tasks": {
     "lint": {},
     "typecheck": { "dependsOn": ["^typecheck"] },
-    "test": { "dependsOn": ["^typecheck"] },
+    "test": { "dependsOn": ["^typecheck"], "env": ["FOOD_IMPORT_SKIP_STREAMING"] },
     "build": { "dependsOn": ["^build"], "outputs": ["dist/**"] }
   }
 }

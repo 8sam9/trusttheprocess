@@ -77,8 +77,8 @@ and see an accurate daily summary on iOS, Android and web; there are no P0/P1 bu
 ## 5. Data sources (licences matter)
 | Source | Use | Licence / note |
 |---|---|---|
-| USDA FoodData Central (Foundation, SR Legacy, Branded) | Generic + US branded foods | Public domain (CC0) |
-| Open Food Facts | Barcodes, global branded foods | ODbL — attribution + share-alike on the derived *database*; keep OFF data in a separate table |
+| USDA FoodData Central (Foundation, SR Legacy, FNDDS, Branded) | Generic + US branded foods | U.S. Government public domain (data.gov label: U.S. Public Domain, https://www.usa.gov/publicdomain/label/1.0/); not CC0. Cite as FDC suggests. |
+| Open Food Facts | Barcodes, global branded foods | ODbL — attribution + share-alike on the derived *database*; keep OFF-derived data separable: identifiable, exportable and removable as a unit (ADR 0006) |
 | User-created foods | Long tail | Our ToS grants us a licence; moderation queue |
 | LLM estimates | Photo/text when no DB match | Always labelled "estimated" |
 

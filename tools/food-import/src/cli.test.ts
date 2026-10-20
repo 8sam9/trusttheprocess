@@ -43,8 +43,16 @@ describe('cli main', () => {
     expect(r.err[0]).toMatch(/--url/);
   });
 
-  it('engine commands report that B6 is pending (exit 2) rather than pretending to run', async () => {
-    const r = await run(['import', '--manifest', 'm.json']);
-    expect(r.code).toBe(2);
+  it('an import with a missing manifest fails before touching the database (exit 1)', async () => {
+    const r = await run(['import', '--manifest', 'does-not-exist.json'], {
+      FOOD_IMPORT_LOCAL_DATABASE_URL: 'postgresql://postgres@127.0.0.1:1/none',
+    });
+    expect(r.code).toBe(1);
+    expect(r.err[0]).toMatch(/cannot read manifest/);
+  });
+
+  it('cut-fixture with a folder that has no USDA files names the problem', async () => {
+    const r = await run(['cut-fixture', '--from', '/nonexistent-dir-for-test']);
+    expect(r.code).not.toBe(0);
   });
 });

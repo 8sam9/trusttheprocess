@@ -15,6 +15,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v7
+      # AC 40: no secret in any committed file. Runs before `pnpm install` so node_modules is not scanned.
+      # Pinned official image; `dir` scans the checked-out files. Config: .gitleaks.toml.
+      - name: Secrets scan (gitleaks)
+        run: >
+          docker run --rm -v "$PWD:/repo" ghcr.io/gitleaks/gitleaks:v8.28.0
+          dir /repo --config /repo/.gitleaks.toml --no-banner --redact --verbose
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
         with:
@@ -26,12 +32,23 @@ jobs:
       - run: pnpm format:check
       - run: pnpm lint
       - run: pnpm typecheck
+      # The importer's 50k-record streaming test (about 25 s, spawns a child process) runs in the `food-import` job.
+      # Remove the env var to run it here too.
       - run: pnpm test
+        env:
+          FOOD_IMPORT_SKIP_STREAMING: '1'
       - name: Web export (smoke build)
         run: pnpm --filter mobile export:web
         env:
           EXPO_PUBLIC_SUPABASE_URL: http://127.0.0.1:54321
           EXPO_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ci-placeholder
+      # AC 40: the importer credential and any database URL never reach the client bundle.
+      - name: No importer credentials in the web bundle
+        run: |
+          if grep -rIlE "FOOD_IMPORT|postgres(ql)?://" apps/mobile/dist; then
+            echo "::error::importer variable or database URL found in the web export"
+            exit 1
+          fi
 
   database:
     name: Migrations + pgTAP (RLS)
@@ -44,3 +61,23 @@ jobs:
       - run: supabase test db
       - name: Lint SQL
         run: supabase db lint --level warning
+
+  food-import:
+    name: Importer pipeline on fixtures
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 24
+          cache: pnpm
+      # No version pinned: setup-cli v3 uses the version in pnpm-lock.yaml, same as local dev.
+      - uses: supabase/setup-cli@v3
+      # Database only (port 54322, migrations applied). The importer tests need no network and no USDA/OFF download.
+      - run: supabase db start
+      - run: pnpm install --frozen-lockfile
+      - name: Pipeline tests (importer end to end against the fixtures)
+        run: pnpm --filter @ttp/food-import test:pipeline
+      - name: Streaming test (50k synthetic records, flat memory)
+        run: pnpm --filter @ttp/food-import test:streaming

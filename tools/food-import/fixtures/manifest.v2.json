@@ -1,0 +1,28 @@
+{
+  "mode": "full",
+  "inputs": [
+    {
+      "dataset": "usda_foundation",
+      "path": "usda/foundation.v2.json",
+      "releaseLabel": "fixture-foundation-v2",
+      "snapshot": true
+    },
+    {
+      "dataset": "usda_sr_legacy",
+      "path": "usda/sr_legacy.v1.json",
+      "releaseLabel": "fixture-sr-legacy",
+      "snapshot": true
+    },
+    {
+      "dataset": "usda_fndds",
+      "path": "usda/fndds.v1.json",
+      "releaseLabel": "fixture-fndds",
+      "snapshot": true
+    }
+  ],
+  "meta": {
+    "provenance": "synthetic placeholders until pnpm food:cut-fixture replaces them with real USDA records (H1)",
+    "licence": "USDA data: U.S. Government public domain. Synthetic rows: ours. See LICENCES.md",
+    "usda/foundation": "synthetic rule rows; synthetic; see LICENCES.md"
+  }
+}

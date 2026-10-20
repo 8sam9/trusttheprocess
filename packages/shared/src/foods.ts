@@ -112,17 +112,21 @@ export type FoodRow = z.infer<typeof FoodRow>;
 
 export const GetFoodsArgs = z.strictObject({
   p_ids: z.array(z.uuid()).min(1).max(GET_FOODS_MAX_IDS),
+  /** Defaults to false on the server: OFF-derived rows are excluded until the attribution page ships (011). */
+  p_include_off: z.boolean().optional(),
 });
 export type GetFoodsArgs = z.infer<typeof GetFoodsArgs>;
 
 export const LookupBarcodeArgs = z.strictObject({
   p_gtin14: z.string().regex(/^\d{14}$/),
+  p_include_off: z.boolean().optional(),
 });
 export type LookupBarcodeArgs = z.infer<typeof LookupBarcodeArgs>;
 
 export const SearchFoodsArgs = z.strictObject({
   p_query: z.string().trim().min(1).max(100),
   p_limit: z.int().min(1).max(SEARCH_FOODS_MAX_LIMIT).optional(),
+  p_include_off: z.boolean().optional(),
 });
 export type SearchFoodsArgs = z.infer<typeof SearchFoodsArgs>;
 

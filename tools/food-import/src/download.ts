@@ -79,7 +79,12 @@ export interface DownloadOptions {
 
 /** Streams a file to `outPath` (via a .part file, renamed on success). Every redirect hop is re-checked. */
 export async function downloadFile(opts: DownloadOptions): Promise<{ bytes: number }> {
-  const userAgent = buildUserAgent(opts.version, opts.contact);
+  // Open Food Facts requires a contact in the User-Agent (AC 45). USDA asks for none, so a USDA download works
+  // without FOOD_IMPORT_CONTACT (it still names the app and version), which keeps cut-fixture one command.
+  const userAgent =
+    opts.dataset === 'off' || (opts.contact ?? '').trim() !== ''
+      ? buildUserAgent(opts.version, opts.contact)
+      : `TrustTheProcess-food-import/${opts.version}`;
   const doFetch = opts.fetchImpl ?? fetch;
   let url = assertAllowedUrl(opts.url);
   assertHostMatchesDataset(url, opts.dataset);

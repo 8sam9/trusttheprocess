@@ -32,7 +32,7 @@ export type ParsedCommand =
       throttleMs: number;
     }
   | { command: 'load-fixture' }
-  | { command: 'cut-fixture'; from: string; ids: string }
+  | { command: 'cut-fixture'; from: string | null; ids: string | null }
   | {
       command: 'release-check';
       checks: ReleaseCheck[];
@@ -49,7 +49,8 @@ export const USAGE = `Usage: food-import <command> [options]
   import         --manifest <file.json> [--apply] [--target local|remote] [--confirm-remote <project-ref>]
                  [--allow-mass-removal] [--report-dir <dir>] [--throttle-ms <n>]
   load-fixture   Import the checked-in fixture into the local database (needs no network)
-  cut-fixture    --from <dir of real downloads> --ids <fixture-ids.json>   (operator only)
+  cut-fixture    [--from <folder with the USDA zips>] [--ids <fixture-ids.json>]   (operator only; downloads
+                 from fdc.nal.usda.gov when --from is not given)
   release-check  --checks golden,italian-barcodes,size [--target local|remote] [--confirm-remote <ref>]
   download       --dataset <name> --out <dir> [--url <https url>]   (official hosts only)
 
@@ -68,7 +69,9 @@ function parseTarget(value: string | undefined): 'local' | 'remote' {
 }
 
 export function parseCli(argv: readonly string[]): ParsedCommand {
-  const [command, ...rest] = argv;
+  const [command, ...restRaw] = argv;
+  // `pnpm food:import -- --apply` may forward the separator; it carries no meaning here.
+  const rest = restRaw.filter((a, i) => !(a === '--' && i === 0));
   if (command === undefined || command === 'help' || command === '--help' || command === '-h') {
     return { command: 'help' };
   }
@@ -124,8 +127,8 @@ export function parseCli(argv: readonly string[]): ParsedCommand {
     case 'cut-fixture':
       return {
         command: 'cut-fixture',
-        from: need(values.from, '--from', 'cut-fixture'),
-        ids: need(values.ids, '--ids', 'cut-fixture'),
+        from: values.from ?? null,
+        ids: values.ids ?? null,
       };
     case 'release-check': {
       const list = need(values.checks, '--checks', 'release-check').split(',');
