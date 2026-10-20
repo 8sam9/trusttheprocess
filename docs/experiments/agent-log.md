@@ -22,6 +22,7 @@ One row per pipeline stage. "Rework" = times the stage was re-run because a late
 | 2026-10-20 | 001a | product-manager | Opus 5.5 (claude.ai, inline — not subagent) | ~5 min | ~25k | 0 | 0 | Spec drafted; 6 open questions |
 | 2026-10-20 | 001a | 🧑 Gate 1 | — | ~4 min | — | 0 | 1 | Approved with all PM recommendations; moved to backlog (before closed beta) |
 | 2026-10-20 | 002 food DB import | product-manager → spec (Product section) | sonnet | 5m52s | ~148k | 0 | 0 (awaiting gate 1) | 54 ACs, 15 open questions with defaults; verified USDA/OFF/Supabase facts on official pages; found USDA licence is "public domain" not CC0 as PRODUCT_SPEC says; suggests 002a/002b split |
+| 2026-10-20 | 002 food DB import | orchestrator → CR-1 Italian products (human asked before Gate 1) | opus | ~4m | ~20k | 1 | 1 (change request) | Italy added as market with Italian names accepted; new AC 4a (fixture) + 4b (30 real Italian barcodes, ≥90% resolve); Q3/Q13 marked decided |
 
 ## Feature-level summary
 | Feature | Total time | Total tokens | Rework loops | Escaped bugs (30d) | Human time | Verdict |
