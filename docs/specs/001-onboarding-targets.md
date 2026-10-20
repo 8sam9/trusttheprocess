@@ -759,3 +759,17 @@ No new colours are proposed.
 - AC 33 — Given the pace step, when the user selects Custom and enters a value from 0.01 to 1.5 kg a week, then targets compute with that rate; values outside the range show the inline error and CONTINUE is blocked.
 - AC 34 — Given a custom value above 0.75 kg a week, then the amber outline and the "Faster than we recommend…" message are shown and announced, and the user can still continue.
 - AC 35 — The 0.75 kg recommendation Notice is visible on the pace step whenever it is shown (onboarding and the Pace row of the adjust/edit sheets).
+
+---
+**GATE 2 — approved by Samuele, 2026-10-20 08:36 CEST: "approve".** Design section D1–D8 + CR-1 (custom pace), with the orchestrator's resolutions of the designer's D8 items:
+1. AC 19: the maths sums within ±5 kcal; show "Rounded to the nearest 10 kcal" when rounding changed the value.
+2. AC 20: add the second floor message for floor ≥ maintenance (copy in S6).
+3. Remove "We recheck it every week against your weight trend." (no adaptive TDEE yet).
+4. Persist the four-way choice: nullable `goal_option` (`lose_fat` | `build_muscle` | `fuel_performance` | `just_track`).
+5. Inputs changed after a custom calorie edit: clear the custom value, recalculate, and tell the user ("Your inputs changed, so we recalculated your target.").
+6. Manual calorie cap: 6,000 kcal (floor still applies at the bottom).
+7. Keep "I typed the wrong year"; when the under-16 block is hit after consent was recorded, withdraw consent automatically.
+8. Cache the onboarding-complete flag (and last targets) on device so a completed user opens to Today offline.
+9. Consent timing (on tap vs at final save): architect's decision, documented in the technical plan.
+10. In scope: Settings reshape (body stats leave the Profile form; units/name autosave) and the Today target card.
+Design-system additions in D7 are approved; apply them to DESIGN_SYSTEM.md and packages/ui as part of the build.
