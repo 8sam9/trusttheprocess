@@ -1166,3 +1166,36 @@ Not automatable here: real screen-reader output, Dynamic Type layout at AX5/200%
 - **H3:** Analytics SDK and gating. There is no analytics SDK in the app yet, so events go to a no-op sink. Whether `goal` and `floor_applied` (pseudonymous, health-adjacent) need analytics opt-in is for the security-privacy reviewer and you, when PostHog is wired up.
 - **H4:** Maestro in CI. No simulator CI exists; flows will run locally for this feature. Do you want an EAS or Maestro Cloud job later?
 - **H5:** The migration's `onboarding_completed_at` reset and grant revoke must be confirmed before they're applied to any remote or shared database (CLAUDE.md hard rule).
+
+### C1 notes (contract, backend-engineer, 2026-10-20)
+
+**Landed** (all in `packages/shared/src` unless noted):
+- `targets.ts` (new): all constants, `PACE_PRESETS`, `GoalOption`, `GOAL_FOR_OPTION`, `TargetsBreakdown`, `FinalTargets`, and fully implemented `explainTargets`, `applyManualKcal`, `manualKcalBounds`, `isLoseGoalGuarded`, `defaultUnitsForRegion`, `localDateIn`, `targetForDate`, plus a small `birthYearRange(today)` helper (used by `profile.ts`).
+- `api.ts` (new): `ApplyTargetsArgs` (strictObject plus `superRefine`), `buildApplyTargetsArgs`, `ApplyTargetsResult`, `ApplyTargetsErrorCode`, `CachedGate`.
+- `analytics.ts` (new): `AnalyticsEvent` discriminated union (flat strict objects, enums and small ints only; `pace_option` and `pace_band` optional on `targets_revealed`).
+- `db.ts`: `ProfileRowSchema` (type `ProfileRow` inferred), `DailyTargetsRow`, `ProfileUpdate` narrowed to `display_name`, `units`, `timezone`.
+- `profile.ts`: rate `0` for maintain, otherwise `0.01..1.5`; birth-year bounds evaluated at parse time.
+- `__fixtures__/apply-targets-cases.json`: 51 cases (shape per T3). `tsconfig.json` gets `resolveJsonModule`.
+- Tests: `targets.test.ts`, `api.test.ts` (runs every fixture case through `ApplyTargetsArgs`), `profile.test.ts`, `analytics.test.ts`, `db.test.ts` (updated).
+- Mobile (minimal, to keep `pnpm typecheck` green): `apps/mobile/src/features/profile/form.ts` `updateFromForm` now returns only `display_name`, `units`, `timezone`; `form.test.ts` updated for the new row fields and the narrowed update. **Behaviour consequence:** the old Settings form no longer saves sex, birth year, height or activity until M8 reshapes it (R7).
+
+**Semantics the later tasks should rely on**
+- `ApplyTargetsArgs` issues: each failing rule adds exactly one issue whose `message` is the RPC error code (same order as the RPC sketch), so `issues[0].message` is the code the server would raise. `consent_required` is server-state dependent and is not checked client-side.
+- `adjustmentKcal` is `round(raw) - maintenance` (e.g. -550), or `calculatedKcal - maintenance` when the floor applied (e.g. -129). `maintenanceKcal + adjustmentKcal` is always within 5 of `calculatedKcal`; `roundingChanged` says whether they differ.
+- `impliedWeeklyRateKg` is unrounded, only set when `floorApplied`; for lose it is a loss rate, otherwise a gain rate; it is <= 0 when the floor is at or above maintenance (AC 20 second variant).
+- `applyManualKcal` clamps into `manualKcalBounds` and reports `clamped`; when kcal equals the calculated target it returns the calculated macros with `isCustom: false`.
+- `localDateIn` falls back to UTC for an unknown zone instead of throwing (R5).
+- `buildApplyTargetsArgs` does not validate (run `ApplyTargetsArgs.safeParse`); it throws if `goalOption` contradicts `input.goal`.
+
+**Deviations from the plan**
+1. `PROTEIN_MAX_KCAL_SHARE` is defined in `nutrition.ts` (where `macroTargets` uses it) and exported through the index, not from `targets.ts`, to avoid a `targets` <-> `nutrition` import cycle. Same public name via `@ttp/shared`.
+2. `ApplyTargetsArgs` checks the time zone with `Intl.DateTimeFormat`, which is slightly more lenient than Postgres `pg_timezone_names` (it accepts offsets like `+01:00` and any letter case). B2/B4 pgTAP only contains an unknown-name case, so parity holds for the fixture.
+3. `ApplyTargetsArgs` does not enforce the table's 12,000 kcal sanity bound (the RPC sketch has none); the DB check would answer 23514, which maps to `validation`.
+4. Row timestamps in `ProfileRowSchema` and `DailyTargetsRow` are plain strings (PostgREST returns `+00:00` offsets, which `z.iso.datetime()` rejects). `effective_from` uses `z.iso.date()`.
+5. `explainTargets` is fully implemented here rather than stubbed, as requested by the orchestrator (this overlaps M1's function work; M1 keeps pace/unit display helpers and any further tests).
+
+**Verification**
+- `pnpm --filter @ttp/shared test`: 7 files, 120 tests passed. (`targets` 31, `api` 60 incl. 51 fixture cases, `profile` 5, `analytics` 3, `db` 5, existing `nutrition` 13 and `units` 3.)
+- `pnpm --filter @ttp/shared typecheck` and `lint`: clean.
+- Root `pnpm typecheck`: 3/3 tasks passed. Root `pnpm test`: shared 120 passed, mobile 8 passed. Root `pnpm lint`: clean.
+- Not run (out of scope for C1): `pnpm db:test` (no migration yet).

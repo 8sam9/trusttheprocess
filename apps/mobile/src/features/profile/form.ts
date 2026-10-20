@@ -1,11 +1,4 @@
-import {
-  cmToFtIn,
-  ftInToCm,
-  round,
-  type ProfileRow,
-  type ProfileUpdate,
-  type UnitSystem,
-} from '@ttp/shared';
+import { cmToFtIn, type ProfileRow, type ProfileUpdate, type UnitSystem } from '@ttp/shared';
 
 /** Form state keeps raw strings so users can type freely; conversion happens on save. */
 export interface ProfileForm {
@@ -33,30 +26,14 @@ export function formFromRow(row: ProfileRow): ProfileForm {
   };
 }
 
-const toNumber = (s: string): number | null => {
-  const n = Number(s.replace(',', '.').trim());
-  return s.trim() === '' || Number.isNaN(n) ? null : n;
-};
-
-/** Converts the form into a metric ProfileUpdate. Empty fields become null. */
+/**
+ * Builds the direct profile update. Since the onboarding migration only display_name, units and timezone
+ * can be written directly; body stats go through apply_targets (spec 001, M7/M8 replace this form).
+ */
 export function updateFromForm(f: ProfileForm, timezone: string): ProfileUpdate {
-  let heightCm: number | null;
-  if (f.units === 'imperial') {
-    const ft = toNumber(f.heightFt);
-    const inches = toNumber(f.heightIn) ?? 0;
-    heightCm = ft == null ? null : round(ftInToCm(ft, inches), 1);
-  } else {
-    const cm = toNumber(f.heightCm);
-    heightCm = cm == null ? null : round(cm, 1);
-  }
-  const birthYear = toNumber(f.birthYear);
   return {
     display_name: f.displayName.trim() === '' ? null : f.displayName.trim(),
     units: f.units,
-    sex: f.sex,
-    birth_year: birthYear == null ? null : Math.trunc(birthYear),
-    height_cm: heightCm,
-    activity_level: f.activityLevel,
     timezone,
   };
 }

@@ -9,7 +9,10 @@ const row: ProfileRow = {
   height_cm: 180,
   activity_level: 'moderate',
   goal: null,
+  goal_option: null,
   weekly_rate_kg: null,
+  weight_kg: null,
+  weight_recorded_on: null,
   units: 'metric',
   timezone: 'Europe/Rome',
   health_data_consent_at: null,
@@ -19,27 +22,14 @@ const row: ProfileRow = {
 };
 
 describe('profile form', () => {
-  it('round-trips a metric profile', () => {
+  it('builds a direct update with only name, units and timezone', () => {
     const update = updateFromForm(formFromRow(row), 'Europe/Rome');
-    expect(update).toMatchObject({
-      display_name: 'Sam',
-      height_cm: 180,
-      birth_year: 1989,
-      units: 'metric',
-    });
+    expect(update).toEqual({ display_name: 'Sam', units: 'metric', timezone: 'Europe/Rome' });
     expect(ProfileUpdate.safeParse(update).success).toBe(true);
   });
 
-  it('converts imperial height to centimetres', () => {
-    const form = { ...formFromRow(row), units: 'imperial' as const, heightFt: '6', heightIn: '0' };
-    expect(updateFromForm(form, 'UTC').height_cm).toBe(182.9);
-  });
-
-  it('accepts a decimal comma and turns blanks into null', () => {
-    const form = { ...formFromRow(row), heightCm: '175,5', birthYear: '', displayName: '  ' };
-    const update = updateFromForm(form, 'UTC');
-    expect(update.height_cm).toBe(175.5);
-    expect(update.birth_year).toBeNull();
+  it('turns a blank name into null', () => {
+    const update = updateFromForm({ ...formFromRow(row), displayName: '  ' }, 'UTC');
     expect(update.display_name).toBeNull();
   });
 

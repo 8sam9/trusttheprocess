@@ -2,3 +2,6 @@ export * from './units';
 export * from './profile';
 export * from './nutrition';
 export * from './db';
+export * from './targets';
+export * from './api';
+export * from './analytics';
