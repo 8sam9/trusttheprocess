@@ -48,6 +48,16 @@ Barlow Condensed (display, numbers) + Barlow (body), loaded with expo-font (`app
 | body / bodyRegular | Barlow 500 / 400 | 16 / 23 | |
 | small | Barlow 400 | 14 / 20 | |
 | label | Barlow 600 | 12 / 16 | caps, +1.2 tracking (field labels, eyebrow text) |
+| chip | Barlow 500 | 15 / 20 | Choice chip text (regular weight when unselected) |
+| input | Barlow 400 | 17 / 22 | text typed into a TextField |
+| numberS | Condensed 600 | 18 / 22 | small inline number (sign-in promise list) |
+| numberM | Condensed 600 | 28 / 32 | Stepper value on a sheet |
+| numberInput | Condensed 800 italic | 44 / 48 | editable big number (Stepper field) |
+| navTitle | Condensed 800 | 18 / 22 | native navigation header title |
+
+**Glyphs** (`glyph`): text characters used as icons (back chevron, close, list chevron, check). `sm` 22 / 26, `md` 24 / 28,
+`lg` 32 / 36. **Badge** (`badge`): the numbered volt square of the FactRow, 24 pt with 13 / 16 number text.
+Components take sizes from these tokens, not literals.
 
 Dynamic Type is on everywhere; `numberXL` is capped at 1.4× so hero numbers don't overflow.
 
@@ -57,14 +67,34 @@ Dynamic Type is on everywhere; `numberXL` is capped at 1.4× so hero numbers don
 - Every touch target ≥ 44 pt. Primary CTA 56 pt tall, pinned at the bottom of task screens.
 
 ## Components (v1)
-| Component | Where | Notes |
-|---|---|---|
-| Button | `ui.tsx` | primary (volt fill, condensed caps), secondary (outline), danger (text) |
-| TextField | `ui.tsx` | label above (label variant), 52 pt, surface fill |
-| Choice | `ui.tsx` | chips as radio group; selected = 2 pt accentText outline |
-| LaneBar | `ui.tsx` | 10-segment calorie bar, exposed as a progressbar to screen readers |
-| Card, Screen, Text, BrandMark | `ui.tsx` | |
-| *Planned for Milestone 1* | | macro bar trio, meal row, segmented tabs (Describe/Search/Scan/Photo), stepper, source badge, bottom tab bar with the skewed volt "+" |
+Source: `apps/mobile/src/components/ui/` (one file per component, re-exported from `index.ts`).
+
+| Component | Notes |
+|---|---|
+| Button | primary (volt fill, condensed caps), secondary (outline), danger, text; size `cta` for the pinned primary action; `busyLabel` while loading |
+| TextField | label above (label variant), 52 pt, surface fill; helper text and live inline error |
+| Choice | chips as radio group; selected = 2 pt accentText outline and `accessibilityState.checked` |
+| RadioCard | large selectable card (goal, activity, pace options); radio role, checked state, optional unavailable state |
+| LaneBar | 10-segment calorie bar, progressbar for screen readers; optional `valueText` |
+| Card, Screen, Text, BrandMark | Screen exposes `columnStyle` (480 pt max-width column) |
+| StepHeader | back control plus a "Step n of 5" progress bar |
+| TaskScreen | scrolling content with a pinned footer: `notice` slot, optional small muted `footnote` (e.g. "Not medical advice." on the plan), then the action; the footer scrolls and the tagline hides at large text or with the keyboard. Messages that must be seen on first paint go in the footer, never at the end of the scrolling content |
+| Notice | info, danger or warning message, live region, optional action. `warning` (amber rule and text) is used only for the pace "faster than we recommend" message |
+| Tag | small caps pill (CUSTOM, SAFETY MINIMUM) |
+| MacroTrio | protein, carbs, fat values; compact and "previous" variants; stacks at large text |
+| BreakdownRow | label and value row for the maths card |
+| ListRow | tappable summary row with chevron (Adjust and Edit sheets) |
+| Stepper | adjustable numeric field with minus/plus buttons that stay pressable at limits |
+| Sheet | modal sheet (dialog on wide web); Back/Close, discard confirmation when dirty |
+| FadeRise | entrance motion, disabled under reduce motion |
+
+FactRow pattern: a bold title with a muted detail line, used on the consent page.
+
+### Motion and scale tokens
+`motion = { fast: 120, base: 200, stagger: 60 }` (ms) and `largeTextScale = 1.5` (font scale at which layouts switch to
+the stacked, large-text variant) live in `packages/ui/src/tokens.ts`.
+
+| *Planned for Milestone 1* | | macro bar trio, meal row, segmented tabs (Describe/Search/Scan/Photo), source badge, bottom tab bar with the skewed volt "+" |
 
 ## Patterns (from the canvas)
 - **Today:** date label → "TODAY" display → streak badge; calorie card (numberXL kcal left, lane bar, macro trio); meal rows; empty meal row is a dashed button whose action is "Fix my day".

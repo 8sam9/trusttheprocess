@@ -27,7 +27,7 @@
       "output": "single"
     },
     "plugins": [
-      "expo-router",
+      ["expo-router", { "asyncRoutes": { "web": false } }],
       "expo-status-bar",
       "expo-sqlite",
       "expo-web-browser",
@@ -40,7 +40,8 @@
           "image": "./assets/splash-icon.png",
           "imageWidth": 160
         }
-      ]
+      ],
+      "expo-localization"
     ],
     "experiments": {
       "typedRoutes": true

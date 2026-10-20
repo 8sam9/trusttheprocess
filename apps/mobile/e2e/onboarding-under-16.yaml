@@ -1,0 +1,16 @@
+# Spec 001: a year of birth under 16 shows the supportive stop screen and stores nothing.
+appId: app.trusttheprocess
+---
+- assertVisible: 'YOUR DATA, YOUR CALL'
+- tapOn: 'I AGREE'
+- tapOn: 'Female'
+- tapOn: 'Year of birth'
+- inputText: '2015'
+- tapOn: 'Height (cm)'
+- inputText: '150'
+- tapOn:
+    text: 'Current weight.*'
+- inputText: '45'
+- hideKeyboard
+- tapOn: 'CONTINUE'
+- assertVisible: 'SEE YOU AT 16'

@@ -68,12 +68,14 @@ export interface DailyTargets extends MacroTargets {
 export const PROTEIN_G_PER_KG: Record<Goal, number> = { lose: 1.6, maintain: 1.4, gain: 1.6 };
 /** Share of calories from fat. */
 export const FAT_KCAL_SHARE = 0.3;
+/** Protein never exceeds this share of calories, so very low targets still leave room for carbs and fat. */
+export const PROTEIN_MAX_KCAL_SHARE = 0.35;
 
 export function macroTargets(kcal: number, weightKg: number, goal: Goal): MacroTargets {
-  // Cap protein at 35% of calories so very low targets still leave room for carbs and fat.
+  // Cap protein (PROTEIN_MAX_KCAL_SHARE) so very low targets still leave room for carbs and fat.
   const proteinG = Math.min(
     PROTEIN_G_PER_KG[goal] * weightKg,
-    (kcal * 0.35) / KCAL_PER_GRAM.protein,
+    (kcal * PROTEIN_MAX_KCAL_SHARE) / KCAL_PER_GRAM.protein,
   );
   const fatG = (kcal * FAT_KCAL_SHARE) / KCAL_PER_GRAM.fat;
   const carbKcal = kcal - proteinG * KCAL_PER_GRAM.protein - fatG * KCAL_PER_GRAM.fat;

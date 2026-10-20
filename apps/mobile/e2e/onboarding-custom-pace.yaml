@@ -1,0 +1,30 @@
+# Spec 001, CR-1: custom pace shows the 0.75 recommendation, rejects out-of-range, accepts a valid value.
+appId: app.trusttheprocess
+---
+- assertVisible: 'YOUR DATA, YOUR CALL'
+- tapOn: 'I AGREE'
+- tapOn: 'Female'
+- tapOn: 'Year of birth'
+- inputText: '1996'
+- tapOn: 'Height (cm)'
+- inputText: '165'
+- tapOn:
+    text: 'Current weight.*'
+- inputText: '65'
+- hideKeyboard
+- tapOn: 'CONTINUE'
+- tapOn: 'Lose fat.*'
+- tapOn: 'CONTINUE'
+- tapOn: 'Lightly active.*'
+- tapOn: 'CONTINUE'
+- assertVisible: 'We strongly suggest no more than 0.75 kg a week.*'
+- tapOn: 'Custom.*'
+- tapOn: 'Custom pace in kg a week'
+- inputText: '1.6'
+- tapOn: 'CONTINUE'
+- assertVisible: 'Enter a pace between 0.01 and 1.5 kg a week.'
+- eraseText: 3
+- inputText: '0.9'
+- hideKeyboard
+- tapOn: 'CONTINUE'
+- assertVisible: 'YOUR GAME PLAN'

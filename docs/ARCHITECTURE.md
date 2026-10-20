@@ -50,8 +50,9 @@ docs/                   spec, ADRs, feature specs, experiment log
 - Account deletion: `delete-account` edge function → `auth.admin.deleteUser` → everything cascades.
 
 ## Core data model (initial)
-- `profiles` (user_id, sex, birth_year, height_cm, activity_level, goal, units, locale)
-- `targets` (user_id, effective_from, kcal, protein_g, carbs_g, fat_g, per_meal json)
+- `profiles` (user_id, sex, birth_year, height_cm, weight_kg + weight_recorded_on (until 007), activity_level, goal, goal_option, weekly_rate_kg, units, timezone, consent + onboarding timestamps). Body stats are written only through `apply_targets()` (ADR 0004).
+- `daily_targets` (user_id, effective_from local date, kcal, protein_g, carbs_g, fat_g, calculated_kcal, floor_applied, derivation snapshot, formula_version): effective-dated, never recomputed, written only through `apply_targets()` (ADR 0004). Per-meal goals arrive with F12.
+- Health-data writes record consent in the same transaction (ADR 0005).
 - `foods` (id, source enum[usda|off|user|ai], source_ref, name, brand, barcode, nutrients per 100g jsonb, verified bool)
 - `servings` (food_id, label, grams)
 - `diary_entries` (id uuid client-generated, user_id, date, meal, food_id nullable, grams, nutrients snapshot jsonb, origin enum[search|barcode|text|photo|voice|quick], ai_confidence, updated_at, deleted_at)

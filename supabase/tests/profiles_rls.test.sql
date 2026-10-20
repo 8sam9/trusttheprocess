@@ -1,6 +1,6 @@
 -- pgTAP: profiles table security. Run with `supabase test db`.
 begin;
-select plan(16);
+select plan(24);
 
 -- Fixtures: two users (the trigger creates their profiles).
 insert into auth.users (id, email) values
@@ -39,6 +39,33 @@ select throws_ok(
 select throws_ok(
   $$ update public.profiles set health_data_consent_at = now() $$,
   '42501', null, 'consent timestamp is not writable directly (set via a dedicated consent flow)'
+);
+select throws_ok(
+  $$ update public.profiles set sex = 'female' $$, '42501', null, 'sex is not directly writable'
+);
+select throws_ok(
+  $$ update public.profiles set birth_year = 1990 $$, '42501', null, 'birth_year is not directly writable'
+);
+select throws_ok(
+  $$ update public.profiles set height_cm = 170 $$, '42501', null, 'height_cm is not directly writable'
+);
+select throws_ok(
+  $$ update public.profiles set activity_level = 'light' $$, '42501', null, 'activity_level is not directly writable'
+);
+select throws_ok(
+  $$ update public.profiles set goal = 'lose', weekly_rate_kg = 0.5 $$, '42501', null,
+  'goal and weekly_rate_kg are not directly writable'
+);
+select throws_ok(
+  $$ update public.profiles set onboarding_completed_at = now() $$, '42501', null,
+  'onboarding_completed_at is not directly writable (completion only via apply_targets)'
+);
+select throws_ok(
+  $$ update public.profiles set weight_kg = 70 $$, '42501', null, 'weight_kg is not directly writable'
+);
+select lives_ok(
+  $$ update public.profiles set units = 'imperial', timezone = 'Europe/Rome', display_name = 'Alice B' $$,
+  'units, timezone and display_name remain directly writable'
 );
 select isnt(public.give_health_data_consent(), null, 'Alice can give consent via the function');
 select is(

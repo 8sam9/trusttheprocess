@@ -110,6 +110,18 @@ export const type = {
   body: { fontFamily: fonts.bodyMedium, fontSize: 16, lineHeight: 23 },
   bodyRegular: { fontFamily: fonts.body, fontSize: 16, lineHeight: 23 },
   small: { fontFamily: fonts.body, fontSize: 14, lineHeight: 20 },
+  /** Choice chip text. */
+  chip: { fontFamily: fonts.bodyMedium, fontSize: 15, lineHeight: 20 },
+  /** Text typed into a TextField. */
+  input: { fontFamily: fonts.body, fontSize: 17, lineHeight: 22 },
+  /** Small inline number (promise list on sign-in). */
+  numberS: { fontFamily: fonts.number, fontSize: 18, lineHeight: 22 },
+  /** Medium number (Stepper value on a sheet). */
+  numberM: { fontFamily: fonts.number, fontSize: 28, lineHeight: 32 },
+  /** Editable big number (Stepper field). */
+  numberInput: { fontFamily: fonts.display, fontSize: 44, lineHeight: 48 },
+  /** Native navigation header title. */
+  navTitle: { fontFamily: fonts.title, fontSize: 18, lineHeight: 22 },
   label: {
     fontFamily: fonts.bodySemibold,
     fontSize: 12,
@@ -119,4 +131,20 @@ export const type = {
   },
 } as const satisfies Record<string, TextStyleToken>;
 
+/** Text glyphs used as icons (chevron, close, check). Pair with `lineHeight` so they centre in a 44 pt target. */
+export const glyph = {
+  sm: { fontSize: 22, lineHeight: 26 },
+  md: { fontSize: 24, lineHeight: 28 },
+  lg: { fontSize: 32, lineHeight: 36 },
+} as const;
+
+/** Numbered volt badge (FactRow): square size and its number text. */
+export const badge = { size: 24, fontSize: 13, lineHeight: 16 } as const;
+
 export type TypeVariant = keyof typeof type;
+
+/** Motion durations in ms. Rule: with Reduce Motion on, replace movement with an instant change or a cross-fade of at most 100 ms. */
+export const motion = { fast: 120, base: 200, stagger: 60 } as const;
+
+/** Font scale at or above which layouts reflow (MacroTrio stacks, footers unpin, tagline hides). */
+export const largeTextScale = 1.5;
