@@ -5,3 +5,5 @@ export * from './db';
 export * from './targets';
 export * from './api';
 export * from './analytics';
+export * from './foods';
+export * from './gtin';

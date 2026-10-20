@@ -867,3 +867,29 @@ Layers: **unit** (vitest in `tools/food-import` or `packages/shared`), **pipelin
 - **H4: AC 2 reinterpretation** (T12.1) and dropping non-surfacing rows first under the budget (T12.2). **Default:** yes.
 - **H5: Remote operations are yours.** You enable `food_importer` login once on the Free project (`alter role food_importer with login password '…'` in the SQL editor), store the URL only on your machine, and run the first remote import yourself with `--apply --target remote --confirm-remote <ref>`. Applying the migrations remotely (`supabase db push`) also needs your confirmation. Agents never do any of this.
 - **H6: Split** into 002a/002b, with USDA Branded moved to 002b (differs from Q14's suggested cut). **Default:** split as in T9. The orchestrator decides whether 002a stays on this branch.
+
+---
+
+# Backend notes
+
+## Backend notes: C1 (shared contract, 2026-10-20)
+
+Files: `packages/shared/src/foods.ts`, `gtin.ts`, `foods.test.ts`, `gtin.test.ts`; `index.ts` re-exports both. No new dependencies.
+
+Command output summary (`pnpm install --frozen-lockfile` was needed first; node_modules was missing):
+- `pnpm --filter @ttp/shared test`: 9 files, 203 tests passed (new: gtin 47, foods 19).
+- `pnpm --filter @ttp/shared typecheck`: clean.
+- `pnpm --filter @ttp/shared lint`: clean.
+- `pnpm exec prettier --check packages/shared docs/specs`: clean.
+- `supabase test db` not run: C1 has no SQL.
+
+Coverage: all GTIN forms (UPC-A, EAN-13, GTIN-14, EAN-8, 9 to 11 digit padding, whitespace), failures (`non_numeric`, `bad_length`, `bad_check_digit`), every restricted range in T6.1 with both edges and neighbours, and boundaries 200/201 ids, 10/11 servings, 5,000/5,000.01 g, limit 50/51.
+
+### Open questions (conservative reading applied; the architect should confirm)
+1. **GTIN-14 with a non-zero indicator digit and restricted ranges.** T6.1 checks prefixes on `0` + GTIN-13 only. Applied literally: an indicator-digit GTIN-14 is never restricted, even if the inner item is an in-store code. Alternative is to test the inner GTIN-13 (digits 2 to 13).
+2. **`isRestrictedGtin14` cannot see the original length.** A GTIN-8 is recognised as a key starting with six zeros (GS1 reserves the colliding GTIN-13 range, T6.1), then restricted if it starts with 0 or 2.
+3. **`kind` for 9 to 11 digit codes** is `'gtin13'` (the union has no padded kind); T6.1 says they are padded to 13.
+4. **Whitespace:** all whitespace is removed, including internal (reading of "strip whitespace"). An empty or blank string returns `non_numeric`, not `bad_length`. Non-ASCII digits are `non_numeric`.
+5. **All-zero codes** (for example `00000000`) pass the check digit and normalise (as a restricted GTIN-8). Not specified; left as is.
+6. **`FoodRow.reasons`** is typed as `FoodFlagCode[]` (soft flags only), so a row carrying a hide reason in `reasons[]` would fail parsing. This matches T3's comments ("soft flags stored in reasons[]"), but the SQL column type is the full `reason_code[]`; B2/M1 must keep hide reasons out of `reasons`.
+7. **`FoodRow.hidden`** is exposed as a boolean; `hidden_reason` is not in the T3 column list, so it is not in the contract.
