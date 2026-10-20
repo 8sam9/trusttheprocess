@@ -773,3 +773,396 @@ No new colours are proposed.
 9. Consent timing (on tap vs at final save): architect's decision, documented in the technical plan.
 10. In scope: Settings reshape (body stats leave the Profile form; units/name autosave) and the Today target card.
 Design-system additions in D7 are approved; apply them to DESIGN_SYSTEM.md and packages/ui as part of the build.
+
+---
+
+# Technical plan
+
+Status: **drafted by the architect, 2026-10-20.** ADRs: [0004 effective-dated targets via a validating RPC](../decisions/0004-effective-dated-targets-via-rpc.md) and [0005 consent recorded with the first health write](../decisions/0005-consent-recorded-with-first-health-write.md). `docs/ARCHITECTURE.md` (data model) has been updated to match.
+
+APIs below were checked against the installed versions: expo-router 58.0.23 (`Stack.Protected` with `guard`/`redirectTo`, `usePreventRemove`, `expo-router/testing-library` `renderRouter`), react-native 0.88 `Modal` (`presentationStyle="pageSheet"`, `allowSwipeDismissal` + `onRequestClose`), expo-sqlite 58.0.13 (`expo-sqlite/localStorage/install`, which provides a synchronous `localStorage`), zod 4.6.7 (`z.strictObject`, `z.discriminatedUnion`, `z.iso.date`), and @tanstack/react-query 5.104. Two packages are not installed yet, so their APIs were checked against current Expo docs: expo-localization (`getLocales()[0].regionCode`, which can be null on web) and expo-haptics (`selectionAsync`, `impactAsync(ImpactFeedbackStyle.Light)`, `notificationAsync(NotificationFeedbackType.Success)`).
+
+## T1. Key decisions
+
+| # | Question | Decision | Why |
+|---|---|---|---|
+| 1 | Where targets live | New table `daily_targets`, keyed by `(user_id, effective_from)` (user-local date). Each row stores the targets and a snapshot of how they were derived. Profile inputs stay on `profiles`, plus `goal_option`, `weight_kg` and `weight_recorded_on`. | OQ 5 (past days keep their target), AC 23 and AC 27 (stored values are never recomputed), and spec 003 reads it. ADR 0004. |
+| 2 | Atomic final save | One `SECURITY DEFINER` RPC, `public.apply_targets(...)`, handles both onboarding and Settings edits. It records consent if needed, validates, updates the profile, upserts today's targets row and sets `onboarding_completed_at`, all in one transaction. Direct `UPDATE` of body stats and `onboarding_completed_at` is revoked. | AC 11, double-tap safety (idempotent upsert), and server-side enforcement of consent, age, ranges, floor and cap. |
+| 3 | Where the formula runs | **Only in TypeScript** (`@ttp/shared`). The client computes for the live preview and sends the result. The RPC re-checks the **safety invariants** (consent, age, ranges, goal/pace, the lose guard, floor, cap, macro consistency within ±10 kcal), not the formula. A JSON fixture of boundary cases drives both vitest (zod contract) and a **generated** pgTAP file (RPC), and CI fails if the generated file is stale. | One formula means no drift. The safety rules are constants that can be checked on the server. A modified client can only alter its own `calculated_kcal`, and only within the safe bounds. |
+| 4 | Consent timing | **Recorded at final save** (inside `apply_targets`, `p_give_consent = true`). Tapping "I AGREE" only records the decision in memory. | All steps work offline (AC 28), consent and data are stored together, and an under-16 user who tapped "I agree" leaves no consent record. ADR 0005. Consent errors therefore appear on the reveal or the Settings Apply, not on S1. |
+| 5 | Under-16 | Nothing is sent for a first-run user. If the server already holds consent or body stats (legacy settings form, or an earlier session) and onboarding isn't complete, the client calls a new RPC, `reset_onboarding_for_underage()`. It withdraws consent and clears stored body-stat columns. If the call fails, a pending flag is kept on the device and retried at the next app start. | Gate 2 resolution 7, and it makes S2b's "We haven't saved your year of birth" true. |
+| 6 | Offline cache and gate | A small JSON value per user in the **synchronous** `localStorage`: expo-sqlite's polyfill on native (already installed via `authStorage.native.ts`) and `window.localStorage` on web. It holds the onboarding-complete flag and a summary of the current targets, and **no body stats**. The `(app)` layout uses it so the first render already knows where to go, which avoids flashing the wrong screen. | Gate 2 resolution 8. TanStack's persister is rejected because it would write the whole profile row (body stats) to disk. |
+| 7 | Routing | `(app)/onboarding/*` is a nested Stack, one route per step, so iOS swipe-back, Android back and browser back all work (D3). Screen availability is controlled by `Stack.Protected`: `(app)/_layout` guards on the gate status, and `onboarding/_layout` guards on the draft phase. | This uses the same pattern as the existing auth guard. Guard flips redirect automatically. |
+| 8 | Answer state | A pure reducer (`features/targets/draft.ts`) in a React context mounted by `onboarding/_layout.tsx`. It lives only in memory (OQ 6) and is discarded on sign-out because the `(app)` tree unmounts. | It's testable without React and adds no new dependency. |
+| 9 | Adjust and Edit sheet | One `TargetsSheet` component built on RN `Modal` (iOS `pageSheet`, Android back via `onRequestClose`, web overlay or dialog). It's used by the reveal (mode `onboarding`) and Settings (mode `settings`). It edits a **working copy** of the draft: DONE or APPLY commits, and dismissing while dirty asks to discard. | Expo Router 58 has no web modal presentation, and a route-based sheet would have to share the draft across routes. `Modal` is core RN and works on all three platforms. |
+
+## T2. Schema changes
+
+New migration: `supabase/migrations/20261020090000_onboarding_targets.sql`. All changes are additive except the grant revoke and the one-off reset noted below.
+
+```sql
+-- 1. Four-way goal (Gate 2 resolution 4) and starting weight (OQ 1).
+create type public.goal_option as enum ('lose_fat', 'build_muscle', 'fuel_performance', 'just_track');
+
+alter table public.profiles
+  add column goal_option public.goal_option,
+  add column weight_kg numeric(5, 2) check (weight_kg between 30 and 350),   -- 2 dp so 0.1 lb round-trips
+  add column weight_recorded_on date,                                          -- user-local date; 007 migrates it
+  drop constraint profiles_weekly_rate_kg_check,                               -- CR-1: widen 0..1 → 0..1.5
+  add constraint profiles_weekly_rate_kg_check check (weekly_rate_kg between 0 and 1.5),
+  add constraint profiles_goal_option_matches_goal check (
+    goal_option is null or goal is null or
+    (goal_option = 'lose_fat' and goal = 'lose') or
+    (goal_option = 'build_muscle' and goal = 'gain') or
+    (goal_option in ('fuel_performance', 'just_track') and goal = 'maintain'));
+
+-- 2. Body stats and completion are written only through apply_targets() (ADR 0004).
+revoke update (sex, birth_year, height_cm, activity_level, goal, weekly_rate_kg, onboarding_completed_at)
+  on table public.profiles from authenticated;
+-- Remaining direct-update columns: display_name, units, timezone.
+
+-- 3. Invariant "completed ⇔ has a targets row". No targets exist yet, so no existing row can be completed.
+--    Pre-launch data only. Needs human confirmation before running against any shared or remote database.
+update public.profiles set onboarding_completed_at = null where onboarding_completed_at is not null;
+
+-- 4. Effective-dated targets.
+create table public.daily_targets (
+  user_id uuid not null references auth.users (id) on delete cascade,
+  effective_from date not null,                         -- user-local YYYY-MM-DD
+  kcal integer not null check (kcal between 1200 and 12000),
+  protein_g integer not null check (protein_g >= 0),
+  carbs_g integer not null check (carbs_g >= 0),
+  fat_g integer not null check (fat_g >= 0),
+  calculated_kcal integer not null check (calculated_kcal between 1200 and 12000), -- formula result after floor
+  is_custom boolean generated always as (kcal <> calculated_kcal) stored,
+  floor_applied boolean not null,
+  bmr integer not null check (bmr > 0),
+  maintenance_kcal integer not null check (maintenance_kcal > 0),
+  goal public.goal not null,
+  goal_option public.goal_option not null,
+  weekly_rate_kg numeric(3, 2) not null check (weekly_rate_kg between 0 and 1.5),
+  activity_level public.activity_level not null,
+  formula_version text not null check (char_length(formula_version) between 1 and 32),
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),
+  primary key (user_id, effective_from)
+);
+comment on table public.daily_targets is
+  'Daily calorie/macro targets, effective from a user-local date; never recomputed. Health data (GDPR art. 9). Export: all columns (F15).';
+
+create trigger daily_targets_set_updated_at before update on public.daily_targets
+for each row execute function public.set_updated_at();
+
+alter table public.daily_targets enable row level security;
+revoke all on table public.daily_targets from anon, authenticated;
+grant select on table public.daily_targets to authenticated;          -- no insert/update/delete: RPC only
+create policy "daily_targets: read own" on public.daily_targets for select to authenticated
+  using ((select auth.uid()) = user_id);
+```
+
+The upper limit of 12,000 kcal is a sanity bound. The largest valid input (250 cm, 350 kg, 16 years old, male, athlete, gaining 1.5 kg a week) gives about 11,130 kcal. The 6,000 cap applies only to manual edits (see the RPC).
+
+### `apply_targets` (sketch)
+
+```sql
+create function public.apply_targets(
+  p_give_consent boolean,
+  p_goal_option public.goal_option,
+  p_sex public.biological_sex,
+  p_birth_year smallint,
+  p_height_cm numeric,
+  p_weight_kg numeric,
+  p_activity_level public.activity_level,
+  p_weekly_rate_kg numeric,
+  p_units public.unit_system,
+  p_timezone text,
+  p_kcal integer, p_protein_g integer, p_carbs_g integer, p_fat_g integer,
+  p_calculated_kcal integer, p_floor_applied boolean, p_bmr integer, p_maintenance_kcal integer,
+  p_formula_version text
+) returns jsonb
+language plpgsql security definer set search_path = ''
+as $$
+declare
+  v_uid uuid := (select auth.uid());
+  v_profile public.profiles;
+  v_goal public.goal;
+  v_age int;
+  v_floor int;
+  v_date date;
+  v_targets public.daily_targets;
+begin
+  if v_uid is null then raise exception 'not_authenticated'; end if;
+  select * into v_profile from public.profiles where user_id = v_uid for update;   -- serialises double taps
+
+  -- Consent first (ADR 0005): nothing below runs without it.
+  if v_profile.health_data_consent_at is null then
+    if not p_give_consent then raise exception 'consent_required'; end if;
+    update public.profiles set health_data_consent_at = now() where user_id = v_uid;
+  end if;
+
+  -- Validation. The constants mirror @ttp/shared/targets.ts; the parity fixture enforces this.
+  if not exists (select 1 from pg_catalog.pg_timezone_names where name = p_timezone) then raise exception 'invalid_input'; end if;
+  v_age := extract(year from now() at time zone 'UTC')::int - p_birth_year;  -- same UTC year rule as ageInYears()
+  if v_age < 16 then raise exception 'under_min_age'; end if;
+  if v_age > 110 or p_height_cm not between 100 and 250 or p_weight_kg not between 30 and 350 then raise exception 'invalid_input'; end if;
+  v_goal := case p_goal_option when 'lose_fat' then 'lose' when 'build_muscle' then 'gain' else 'maintain' end;
+  if (v_goal = 'maintain' and p_weekly_rate_kg <> 0)
+     or (v_goal <> 'maintain' and p_weekly_rate_kg not between 0.01 and 1.5) then raise exception 'invalid_input'; end if;
+  if v_goal = 'lose' and (v_age < 18 or p_weight_kg / ((p_height_cm / 100) ^ 2) < 18.5) then
+    raise exception 'lose_goal_unavailable'; end if;
+  v_floor := case p_sex when 'male' then 1500 else 1200 end;
+  if p_kcal < v_floor or p_calculated_kcal < v_floor then raise exception 'below_floor'; end if;
+  if p_floor_applied and p_calculated_kcal <> v_floor then raise exception 'invalid_input'; end if;
+  if p_kcal <> p_calculated_kcal and p_kcal > greatest(6000, p_calculated_kcal) then raise exception 'above_cap'; end if;
+  if abs(4 * p_protein_g + 4 * p_carbs_g + 9 * p_fat_g - p_kcal) > 10
+     or 4 * p_protein_g > p_kcal * 0.35 + 2 then raise exception 'macro_mismatch'; end if;
+
+  v_date := (now() at time zone p_timezone)::date;   -- "applies from today" in the user's zone (AC 26)
+
+  update public.profiles set
+    sex = p_sex, birth_year = p_birth_year, height_cm = p_height_cm, activity_level = p_activity_level,
+    goal = v_goal, goal_option = p_goal_option, weekly_rate_kg = p_weekly_rate_kg,
+    units = p_units, timezone = p_timezone,
+    weight_recorded_on = case when weight_kg is distinct from p_weight_kg then v_date else weight_recorded_on end,
+    weight_kg = p_weight_kg,
+    onboarding_completed_at = coalesce(onboarding_completed_at, now())
+  where user_id = v_uid returning * into v_profile;
+
+  -- Rows dated after the new "today" (the user moved to an earlier timezone) are superseded.
+  delete from public.daily_targets where user_id = v_uid and effective_from > v_date;
+  insert into public.daily_targets as t (user_id, effective_from, kcal, protein_g, carbs_g, fat_g, calculated_kcal,
+    floor_applied, bmr, maintenance_kcal, goal, goal_option, weekly_rate_kg, activity_level, formula_version)
+  values (v_uid, v_date, p_kcal, p_protein_g, p_carbs_g, p_fat_g, p_calculated_kcal, p_floor_applied, p_bmr,
+    p_maintenance_kcal, v_goal, p_goal_option, p_weekly_rate_kg, p_activity_level, p_formula_version)
+  on conflict (user_id, effective_from) do update set
+    kcal = excluded.kcal, protein_g = excluded.protein_g, carbs_g = excluded.carbs_g, fat_g = excluded.fat_g,
+    calculated_kcal = excluded.calculated_kcal, floor_applied = excluded.floor_applied, bmr = excluded.bmr,
+    maintenance_kcal = excluded.maintenance_kcal, goal = excluded.goal, goal_option = excluded.goal_option,
+    weekly_rate_kg = excluded.weekly_rate_kg, activity_level = excluded.activity_level,
+    formula_version = excluded.formula_version
+  returning * into v_targets;
+
+  return jsonb_build_object('profile', to_jsonb(v_profile), 'targets', to_jsonb(v_targets));
+end;
+$$;
+revoke execute on function public.apply_targets(...) from public, anon;
+grant execute on function public.apply_targets(...) to authenticated;
+```
+
+- **Errors.** Every rejection is `RAISE EXCEPTION '<code>'` (SQLSTATE P0001). PostgREST returns `{ code: 'P0001', message: '<code>' }`, and the client maps `message` through `ApplyTargetsErrorCode`. Check violations (23514) and bad enum values (22P02) also map to `validation`.
+- **Atomicity.** Any raise rolls back the whole call, including the consent update (AC 11).
+- **Double taps.** Concurrent calls queue on the row lock. A repeat on the same day upserts the same row, and `onboarding_completed_at` keeps its first value.
+
+### `reset_onboarding_for_underage()` (sketch)
+
+```sql
+create function public.reset_onboarding_for_underage() returns void
+language sql security definer set search_path = '' as $$
+  update public.profiles set
+    health_data_consent_at = null, sex = null, birth_year = null, height_cm = null, weight_kg = null,
+    weight_recorded_on = null, activity_level = null, goal = null, goal_option = null, weekly_rate_kg = null
+  where user_id = (select auth.uid()) and onboarding_completed_at is null;   -- no-op for completed users
+$$;
+-- revoke from public, anon; grant execute to authenticated
+```
+
+- **No new edge function.** `delete-account` keeps working because `daily_targets` cascades from `auth.users`.
+- **Export inventory for F15 (AC 30):** `profiles.goal_option`, `profiles.weight_kg`, `profiles.weight_recorded_on`, and every column of `daily_targets`.
+- **Logs.** Nothing new is logged. RPC errors carry only the code, never the values.
+
+## T3. Contracts in `packages/shared` (both sides depend on these; land first)
+
+| File | Exports (names and shapes) |
+|---|---|
+| `src/targets.ts` (new) | **Constants:** `MIN_AGE_YEARS = 16`, `MAX_AGE_YEARS = 110`, `LOSE_GUARD_MIN_AGE = 18`, `LOSE_GUARD_MIN_BMI = 18.5`, `HEIGHT_CM = { min: 100, max: 250 }`, `WEIGHT_KG = { min: 30, max: 350 }`, `MIN_WEEKLY_RATE_KG = 0.01`, `MAX_WEEKLY_RATE_KG = 1.5`, `RECOMMENDED_MAX_WEEKLY_RATE_KG = 0.75`, `MANUAL_KCAL_MAX = 6000`, `MANUAL_KCAL_STEP = 50`, `MACRO_KCAL_TOLERANCE = 10`, `PROTEIN_MAX_KCAL_SHARE = 0.35` (moved out of `macroTargets`), `TARGETS_FORMULA_VERSION = 'msj-1'`, `DEFAULT_WEEKLY_RATE_KG = { lose: 0.5, gain: 0.25 }`, `PACE_PRESETS: Record<'lose' \| 'gain', Record<UnitSystem, readonly { id: 'steady' \| 'moderate' \| 'faster'; kg: number }[]>>` (lose metric 0.25/0.5/0.75 and imperial 0.23/0.45/0.68; gain metric 0.25/0.5 and imperial 0.23/0.45). `CALORIE_FLOOR` stays in `nutrition.ts`. **Domain:** `GoalOption = z.enum(['lose_fat','build_muscle','fuel_performance','just_track'])`, `GOAL_FOR_OPTION: Record<GoalOption, Goal>`. **Pure functions:** `explainTargets(input: ProfileInput, today?: Date): TargetsBreakdown`, `applyManualKcal(b: TargetsBreakdown, kcal: number, p: Pick<ProfileInput,'sex'\|'weightKg'\|'goal'>): FinalTargets`, `manualKcalBounds(sex, calculatedKcal): { min: number; max: number }` (min is the floor, max is `max(6000, calculatedKcal)`), `isLoseGoalGuarded(p: {birthYear; heightCm; weightKg}, today?): boolean` (BMI stays internal and is never returned), `defaultUnitsForRegion(region: string \| null): UnitSystem` (US, LR, MM give imperial), `localDateIn(timeZone: string, now?: Date): string`, `targetForDate<T extends { effective_from: string }>(rows: readonly T[], date: string): T \| null`. |
+| `TargetsBreakdown` | `{ bmr; activityMultiplier; maintenanceKcal; adjustmentKcal /* goal delta, signed */; rawKcal; calculatedKcal; roundingChanged: boolean; floorKcal; floorApplied; floorAtOrAboveMaintenance: boolean; impliedWeeklyRateKg: number \| null /* only when floorApplied */; proteinG; carbsG; fatG }` (all integers except the multiplier and the rate) |
+| `FinalTargets` | `{ kcal; proteinG; carbsG; fatG; isCustom: boolean; proteinCapped: boolean; clamped: 'floor' \| 'max' \| null }` |
+| `src/profile.ts` (change) | `ProfileInput.weeklyRateKg`: 0 for maintain, otherwise `MIN_WEEKLY_RATE_KG..MAX_WEEKLY_RATE_KG` (was `0..1` with `> 0`). Birth-year bounds are computed **at parse time** via `.refine` (today `currentYear` is frozen at module load, which goes stale across New Year). |
+| `src/db.ts` (change) | `ProfileRow` becomes a zod schema `ProfileRowSchema` (with the interface inferred from it) and gains `goal_option`, `weight_kg`, `weight_recorded_on`. `ProfileUpdate` is reduced to `display_name`, `units`, `timezone` to match the narrowed grant, which makes the old Settings body-stat save a type error. `DailyTargetsRow` is a zod schema mirroring the table. |
+| `src/api.ts` (new) | `ApplyTargetsArgs = z.strictObject({ p_give_consent, p_goal_option, p_sex, p_birth_year, p_height_cm, p_weight_kg, p_activity_level, p_weekly_rate_kg, p_units, p_timezone, p_kcal, p_protein_g, p_carbs_g, p_fat_g, p_calculated_kcal, p_floor_applied, p_bmr, p_maintenance_kcal, p_formula_version })`, with `.superRefine` applying the same rules as the RPC (it imports the constants above). `buildApplyTargetsArgs({ input: ProfileInput; goalOption; timezone; giveConsent; breakdown; final }): ApplyTargetsArgs`. `ApplyTargetsResult = z.object({ profile: ProfileRowSchema, targets: DailyTargetsRow })`. `ApplyTargetsErrorCode = z.enum(['not_authenticated','consent_required','under_min_age','invalid_input','lose_goal_unavailable','below_floor','above_cap','macro_mismatch'])`. `CachedGate = z.object({ v: z.literal(1), onboardingCompleted: z.boolean(), targets: z.object({ effective_from, kcal, protein_g, carbs_g, fat_g, is_custom, floor_applied }).nullable(), cachedAt: z.iso.datetime() })`. |
+| `src/analytics.ts` (new) | `AnalyticsEvent = z.discriminatedUnion('name', [...])`, one `z.strictObject` per event in §5, with enum or small-integer props only. CR-1 adds `pace_option: 'steady' \| 'moderate' \| 'faster' \| 'custom'` and `pace_band: 'le_0_75' \| 'gt_0_75'` to `targets_revealed` (only for lose and gain). `back_count` is `z.int().min(0).max(5)` (5 means 5+). |
+| `src/__fixtures__/apply-targets-cases.json` (new) | `[{ name, age, args /* ApplyTargetsArgs without p_birth_year */, consentOnServer: boolean, expect: 'ok' \| ApplyTargetsErrorCode, clientRejects: boolean }]`. It covers the AC 17 and AC 20 examples, ages 15/16/17/18/110/111, BMI 18.4 and 18.5 with lose, rate 0.009/0.01/0.75/0.76/1.5/1.51 and maintain with a non-zero rate, kcal 1199/1200 (female), 1499/1500 (male), custom 6000/6001 and custom above a 9,000 calculated value, macro sums off by 10 and 11, and consent missing. Age is stored instead of birth year so the cases don't go stale across New Year. |
+
+`packages/shared/scripts/gen-pgtap-cases.mjs` is plain Node with no TS imports. It reads the fixture and writes `supabase/tests/apply_targets_cases.test.sql`, where each case becomes `lives_ok` or `throws_ok(..., 'P0001', '<code>')`. Run with `--check` it exits non-zero if the generated file differs from what's on disk. A root script `pnpm gen:pgtap` runs it.
+
+## T4. Client plan
+
+### Routes (`apps/mobile/src/app`)
+```
+_layout.tsx                    unchanged: auth Stack.Protected
+(app)/_layout.tsx              GATE: useOnboardingGate() → S0 loading/error, else
+                               <Stack.Protected guard={status==='complete'}> index, settings
+                               <Stack.Protected guard={status==='needs_onboarding'}> onboarding
+(app)/index.tsx                Today (S8)
+(app)/settings.tsx             Settings (S9) + <TargetsSheet mode="settings">
+(app)/onboarding/_layout.tsx   <OnboardingProvider> + Stack; Protected by draft.phase:
+                                 'consent'  → consent.tsx (S1), declined.tsx (S1b)
+                                 'underage' → not-yet.tsx (S2b)
+                                 'steps'    → about-you.tsx (S2), goal.tsx (S3), activity.tsx (S4), pace.tsx (S5),
+                                              plan.tsx (S6 + <TargetsSheet mode="onboarding">)
+```
+- **Phase.** The phase is `'consent'` when the server has no consent and there's no in-memory consent, otherwise `'steps'`. "I AGREE" sets the in-memory consent, which flips the phase. The guard redirect lands on `about-you`, the first available screen, so there's no back into Consent (D2).
+- **Under-16.** The block sets the phase to `'underage'`, clears `birthYear` and the in-memory consent, and runs the reset RPC (T1 #5). "I typed the wrong year" sets the phase back to `'consent'`, then `about-you` opens with the year emptied and focused. *Deviation, flagged below:* the user re-confirms "16 or older" on S1 because their earlier statement was contradicted.
+- **Completion.** `apply_targets` succeeds, then `setQueryData(['profile', uid])`. The gate becomes `'complete'`, the onboarding group's guard turns false, and Expo Router redirects to the anchor `index`. Set `unstable_settings = { anchor: 'index' }`. If the `renderRouter` test shows that the redirect doesn't fire, call `router.replace('/')` explicitly (R1).
+- **Deep links and web refresh.** If a step URL is opened with an empty draft, each step checks its prerequisites and `<Redirect>`s to `about-you`.
+- **While saving.** `plan.tsx` sets `gestureEnabled: false` and calls `usePreventRemove(saving)`. A web-only `useBeforeUnload(hasTypedStats && !saved)` covers D6 web.
+
+### Gate (`features/targets/gate.ts`)
+`useOnboardingGate(): 'checking' | 'error' | 'needs_onboarding' | 'complete'`
+1. When the hook mounts, it reads `gateCache.read(uid)` synchronously from `localStorage` key `ttp:v1:gate:<uid>` and parses it with `CachedGate`. A corrupt value is ignored.
+2. If `useProfile()` has data, the status comes from `row.onboarding_completed_at`, and the cache is written with the flag plus a summary of the current targets.
+3. Otherwise, if the cache says completed, the status is `'complete'` (offline cold start, AC 2). The query keeps fetching in the background, and if the server disagrees the status switches to onboarding.
+4. Otherwise, if the query errored, the status is `'error'`: S0, which never defaults to onboarding or Today.
+5. Otherwise the status is `'checking'`: S0 loading.
+- **Cache clearing.** On `SIGNED_OUT` (in `AuthProvider`) and after delete-account: `queryClient.clear()` plus `gateCache.clear(uid)`.
+- **Query keys** now include the user id: `['profile', uid]` and `['targets', uid]`. This fixes a cross-account leak, because today's keys aren't user-scoped and sign-out doesn't clear the cache.
+- **Pending under-16 reset.** The gate also retries it when `ttp:v1:underage-reset:<uid>` is set.
+
+### State: server vs local
+| Data | Where | Notes |
+|---|---|---|
+| Profile row, targets rows | TanStack Query (`useProfile`, `useCurrentTargets`) | `useCurrentTargets` selects the latest few `daily_targets` rows (`order effective_from desc`), then applies `targetForDate(rows, localDateIn(tz))`. Its `placeholderData` comes from the gate cache so Today renders offline. |
+| Onboarding answers, consent decision, back count, start time | `OnboardingProvider` (useReducer, memory only) | They're lost on kill, refresh or sign-out by design (OQ 6). |
+| Sheet working copy | Local state in `TargetsSheet`, using the same reducer | Seeded from the draft (onboarding) or from the profile plus current targets (settings). |
+| Gate cache, pending underage reset | Synchronous `localStorage` (expo-sqlite polyfill on native, browser on web) | No body stats. Namespaced per user. |
+| "Plan saved" one-off line (S8) | In-memory flag in an `(app)` context | It disappears on the next open. |
+
+No Drizzle and no offline outbox. Full offline sync is spec 010.
+
+### Feature code (`apps/mobile/src/features/targets/`)
+- `draft.ts`: `TargetsDraft`, `draftReducer`, `draftFromProfile(row, targets?)`. The draft holds raw strings for typed fields, as in today's `form.ts`.
+- **Reducer rules:**
+  - changing units converts the typed values (D2);
+  - goal changes clear or preselect the pace (§6);
+  - any input change clears `customKcal` and raises the "recalculated" notice (Gate 2 resolution 5);
+  - a stored rate that matches a preset (within 0.005) selects that preset, otherwise Custom.
+- `validate.ts`: field errors in the user's units, using copy C-e1 to C-e10 and the CR-1 custom pace error.
+- `derive.ts`: draft → `ProfileInput`, then `explainTargets` and `applyManualKcal`, then a view model for S5, S6, S7 and S10 (eyebrow variant, BreakdownRows, notice variant C-f1 or C-f2, tags, pace-band warning).
+- `copy.ts`: every D4 string keyed by its ID (`C-r4`, ...), so copy review and tests share one source.
+- `api.ts`: `useCurrentTargets`, `useApplyTargets`, `useResetUnderage`, and `toSaveFailure(error): 'offline' | 'server' | 'validation'`.
+  - `'validation'` covers any `ApplyTargetsErrorCode` except `not_authenticated`, plus 23514 and 22P02.
+  - `'offline'` is a fetch failure with no PostgREST code (`message` like `TypeError: Network request failed` or `Failed to fetch`). The engineer verifies the exact supabase-js error shape in a test.
+  - `'server'` is everything else. Retries are manual (`retry: 0`).
+- `components/`: `AboutYouForm`, `GoalOptions`, `ActivityOptions`, `PaceOptions` (with the CR-1 custom card, the always-visible 0.75 Notice and the amber state above 0.75), `GamePlan` (target card, MacroTrio, maths), `TargetsSheet`. Step routes and sheet pages render the same components (D2 S7).
+- `OnboardingProvider.tsx`.
+
+The old `features/profile/form.ts` keeps only name and units for the Settings autosave.
+
+### Design-system work (D7, approved)
+- **`packages/ui/src/tokens.ts`:** `motion = { fast: 120, base: 200, stagger: 60 }` and `largeTextScale = 1.5`. Update `docs/design/DESIGN_SYSTEM.md` (components table and the FactRow pattern).
+- **`apps/mobile/src/components/ui.tsx`** becomes `components/ui/` (one file per component plus `index.ts`, so `@/components/ui` imports keep working).
+  - New components: `RadioCard`, `StepHeader`, `TaskScreen`, `Notice`, `Tag`, `MacroTrio`, `BreakdownRow`, `Stepper`, `Sheet` (RN `Modal`), `ListRow`.
+  - Fixes: `Button` gets `variant="text"` and `size="cta"`, `LaneBar` gets `valueText`, and `Choice` exposes `checked` instead of `selected`.
+  - These components are RN-specific, so they stay in the app, as today. `packages/ui` holds tokens only.
+- **New dependencies** (`npx expo install`): `expo-localization` and `expo-haptics`.
+  - Reduce Motion: RN `AccessibilityInfo.isReduceMotionEnabled` plus `reduceMotionChanged`. Font scale: `useWindowDimensions().fontScale`.
+  - Keyboard: RN `KeyboardAvoidingView` plus iOS `InputAccessoryView`. If Android edge-to-edge breaks the pinned footer, `react-native-keyboard-controller` is the fallback (R6).
+- **Analytics:** `lib/analytics.ts` exports `track(event: AnalyticsEvent)`, which validates with zod and forwards to a pluggable sink. Today the sink is a no-op in production, a dev logger in development and a jest spy in tests. **No analytics SDK is installed yet**; wiring PostHog is a separate decision (H3).
+
+### Offline behaviour
+- **Steps, reveal, Adjust (AC 28):** fully local, with no network calls.
+- **"Let's go", Apply and Consent (AC 29):** one RPC. On failure the draft is kept, an inline Notice uses copy C-sv1/2/3 or C-ed7, the button becomes TRY AGAIN, and `onboarding_save_failed{reason, stage:'final_save'}` is sent. `stage:'consent'` is no longer emitted, because consent is part of the save (ADR 0005); the value stays in the enum.
+- **Cold start offline:** a completed user reaches Today through the cache and sees the cached targets. A first-run user sees S0 loading, then S0 error, because we can't know their status and must not guess.
+
+## T5. Task list
+
+Each task is one reviewable unit with its own tests. **C1 is the contract both sides depend on.** After C1 merges into the branch, the B tasks and M tasks can run in parallel worktrees. The only cross-dependency is that M6's real-RPC smoke test needs B2.
+
+- **CONTRACT C1 (backend-engineer, first):** `packages/shared` `targets.ts` constants, `GoalOption`, `GOAL_FOR_OPTION`, `PACE_PRESETS` and the function **signatures** with stubbed bodies; `api.ts`; `analytics.ts`; `db.ts` and `profile.ts` changes (CR-1 range, parse-time birth-year bounds, narrowed `ProfileUpdate`, `ProfileRowSchema`, `DailyTargetsRow`); the fixture JSON plus a vitest run of every case through `ApplyTargetsArgs`. Tests: schema unit tests including CR-1 boundaries 0.01, 0.75, 0.76, 1.5, 1.51.
+- **BACKEND B1:** migration part 1: enum, profile columns, widened rate check, goal_option check, grant revoke, completion reset, `daily_targets` with RLS, grants and trigger. pgTAP: new `daily_targets_rls.test.sql`; `profiles_rls.test.sql` updated so that direct update of sex, birth_year, height_cm, activity_level, goal, weekly_rate_kg and onboarding_completed_at fails with 42501 while display_name, units and timezone still work; cascade on delete.
+- **BACKEND B2:** `apply_targets` RPC. pgTAP `apply_targets.test.sql`:
+  - consent required, given in the same call, and preserved on failure;
+  - atomic rollback;
+  - `effective_from` follows the timezone (two zones around midnight via a fixed `now()`, which needs `set local` with a test override or zones far enough apart);
+  - same-day upsert, deletion of future rows, past rows untouched;
+  - `onboarding_completed_at` set once;
+  - returned JSON shape;
+  - anon cannot execute.
+- **BACKEND B3:** `reset_onboarding_for_underage` RPC. pgTAP: clears consent and body columns when not completed; no-op when completed; only touches the caller's own row.
+- **BACKEND B4:** `gen-pgtap-cases.mjs` plus the generated `apply_targets_cases.test.sql`, root `pnpm gen:pgtap`, and a CI step in the `app` job (`node packages/shared/scripts/gen-pgtap-cases.mjs --check`). `supabase db lint --level warning` must be clean.
+- **BACKEND B5:** regenerate `pnpm db:types` if the local stack is available (otherwise keep the hand-written schemas). Add an export inventory comment to the migration. Check that no new env vars are needed.
+- **MOBILE M1:** implement the `packages/shared` pure functions (`explainTargets`, `applyManualKcal`, `manualKcalBounds`, `isLoseGoalGuarded`, `defaultUnitsForRegion`, `localDateIn`, `targetForDate`, pace and unit display helpers). Unit tests: AC 17, 18 (input grid), 19, 20 (both floor variants, implied pace 0.1), 22, 33, the guard boundaries, and the US/LR/MM region defaults.
+- **MOBILE M2:** design-system tokens and components (D7), the `components/ui/` split, and DESIGN_SYSTEM.md. Component tests: roles and states (radio `checked`, `progressbar` valueText, Stepper adjustable and min disabled, Notice live region, Sheet dirty dismiss).
+- **MOBILE M3:** infrastructure: `npx expo install expo-localization expo-haptics`, `lib/haptics.ts`, `lib/analytics.ts`, `lib/gateCache.ts`, user-scoped query keys, cache clearing on `SIGNED_OUT`, and the profile api refactor. Unit tests for gateCache (corrupt or missing values, per-user keys) and sign-out clearing.
+- **MOBILE M4:** `features/targets` draft reducer, validate, derive and copy. Unit tests: AC 3 prefill, 5, 7, 13, 14, 15 unit switching, pace preset or custom matching, and custom-kcal clearing.
+- **MOBILE M5:** gate and routing (`(app)/_layout`, `onboarding/_layout`, phases, S0). `renderRouter` tests: AC 1, 2 (cache and offline), 6, under-16 phase, completion redirect, error state never showing onboarding.
+- **MOBILE M6:** screens S1, S1b, S2, S2b, S3, S4, S5 (CR-1) and S6, plus `useApplyTargets`, `useResetUnderage` and the error mapping. Component tests with a mocked `supabase`: AC 4, 8, 9, 11, 12, 16, 19, 20, 21, 28, 29, 33, 34, 35.
+- **MOBILE M7:** `TargetsSheet` (S7 and S10), Stepper manual kcal, discard confirm, and the consent page in settings mode. Component tests: AC 10, 22, 24, 25, Gate 2 resolution 5 notice, the guard blocking DONE, and the under-16 inline error in settings.
+- **MOBILE M8:** Today S8 and the Settings S9 reshape (Daily targets card, autosave of name and units, consent-off line). Component tests: AC 23 (fake clock in the next year shows the stored numbers), AC 26 preview line, AC 27 (renders the server row without computing).
+- **MOBILE M9:** wire every analytics event. Tests: AC 32, meaning the exact payload per action, and that `AnalyticsEvent` rejects extra keys and numeric values.
+- **MOBILE M10:** Maestro flows in `apps/mobile/.maestro/` (happy path; floor; under-16; offline save and retry with airplane mode; settings edit and apply; imperial entry) and an accessibility pass at AX5/200% with VoiceOver and TalkBack. Run locally by QA; not in CI (H4).
+
+## T6. Test plan (every AC)
+
+| AC | Unit (vitest/jest) | pgTAP | Component (jest + RNTL / renderRouter) | Maestro / manual |
+|---|---|---|---|---|
+| 1 Onboarding required | | completion only via RPC (B1 grant test) | gate: not completed → `/onboarding/*`; `router.push('/')` stays in onboarding | happy-path flow starts in onboarding |
+| 2 Completed skip | gateCache read | | gate: server completed → Today; cache completed + fetch failing → Today | manual: reinstall / second device |
+| 3 Prefill | `draftFromProfile` | | about-you shows stored values + C-a3 | |
+| 4 Goal choices | | | four radios, CONTINUE with none → "Pick one to continue." | |
+| 5 Goal mapping | `GOAL_FOR_OPTION` | RPC derives goal; mismatch constraint | args carry `p_goal_option` | |
+| 6 Back keeps answers | | | renderRouter: back then forward keeps values | iOS swipe-back / Android back in flow |
+| 7 Pace only when relevant | reducer clear/preselect | maintain with rate ≠ 0 rejected | maintain skips pace; lose requires it | |
+| 8 Consent before data | | `consent_required` writes nothing; direct body update 42501 | no `supabase.*` call before "Let's go"; args `p_give_consent: true` | |
+| 9 Declining | | | S1b shows three actions; zero network calls | |
+| 10 Withdrawable | | after withdraw, RPC requires consent again | Settings consent-off: Apply opens consent page; decline → C-ed6, no call | |
+| 11 Atomic save | | invalid case: profile unchanged, no row, not completed | failure keeps answers, gate stays onboarding; double tap → one call | |
+| 12 Min age 16 | schema 15/16 | `under_min_age`; reset RPC clears data | S2b shown, no `apply_targets`, reset called only when server held data | under-16 flow |
+| 13 Ranges | validate messages metric + imperial | range cases (fixture) | inline error, focus, CONTINUE blocked | |
+| 14 Imperial | ft/in, lb, pace lb→kg (2 dp) | | imperial entry → metric args; displays in lb/ft | imperial flow |
+| 15 Units default | `defaultUnitsForRegion` | | locale mock US → imperial; switching converts | |
+| 16 Guard | `isLoseGoalGuarded` 17/18, BMI 18.4/18.5 | `lose_goal_unavailable` | Lose fat disabled + note; no BMI text rendered | |
+| 17 Worked example | exact numbers | fixture case accepted | | |
+| 18 Macro consistency | grid over inputs and manual kcal | `macro_mismatch` at ±11 | | |
+| 19 Reveal maths | rows sum within ±5, `roundingChanged` | | reveal rows and order, rounding sub-line | |
+| 20 Floor | example → 1,200, implied ≈0.1; ≥maintenance variant | `below_floor` 1199/1499 | C-f1 / C-f2, SAFETY MINIMUM tag, eyebrow | floor flow |
+| 21 Reveal actions | | | Let's go → mutation → Today; Adjust opens sheet, no network | happy path |
+| 22 Manual kcal | `applyManualKcal`, bounds, protein cap | `below_floor`, `above_cap` 6000/6001 | Stepper min disabled + C-j4, CUSTOM tag, Use calculated | |
+| 23 No silent recalculation | | no trigger or job touches `daily_targets` (catalog check) | Settings/Today with a fake clock one year later show stored numbers | |
+| 24 Settings entry | | | Daily targets card + Edit opens sheet; absent when not onboarded | settings flow |
+| 25 Preview before apply | | | Apply inactive until a change; Cancel/discard → no call | settings flow |
+| 26 Applies from today | `localDateIn`, `targetForDate` | `effective_from` from timezone; same-day upsert; past rows kept | C-ed2 date line | |
+| 27 Cross-device | | row readable by owner only | Today renders server row with no compute call | manual: two devices |
+| 28 Offline steps | | | all steps + reveal with fetch failing | airplane mode flow |
+| 29 Offline at save | `toSaveFailure` | | offline/server copy, TRY AGAIN, answers kept, not complete | airplane mode flow |
+| 30 Delete/export | | auth user delete cascades `daily_targets`; profile columns gone | | export: inventory in T2 (F15 not built) |
+| 31 Accessibility | | | radiogroup/radio `checked`, progressbar "Step n of 5", errors announced, Stepper adjustable, 44 pt min sizes | **manual**: VoiceOver + TalkBack, AX5 / 200%, iPhone SE width |
+| 32 Analytics | `AnalyticsEvent` rejects extra / numeric props | | exact `track` payloads per action | |
+| 33 Custom pace | 0.009 / 0.01 / 1.5 / 1.51 | rate cases | custom input, inline error, CONTINUE blocked | |
+| 34 Above 0.75 | `pace_band` | | warning outline state + polite status text; can continue | **manual**: announcement heard |
+| 35 0.75 Notice | | | Notice on pace step and sheet Pace page | |
+
+Not automatable here: real screen-reader output, Dynamic Type layout at AX5/200%, haptics, true two-device sync, and airplane mode on real hardware. QA runs these manually and records the results in the QA report. Maestro flows are written now but run locally, because CI has no simulator (H4).
+
+## T7. Risks and how we'll know
+
+| # | Risk | Signal | Mitigation |
+|---|---|---|---|
+| R1 | Expo Router doesn't redirect when the onboarding guard turns false and Today's turns true (the docs only describe the true → false case). | M5 `renderRouter` completion test fails, or QA sees a blank screen after "Let's go". | Call `router.replace('/')` explicitly after success. |
+| R2 | Client zod rules and server SQL rules drift, so users hit "validation" save failures. | `onboarding_save_failed{reason:'validation'}` above 0; CI `--check` fails. | Shared fixture plus generated pgTAP; both sides import or mirror the same constants. |
+| R3 | The cached gate is stale (server reset or another device), so a completed user briefly sees Today and then onboarding, or the reverse. | Sentry breadcrumb "gate cache mismatch" count. | Server data always wins once loaded. The cache holds a flag, not authority. |
+| R4 | Consent-at-save timestamp semantics are questioned by legal review. | Privacy reviewer or human objection. | Switch S1 to call `give_health_data_consent()` on tap. The RPC already accepts existing consent, so only the client changes. |
+| R5 | Device timezone strings that Postgres doesn't know (or `Intl` returning undefined on old Android) make every save fail. | `invalid_input` saves clustered on a platform. | The client falls back to `'UTC'` when `Intl` gives nothing. pgTAP covers an invalid zone. Add a dev log of the zone name (not PII). |
+| R6 | Keyboard and pinned footer misbehave on Android edge-to-edge, or the RN `Modal` sheet breaks focus trapping on web. | QA manual pass; web a11y check. | Adopt `react-native-keyboard-controller` (supported in Expo) if needed. Add explicit focus management in `Sheet` on web. |
+| R7 | The grant revoke breaks the current Settings form before M8 lands. | `pnpm typecheck` fails (narrowed `ProfileUpdate`). | Same branch; C1 makes it a compile error. M8 is required before QA. |
+| R8 | PR size (about 12 components, 9 routes, 2 RPCs) slows review and QA. | Diff above ~4k lines; review loops above 2. | Commit task by task; reviewers read by task. The Settings edit (M7 settings mode plus M8) is the natural place to split if Gate 3 asks. |
+| R9 | Age year computed in UTC on both sides gives an off-by-one around New Year in far-east or far-west zones. | Rare `under_min_age` from users who passed the client check. | Both sides use the same UTC rule, so they agree. Accepted per spec §6. |
+| R10 | Health-adjacent values (targets) are cached on the device. | Privacy review. | Cache only kcal and macros with flags (no body stats), namespace by user, clear on sign-out and delete. |
+
+## T8. Spec ambiguities resolved by the architect
+1. **Consent timing:** at final save (ADR 0005). S1 network errors move to the save step; C-c11/C-c12 are not needed on S1 in onboarding.
+2. **Manual cap when the calculated target is above 6,000:** the allowed manual range is `[floor, max(6000, calculated)]`, so very large athletes can fine-tune downward without jumping to 6,000.
+3. **Adjust sheet in onboarding:** it edits a working copy. DONE commits; dismissing while dirty shows the existing "Discard your changes?" confirm (C-ed5). S10 already had this. S7's Close was unspecified.
+4. **Settings Apply enablement:** active when any input or the final kcal differs from the current state, not only when targets change, because stats are saved too.
+5. **CR-1 analytics placement:** `pace_option` and `pace_band` go on `targets_revealed` (lose and gain only). §5 didn't list a `pace_option` property.
+6. **"I typed the wrong year":** the user goes back through S1, because their "16 or older" statement was contradicted. This adds one tap compared with D2 S2b.
+7. **Under-16 block also clears stored body stats** (not only consent) for non-completed users, so S2b's "We haven't saved your year of birth" is true.
+8. **Weight precision:** stored as `numeric(5,2)` kg so 0.1 lb survives a round trip. Height stays `numeric(4,1)`.
+9. **Completion invariant:** the migration resets `onboarding_completed_at` for existing rows, because no targets exist yet. Pre-launch test accounts go through onboarding with prefilled values (AC 3, §6).
+
+## T9. Needs a human decision
+- **H1:** Confirm consent-at-save (ADR 0005). Also: should a `health_data_consent_version` column be added now or when the legal copy is final (OQ 12)?
+- **H2:** Confirm T8 items 2, 6 and 7. These are small deviations from the design or from the Gate 2 wording.
+- **H3:** Analytics SDK and gating. There is no analytics SDK in the app yet, so events go to a no-op sink. Whether `goal` and `floor_applied` (pseudonymous, health-adjacent) need analytics opt-in is for the security-privacy reviewer and you, when PostHog is wired up.
+- **H4:** Maestro in CI. No simulator CI exists; flows will run locally for this feature. Do you want an EAS or Maestro Cloud job later?
+- **H5:** The migration's `onboarding_completed_at` reset and grant revoke must be confirmed before they're applied to any remote or shared database (CLAUDE.md hard rule).
