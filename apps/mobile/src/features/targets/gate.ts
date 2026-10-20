@@ -1,4 +1,4 @@
-import { useEffect, useMemo } from 'react';
+import { useCallback, useEffect, useMemo } from 'react';
 import { useProfile } from '@/features/profile/api';
 import { useAuth } from '@/lib/auth';
 import { gateCache } from '@/lib/gateCache';
@@ -11,7 +11,7 @@ export type GateStatus = 'checking' | 'error' | 'needs_onboarding' | 'complete';
  * first render, so a completed user opens to Today even offline; once the server answers it always wins.
  * An error never defaults to onboarding or Today: the user sees a retry screen instead.
  */
-export function useOnboardingGate(): GateStatus {
+export function useOnboardingGate(): { status: GateStatus; retry: () => void } {
   const uid = useAuth().session?.user.id;
   const profile = useProfile();
   const cached = useMemo(() => (uid ? gateCache.read(uid) : null), [uid]);
@@ -20,7 +20,8 @@ export function useOnboardingGate(): GateStatus {
   const serverCompleted = profile.data ? profile.data.onboarding_completed_at !== null : null;
 
   useEffect(() => {
-    if (uid && serverCompleted !== null) gateCache.update(uid, { onboardingCompleted: serverCompleted });
+    if (uid && serverCompleted !== null)
+      gateCache.update(uid, { onboardingCompleted: serverCompleted });
   }, [uid, serverCompleted]);
 
   // A failed under-16 reset is retried once the profile is known.
@@ -29,8 +30,12 @@ export function useOnboardingGate(): GateStatus {
     if (uid && hasProfile && gateCache.hasPendingUnderageReset(uid)) void resetUnderage();
   }, [uid, hasProfile, resetUnderage]);
 
-  if (serverCompleted !== null) return serverCompleted ? 'complete' : 'needs_onboarding';
-  if (cached?.onboardingCompleted) return 'complete';
-  if (profile.isError) return 'error';
-  return 'checking';
+  const refetch = profile.refetch;
+  const retry = useCallback(() => void refetch(), [refetch]);
+
+  let status: GateStatus = 'checking';
+  if (serverCompleted !== null) status = serverCompleted ? 'complete' : 'needs_onboarding';
+  else if (cached?.onboardingCompleted) status = 'complete';
+  else if (profile.isError) status = 'error';
+  return { status, retry };
 }

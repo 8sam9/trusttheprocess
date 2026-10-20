@@ -18,7 +18,9 @@ import { rateToDisplay, trimNumber, weightToDisplay } from '../units';
 export function storedPaceText(goal: 'lose' | 'gain', kg: number, units: UnitSystem): string {
   const all = [...PACE_PRESETS[goal].metric, ...PACE_PRESETS[goal].imperial];
   const preset = all.find((p) => Math.abs(p.kg - kg) <= 0.005);
-  const name = preset ? sentenceCase(copy.paceNames[preset.id]) : sentenceCase(copy.paceCustomTitle);
+  const name = preset
+    ? sentenceCase(copy.paceNames[preset.id])
+    : sentenceCase(copy.paceCustomTitle);
   const shown = trimNumber(rateToDisplay(kg, units), units === 'metric' ? 2 : 1);
   return `${name}, ${shown} ${units === 'metric' ? 'kg' : 'lb'} a week`;
 }
@@ -30,7 +32,10 @@ export function inputsLine(row: DailyTargetsRow, units: UnitSystem): string {
   if (GOAL_FOR_OPTION[row.goal_option] === 'maintain') {
     parts.push(goalTitle, copy.steadyWeightShort);
   } else {
-    parts.push(goalTitle, storedPaceText(row.goal === 'gain' ? 'gain' : 'lose', row.weekly_rate_kg, units));
+    parts.push(
+      goalTitle,
+      storedPaceText(row.goal === 'gain' ? 'gain' : 'lose', row.weekly_rate_kg, units),
+    );
   }
   parts.push(copy.activityShort[row.activity_level]);
   return parts.join(' · ');
@@ -49,7 +54,9 @@ export function statsLine(profile: ProfileRow): string {
     }
   }
   if (profile.weight_kg !== null) {
-    parts.push(`${weightToDisplay(profile.weight_kg, profile.units)} ${profile.units === 'metric' ? 'kg' : 'lb'}`);
+    parts.push(
+      `${weightToDisplay(profile.weight_kg, profile.units)} ${profile.units === 'metric' ? 'kg' : 'lb'}`,
+    );
   }
   return parts.join(' · ');
 }

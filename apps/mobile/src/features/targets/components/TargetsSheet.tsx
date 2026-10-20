@@ -1,16 +1,14 @@
-import { GOAL_FOR_OPTION, MANUAL_KCAL_STEP, applyManualKcal, localDateIn, manualKcalBounds } from '@ttp/shared';
+import {
+  GOAL_FOR_OPTION,
+  MANUAL_KCAL_STEP,
+  applyManualKcal,
+  localDateIn,
+  manualKcalBounds,
+} from '@ttp/shared';
 import { space } from '@ttp/ui';
 import { useReducer, useState } from 'react';
 import { View } from 'react-native';
-import {
-  Button,
-  ListRow,
-  MacroTrio,
-  Notice,
-  Sheet,
-  Stepper,
-  Text,
-} from '@/components/ui';
+import { Button, ListRow, MacroTrio, Notice, Sheet, Stepper, Text } from '@/components/ui';
 import { track } from '@/lib/analytics';
 import { formatInt, formatWeekdayDay } from '@/lib/format';
 import { haptics } from '@/lib/haptics';
@@ -61,7 +59,11 @@ export interface TargetsSheetProps {
   /** Onboarding: DONE hands the working copy back. */
   onCommit?: (draft: TargetsDraft) => void;
   /** Settings: runs apply_targets and reports how it went. */
-  onApply?: (draft: TargetsDraft, plan: PlanModel, opts: { giveConsent: boolean }) => Promise<ApplyOutcome>;
+  onApply?: (
+    draft: TargetsDraft,
+    plan: PlanModel,
+    opts: { giveConsent: boolean },
+  ) => Promise<ApplyOutcome>;
 }
 
 const PAGE_TITLES: Record<Exclude<Page, 'list'>, string> = {
@@ -111,7 +113,10 @@ export function TargetsSheet(props: TargetsSheetProps) {
       haptics.light();
       track({ name: 'targets_manual_override', direction: 'blocked_by_floor' });
     } else if (res.kcal !== plan.final.kcal) {
-      track({ name: 'targets_manual_override', direction: res.kcal > plan.final.kcal ? 'up' : 'down' });
+      track({
+        name: 'targets_manual_override',
+        direction: res.kcal > plan.final.kcal ? 'up' : 'down',
+      });
     }
   };
 
@@ -243,14 +248,22 @@ export function TargetsSheet(props: TargetsSheetProps) {
             onPress={() => openPage('goal')}
           />
           {!maintain && work.goalOption ? (
-            <ListRow label={copy.rowPace} value={paceSummary(work)} onPress={() => openPage('pace')} />
+            <ListRow
+              label={copy.rowPace}
+              value={paceSummary(work)}
+              onPress={() => openPage('pace')}
+            />
           ) : null}
           <ListRow
             label={copy.rowActivity}
             value={activitySummary(work)}
             onPress={() => openPage('activity')}
           />
-          <ListRow label={copy.rowAbout} value={aboutSummary(work)} onPress={() => openPage('about')} />
+          <ListRow
+            label={copy.rowAbout}
+            value={aboutSummary(work)}
+            onPress={() => openPage('about')}
+          />
         </View>
 
         {plan && bounds ? (
@@ -294,7 +307,9 @@ export function TargetsSheet(props: TargetsSheetProps) {
           </View>
         ) : null}
 
-        {work.recalculatedNotice && !work.customKcal ? <Notice live>{copy.inputsChanged}</Notice> : null}
+        {work.recalculatedNotice && !work.customKcal ? (
+          <Notice live>{copy.inputsChanged}</Notice>
+        ) : null}
         {settings && dirty && stored?.isCustom && !plan?.isCustom ? (
           <Text variant="small" tone="muted">
             {copy.replacesCustom(formatInt(stored.kcal))}
@@ -365,7 +380,13 @@ export function TargetsSheet(props: TargetsSheetProps) {
             disabled={!dirty || !plan}
             onPress={onApplyPress}
           />
-          <Button label={copy.cancel} variant="secondary" size="cta" disabled={applying} onPress={() => (dirty ? setDiscardToken((n) => n + 1) : onClose())} />
+          <Button
+            label={copy.cancel}
+            variant="secondary"
+            size="cta"
+            disabled={applying}
+            onPress={() => (dirty ? setDiscardToken((n) => n + 1) : onClose())}
+          />
         </>
       );
     }

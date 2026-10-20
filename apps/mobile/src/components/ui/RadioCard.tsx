@@ -78,7 +78,9 @@ export function RadioCard({
         }}
       >
         <View style={{ flex: 1, gap: 2 }}>
-          <View style={{ flexDirection: 'row', alignItems: 'center', gap: space.xs, flexWrap: 'wrap' }}>
+          <View
+            style={{ flexDirection: 'row', alignItems: 'center', gap: space.xs, flexWrap: 'wrap' }}
+          >
             <Text variant="title" tone={textTone}>
               {title}
             </Text>

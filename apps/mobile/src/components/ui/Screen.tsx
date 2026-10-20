@@ -9,7 +9,9 @@ export const columnStyle = { width: '100%', maxWidth: 480, alignSelf: 'center' }
 
 export function Screen({ children, scroll = true }: { children: ReactNode; scroll?: boolean }) {
   const c = useColors();
-  const content = <View style={[columnStyle, { padding: space.lg, gap: space.md }]}>{children}</View>;
+  const content = (
+    <View style={[columnStyle, { padding: space.lg, gap: space.md }]}>{children}</View>
+  );
   return (
     <SafeAreaView style={{ flex: 1, backgroundColor: c.background }}>
       {scroll ? <ScrollView keyboardShouldPersistTaps="handled">{content}</ScrollView> : content}

@@ -55,7 +55,9 @@ export function Button({
       {loading ? (
         <ActivityIndicator color={fg} />
       ) : (
-        <RNText style={[isCta ? typeScale.button : typeScale.body, { color: fg, textAlign: 'center' }]}>
+        <RNText
+          style={[isCta ? typeScale.button : typeScale.body, { color: fg, textAlign: 'center' }]}
+        >
           {label}
         </RNText>
       )}

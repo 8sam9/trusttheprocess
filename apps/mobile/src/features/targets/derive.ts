@@ -82,7 +82,12 @@ function paceLabels(rateKg: number, option: PaceId | 'custom', units: UnitSystem
   return { name: copy.paceNames[option], rate: presetRateText(rateKg, units) };
 }
 
-function baseInput(about: AboutValues, d: TargetsDraft, goal: Goal, rateKg: number): ProfileInput | null {
+function baseInput(
+  about: AboutValues,
+  d: TargetsDraft,
+  goal: Goal,
+  rateKg: number,
+): ProfileInput | null {
   if (d.activity === null) return null;
   return {
     sex: about.sex,
@@ -229,7 +234,11 @@ function paceHitsFloor(d: TargetsDraft, goal: Goal, kg: number, now: Date): bool
   return input ? explainTargets(input, now).floorApplied : null;
 }
 
-export function paceOptions(d: TargetsDraft, goal: 'lose' | 'gain', now: Date = new Date()): PaceOptionModel[] {
+export function paceOptions(
+  d: TargetsDraft,
+  goal: 'lose' | 'gain',
+  now: Date = new Date(),
+): PaceOptionModel[] {
   const floorText = (() => {
     const about = validateAbout(d, now);
     return about.ok ? formatInt(about.value.sex === 'male' ? 1500 : 1200) : null;

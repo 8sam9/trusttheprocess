@@ -60,7 +60,8 @@ export function validateHeight(
   d: Pick<TargetsDraft, 'units' | 'heightCm' | 'heightFt' | 'heightIn'>,
 ): { error: string | null; field: 'height' | 'heightIn'; cm: number | null } {
   if (d.units === 'metric') {
-    if (d.heightCm.trim() === '') return { error: copy.errHeightMissing, field: 'height', cm: null };
+    if (d.heightCm.trim() === '')
+      return { error: copy.errHeightMissing, field: 'height', cm: null };
     const cm = parseDecimal(d.heightCm);
     if (cm === null || cm < HEIGHT_CM.min || cm > HEIGHT_CM.max) {
       return { error: copy.errHeightMetric, field: 'height', cm: null };
@@ -72,7 +73,8 @@ export function validateHeight(
   }
   const ft = d.heightFt.trim() === '' ? null : parseDecimal(d.heightFt);
   const inches = d.heightIn.trim() === '' ? 0 : parseDecimal(d.heightIn);
-  if (inches === null || inches >= 12) return { error: copy.errInches, field: 'heightIn', cm: null };
+  if (inches === null || inches >= 12)
+    return { error: copy.errInches, field: 'heightIn', cm: null };
   if (ft === null) return { error: copy.errHeightImperial, field: 'height', cm: null };
   const total = ft * 12 + inches;
   if (total < IMPERIAL_HEIGHT_IN.min || total > IMPERIAL_HEIGHT_IN.max) {
@@ -81,9 +83,10 @@ export function validateHeight(
   return { error: null, field: 'height', cm: round(ftInToCm(ft, inches), 1) };
 }
 
-export function validateWeight(
-  d: Pick<TargetsDraft, 'units' | 'weight'>,
-): { error: string | null; kg: number | null } {
+export function validateWeight(d: Pick<TargetsDraft, 'units' | 'weight'>): {
+  error: string | null;
+  kg: number | null;
+} {
   if (d.weight.trim() === '') return { error: copy.errWeightMissing, kg: null };
   const v = parseDecimal(d.weight);
   const bounds =
@@ -133,9 +136,9 @@ export function validatePace(
   }
   const v = parseDecimal(pace.text);
   if (v === null) return { error: copy.paceCustomError(units), kg: null };
-  const kg = rateFromDisplay(v, units);
-  if (kg < MIN_WEEKLY_RATE_KG || kg > MAX_WEEKLY_RATE_KG) {
-    return { error: copy.paceCustomError(units), kg: null };
-  }
+  // Range-check in the unit the user typed, matching the copy ("0.01 to 1.5 kg" / "0.02 to 3.3 lb").
+  const range = units === 'metric' ? { min: 0.01, max: 1.5 } : { min: 0.02, max: 3.3 };
+  if (v < range.min || v > range.max) return { error: copy.paceCustomError(units), kg: null };
+  const kg = Math.min(MAX_WEEKLY_RATE_KG, Math.max(MIN_WEEKLY_RATE_KG, rateFromDisplay(v, units)));
   return { error: null, kg };
 }

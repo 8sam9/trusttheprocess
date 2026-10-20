@@ -5,7 +5,7 @@ import { Button, StepHeader, TaskScreen, Text } from '@/components/ui';
 import { copy } from '../copy';
 import { PaceOptions } from '../components/Options';
 import { presetKg } from '../draft';
-import { useBackCounter, useStepGuard, useStepViewed } from '../hooks';
+import { useStepGuard, useStepViewed } from '../hooks';
 import { useOnboarding } from '../OnboardingProvider';
 import { validatePace } from '../validate';
 
@@ -14,8 +14,7 @@ export default function PaceScreen() {
   const { draft, dispatch } = useOnboarding();
   const redirect = useStepGuard('pace');
   const [attempted, setAttempted] = useState(false);
-  useStepViewed('pace');
-  useBackCounter();
+  useStepViewed('pace', !redirect);
   if (redirect) return <Redirect href={redirect} />;
 
   const goal = draft.goalOption ? GOAL_FOR_OPTION[draft.goalOption] : 'maintain';

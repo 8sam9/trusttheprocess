@@ -22,6 +22,8 @@ export function Notice({ tone = 'info', children, live, action }: NoticeProps) {
   }, [live, children]);
   return (
     <View
+      // One spoken element, unless it holds an action button that must stay reachable.
+      accessible={!action}
       accessibilityRole={tone === 'danger' ? 'alert' : undefined}
       accessibilityLiveRegion={live ? 'polite' : undefined}
       style={{

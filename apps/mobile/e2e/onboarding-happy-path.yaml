@@ -1,0 +1,26 @@
+# Spec 001, story: a new user answers five steps and reaches Today with daily targets.
+appId: app.trusttheprocess
+---
+- assertVisible: 'YOUR DATA, YOUR CALL'
+- tapOn: 'I AGREE'
+- tapOn: 'Female'
+- tapOn: 'Year of birth'
+- inputText: '1996'
+- tapOn: 'Height (cm)'
+- inputText: '165'
+- tapOn:
+    text: 'Current weight.*'
+- inputText: '65'
+- hideKeyboard
+- tapOn: 'CONTINUE'
+- tapOn: 'Lose fat.*'
+- tapOn: 'CONTINUE'
+- tapOn: 'Lightly active.*'
+- tapOn: 'CONTINUE'
+- tapOn: 'Moderate.*'
+- tapOn: 'CONTINUE'
+- assertVisible: 'YOUR GAME PLAN'
+- assertVisible: '1,330'
+- tapOn: "LET'S GO"
+- assertVisible: "TODAY'S TARGET"
+- assertVisible: '1,330'

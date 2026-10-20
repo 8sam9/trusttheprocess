@@ -32,7 +32,13 @@ const OnboardingContext = createContext<OnboardingState | null>(null);
  * because the signed-in tree unmounts. Mounted by the onboarding layout, which the gate only renders once the
  * profile is known.
  */
-export function OnboardingProvider({ profile, children }: { profile: ProfileRow; children: ReactNode }) {
+export function OnboardingProvider({
+  profile,
+  children,
+}: {
+  profile: ProfileRow;
+  children: ReactNode;
+}) {
   const [draft, dispatch] = useReducer(draftReducer, profile, (row) =>
     draftFromProfile(row, null, deviceRegion()),
   );

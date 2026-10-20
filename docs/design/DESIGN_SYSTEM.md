@@ -57,13 +57,33 @@ Dynamic Type is on everywhere; `numberXL` is capped at 1.4× so hero numbers don
 - Every touch target ≥ 44 pt. Primary CTA 56 pt tall, pinned at the bottom of task screens.
 
 ## Components (v1)
-| Component | Where | Notes |
-|---|---|---|
-| Button | `ui.tsx` | primary (volt fill, condensed caps), secondary (outline), danger (text) |
-| TextField | `ui.tsx` | label above (label variant), 52 pt, surface fill |
-| Choice | `ui.tsx` | chips as radio group; selected = 2 pt accentText outline |
-| LaneBar | `ui.tsx` | 10-segment calorie bar, exposed as a progressbar to screen readers |
-| Card, Screen, Text, BrandMark | `ui.tsx` | |
+Source: `apps/mobile/src/components/ui/` (one file per component, re-exported from `index.ts`).
+
+| Component | Notes |
+|---|---|
+| Button | primary (volt fill, condensed caps), secondary (outline), danger, text; size `cta` for the pinned primary action; `busyLabel` while loading |
+| TextField | label above (label variant), 52 pt, surface fill; helper text and live inline error |
+| Choice | chips as radio group; selected = 2 pt accentText outline and `accessibilityState.checked` |
+| RadioCard | large selectable card (goal, activity, pace options); radio role, checked state, optional unavailable state |
+| LaneBar | 10-segment calorie bar, progressbar for screen readers; optional `valueText` |
+| Card, Screen, Text, BrandMark | Screen exposes `columnStyle` (480 pt max-width column) |
+| StepHeader | back control plus a "Step n of 5" progress bar |
+| TaskScreen | scrolling content with a pinned footer action; tagline hides at large text or with the keyboard |
+| Notice | info or danger message, live region, optional action |
+| Tag | small caps pill (CUSTOM, SAFETY MINIMUM) |
+| MacroTrio | protein, carbs, fat values; compact and "previous" variants; stacks at large text |
+| BreakdownRow | label and value row for the maths card |
+| ListRow | tappable summary row with chevron (Adjust and Edit sheets) |
+| Stepper | adjustable numeric field with minus/plus buttons that stay pressable at limits |
+| Sheet | modal sheet (dialog on wide web); Back/Close, discard confirmation when dirty |
+| FadeRise | entrance motion, disabled under reduce motion |
+
+FactRow pattern: a bold title with a muted detail line, used on the consent page.
+
+### Motion and scale tokens
+`motion = { fast: 120, base: 200, stagger: 60 }` (ms) and `largeTextScale = 1.5` (font scale at which layouts switch to
+the stacked, large-text variant) live in `packages/ui/src/tokens.ts`.
+
 | *Planned for Milestone 1* | | macro bar trio, meal row, segmented tabs (Describe/Search/Scan/Photo), stepper, source badge, bottom tab bar with the skewed volt "+" |
 
 ## Patterns (from the canvas)

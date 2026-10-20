@@ -82,7 +82,14 @@ export const copy = {
     weightLb: 'Current weight (lb)',
   }, // C-a4
   weightHelper: 'Just a starting point for your estimate.', // C-a5
-  placeholders: { birthYear: '1994', heightCm: '170', heightFt: '5', heightIn: '7', weightKg: '70', weightLb: '155' },
+  placeholders: {
+    birthYear: '1994',
+    heightCm: '170',
+    heightFt: '5',
+    heightIn: '7',
+    weightKg: '70',
+    weightLb: '155',
+  },
 
   // C-e: validation
   errSex: 'Choose one to continue. Prefer not to say is fine.', // C-e1

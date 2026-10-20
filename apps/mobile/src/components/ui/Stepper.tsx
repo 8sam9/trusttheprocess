@@ -1,5 +1,5 @@
 import { minTouch, radius, space, type as typeScale } from '@ttp/ui';
-import { useEffect, useState, type ReactElement } from 'react';
+import { useState, type ReactElement } from 'react';
 import { Pressable, Text as RNText, TextInput, View } from 'react-native';
 import { formatInt } from '@/lib/format';
 import { haptics } from '@/lib/haptics';
@@ -30,7 +30,12 @@ export function Stepper({
 }) {
   const c = useColors();
   const [text, setText] = useState(String(value));
-  useEffect(() => setText(String(value)), [value]);
+  const [shownValue, setShownValue] = useState(value);
+  if (value !== shownValue) {
+    // The owner changed the value (a tap, or a clamp): show it.
+    setShownValue(value);
+    setText(String(value));
+  }
 
   const commit = () => {
     const n = Number(text.replace(/[^\d]/g, ''));

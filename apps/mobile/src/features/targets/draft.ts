@@ -110,11 +110,7 @@ function withInputChange(prev: TargetsDraft, next: TargetsDraft): TargetsDraft {
   return { ...next, customKcal: null, recalculatedNotice: true };
 }
 
-function matchPace(
-  goal: 'lose' | 'gain',
-  units: UnitSystem,
-  rateKg: number | null,
-): PaceChoice {
+function matchPace(goal: 'lose' | 'gain', units: UnitSystem, rateKg: number | null): PaceChoice {
   if (rateKg === null || rateKg <= 0) return defaultPaceFor(goal);
   const preset = PACE_PRESETS[goal][units].find((p) => Math.abs(p.kg - rateKg) <= 0.005);
   if (preset) return { kind: 'preset', id: preset.id };
@@ -142,7 +138,8 @@ export function draftFromProfile(
   const units = prefilled || targets ? row.units : defaultUnitsForRegion(region);
   const height = row.height_cm !== null ? heightToDisplay(row.height_cm) : null;
   const goalOption: GoalOption | null =
-    row.goal_option ?? (row.goal === 'lose' ? 'lose_fat' : row.goal === 'gain' ? 'build_muscle' : null);
+    row.goal_option ??
+    (row.goal === 'lose' ? 'lose_fat' : row.goal === 'gain' ? 'build_muscle' : null);
   const goal = goalOption ? GOAL_FOR_OPTION[goalOption] : null;
   return {
     ...emptyDraft(units, now),
@@ -176,7 +173,9 @@ export function draftReducer(state: TargetsDraft, action: DraftAction): TargetsD
       };
     }
     case 'setSex':
-      return action.sex === state.sex ? state : withInputChange(state, { ...state, sex: action.sex });
+      return action.sex === state.sex
+        ? state
+        : withInputChange(state, { ...state, sex: action.sex });
     case 'setField':
       return state[action.field] === action.value
         ? state
@@ -214,7 +213,13 @@ export function draftReducer(state: TargetsDraft, action: DraftAction): TargetsD
       // Nothing about the answers is kept: the year and the in-memory consent are cleared.
       return { ...state, underage: true, birthYear: '', consentGiven: false };
     case 'wrongYear':
-      return { ...state, underage: false, birthYear: '', consentGiven: false, focusBirthYear: true };
+      return {
+        ...state,
+        underage: false,
+        birthYear: '',
+        consentGiven: false,
+        focusBirthYear: true,
+      };
     case 'focusHandled':
       return state.focusBirthYear ? { ...state, focusBirthYear: false } : state;
     case 'back':

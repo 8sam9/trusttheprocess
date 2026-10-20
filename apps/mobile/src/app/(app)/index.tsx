@@ -44,7 +44,12 @@ export default function TodayScreen() {
           <View
             accessible
             accessibilityLabel={`Today's target, ${formatInt(t.kcal)} kcal`}
-            style={{ flexDirection: 'row', alignItems: 'baseline', gap: space.xs, flexWrap: 'wrap' }}
+            style={{
+              flexDirection: 'row',
+              alignItems: 'baseline',
+              gap: space.xs,
+              flexWrap: 'wrap',
+            }}
           >
             <Text variant="numberXL" tone="accent">
               {formatInt(t.kcal)}

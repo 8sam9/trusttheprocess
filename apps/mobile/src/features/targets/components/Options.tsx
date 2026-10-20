@@ -7,12 +7,7 @@ import { announce } from '@/lib/a11y';
 import { track } from '@/lib/analytics';
 import { copy } from '../copy';
 import type { DraftAction, TargetsDraft } from '../draft';
-import {
-  customPaceInfo,
-  paceBandFor,
-  paceOptions,
-  recommendedLimitText,
-} from '../derive';
+import { customPaceInfo, paceBandFor, paceOptions, recommendedLimitText } from '../derive';
 import { validatePace } from '../validate';
 
 const GOAL_ORDER: GoalOption[] = ['lose_fat', 'build_muscle', 'fuel_performance', 'just_track'];
@@ -40,7 +35,11 @@ export function GoalOptions({
   }, [guarded]);
 
   return (
-    <View style={{ gap: space.sm }} accessibilityRole="radiogroup" accessibilityLabel={copy.goalTitle}>
+    <View
+      style={{ gap: space.sm }}
+      accessibilityRole="radiogroup"
+      accessibilityLabel={copy.goalTitle}
+    >
       {guarded ? <Notice>{copy.goalGuard}</Notice> : null}
       {GOAL_ORDER.map((option) => {
         const card = copy.goalCards[option];
@@ -56,7 +55,9 @@ export function GoalOptions({
             description={unavailable ? undefined : description}
             selected={selected === option}
             unavailable={unavailable}
-            {...(unavailable ? { tag: copy.notAvailable, accessibilityLabel: copy.loseUnavailable } : {})}
+            {...(unavailable
+              ? { tag: copy.notAvailable, accessibilityLabel: copy.loseUnavailable }
+              : {})}
             onPress={() => {
               dispatch({ type: 'setGoal', goal: option });
               track({ name: 'onboarding_goal_selected', goal_option: option });
@@ -131,7 +132,11 @@ export function PaceOptions({
   if (goal === 'maintain') return null;
 
   return (
-    <View style={{ gap: space.sm }} accessibilityRole="radiogroup" accessibilityLabel={copy.paceTitle}>
+    <View
+      style={{ gap: space.sm }}
+      accessibilityRole="radiogroup"
+      accessibilityLabel={copy.paceTitle}
+    >
       <Notice>{copy.paceStrongSuggestion(limit)}</Notice>
       {presets.map((p) => (
         <RadioCard

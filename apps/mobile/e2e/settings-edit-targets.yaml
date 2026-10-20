@@ -1,0 +1,14 @@
+# Spec 001: edit targets from Settings, preview old to new, apply from today.
+# Precondition: the account has completed onboarding.
+appId: app.trusttheprocess
+---
+- tapOn: 'Profile & settings'
+- assertVisible: 'DAILY TARGETS'
+- tapOn: 'Edit targets'
+- assertVisible: 'EDIT YOUR TARGETS'
+- tapOn: 'Activity.*'
+- tapOn: 'Very active.*'
+- tapOn: 'DONE'
+- assertVisible: '.* → .* kcal'
+- tapOn: 'APPLY FROM TODAY'
+- assertVisible: 'New targets in effect from today.'

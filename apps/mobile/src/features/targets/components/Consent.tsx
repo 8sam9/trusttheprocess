@@ -10,7 +10,11 @@ import { copy } from '../copy';
 function FactRow({ n, title, detail }: { n: number; title: string; detail: string }) {
   const c = useColors();
   return (
-    <View style={{ flexDirection: 'row', gap: space.sm }} accessible accessibilityLabel={`${title}. ${detail}`}>
+    <View
+      style={{ flexDirection: 'row', gap: space.sm }}
+      accessible
+      accessibilityLabel={`${title}. ${detail}`}
+    >
       <View
         style={{
           width: 24,
@@ -49,7 +53,9 @@ export function ConsentBody({ returning, inSheet }: { returning?: boolean; inShe
     <View style={{ gap: space.md }}>
       {inSheet ? null : (
         <>
-          <View style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}>
+          <View
+            style={{ flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' }}
+          >
             <BrandMark size={24} />
             <Text variant="label" tone="muted">
               {copy.consentEyebrow}

@@ -22,7 +22,14 @@ export function planMacros(plan: PlanModel): Macros {
 export function TargetCard({ plan }: { plan: PlanModel }) {
   return (
     <Card>
-      <View style={{ flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', gap: space.xs }}>
+      <View
+        style={{
+          flexDirection: 'row',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          gap: space.xs,
+        }}
+      >
         <Text variant="label" tone="muted">
           {copy.dailyTarget}
         </Text>

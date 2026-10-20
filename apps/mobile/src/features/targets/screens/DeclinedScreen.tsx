@@ -12,12 +12,19 @@ export default function DeclinedScreen() {
       primary={
         <Button
           label={copy.reviewConsent}
-          onPress={() => (router.canGoBack() ? router.back() : router.replace('/onboarding/consent'))}
+          onPress={() =>
+            router.canGoBack() ? router.back() : router.replace('/onboarding/consent')
+          }
         />
       }
       secondary={
         <>
-          <Button label={copy.signOut} variant="secondary" size="cta" onPress={() => void signOut()} />
+          <Button
+            label={copy.signOut}
+            variant="secondary"
+            size="cta"
+            onPress={() => void signOut()}
+          />
           <DeleteAccountSection />
         </>
       }

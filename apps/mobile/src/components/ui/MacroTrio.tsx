@@ -39,9 +39,30 @@ export function MacroTrio({
   }
 
   const cols = [
-    { key: 'protein', label: 'PROTEIN', spoken: 'Protein', now: macros.proteinG, was: previous?.proteinG, color: d.protein },
-    { key: 'carbs', label: 'CARBS', spoken: 'Carbs', now: macros.carbsG, was: previous?.carbsG, color: d.carbs },
-    { key: 'fat', label: 'FAT', spoken: 'Fat', now: macros.fatG, was: previous?.fatG, color: d.fat },
+    {
+      key: 'protein',
+      label: 'PROTEIN',
+      spoken: 'Protein',
+      now: macros.proteinG,
+      was: previous?.proteinG,
+      color: d.protein,
+    },
+    {
+      key: 'carbs',
+      label: 'CARBS',
+      spoken: 'Carbs',
+      now: macros.carbsG,
+      was: previous?.carbsG,
+      color: d.carbs,
+    },
+    {
+      key: 'fat',
+      label: 'FAT',
+      spoken: 'Fat',
+      now: macros.fatG,
+      was: previous?.fatG,
+      color: d.fat,
+    },
   ];
   return (
     <View style={{ flexDirection: large ? 'column' : 'row', gap: space.sm }}>

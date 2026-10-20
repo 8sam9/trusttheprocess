@@ -1,6 +1,7 @@
-import { Redirect, Stack, useFocusEffect, usePreventRemove } from 'expo-router';
-import { useCallback, useRef, useState } from 'react';
+import { Redirect, Stack, router, useFocusEffect, usePreventRemove } from 'expo-router';
+import { useCallback, useMemo, useRef, useState } from 'react';
 import { Button, Notice, StepHeader, TaskScreen } from '@/components/ui';
+import type { AnalyticsEvent } from '@ttp/shared';
 import { track } from '@/lib/analytics';
 import { haptics } from '@/lib/haptics';
 import { deviceTimeZone } from '@/lib/locale';
@@ -9,11 +10,10 @@ import { copy } from '../copy';
 import { TargetsSheet } from '../components/TargetsSheet';
 import { PlanBody } from '../components/PlanParts';
 import { buildPlan } from '../derive';
-import { useBackCounter, useStepGuard, useStepViewed } from '../hooks';
+import { useStepGuard, useStepViewed } from '../hooks';
 import { useOnboarding } from '../OnboardingProvider';
 import { usePlanSaved } from '../planSaved';
 import { argsForPlan, durationBucket } from '../save';
-import { router } from 'expo-router';
 
 /** S6, step 5 of 5: "Your game plan". LET'S GO runs the single atomic save (AC 11). */
 export default function PlanScreen() {
@@ -27,26 +27,35 @@ export default function PlanScreen() {
   const saving = apply.isPending;
 
   const plan = buildPlan(draft);
-  const planRef = useRef(plan);
-  planRef.current = plan;
 
-  useStepViewed('reveal');
-  useBackCounter();
+  useStepViewed('reveal', !redirect);
   usePreventRemove(saving, () => {});
+
+  // `targets_revealed` fires when the reveal is shown, and again only if what it shows changes (after Adjust).
+  const goal = plan?.input.goal;
+  const floorApplied = plan?.breakdown.floorApplied ?? false;
+  const units = plan?.input.units ?? 'metric';
+  const paceOption = plan?.paceOption ?? null;
+  const paceBand = plan?.paceBand ?? null;
+  const revealed = useMemo<AnalyticsEvent | null>(
+    () =>
+      goal === undefined
+        ? null
+        : {
+            name: 'targets_revealed',
+            goal,
+            floor_applied: floorApplied,
+            units,
+            source: 'onboarding',
+            ...(paceOption ? { pace_option: paceOption } : {}),
+            ...(paceBand ? { pace_band: paceBand } : {}),
+          },
+    [goal, floorApplied, units, paceOption, paceBand],
+  );
   useFocusEffect(
     useCallback(() => {
-      const p = planRef.current;
-      if (!p) return;
-      track({
-        name: 'targets_revealed',
-        goal: p.input.goal,
-        floor_applied: p.breakdown.floorApplied,
-        units: p.input.units,
-        source: 'onboarding',
-        ...(p.paceOption ? { pace_option: p.paceOption } : {}),
-        ...(p.paceBand ? { pace_band: p.paceBand } : {}),
-      });
-    }, []),
+      if (revealed) track(revealed);
+    }, [revealed]),
   );
 
   if (redirect) return <Redirect href={redirect} />;

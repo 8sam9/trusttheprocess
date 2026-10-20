@@ -10,11 +10,22 @@ export default function NotYetScreen() {
   return (
     <TaskScreen
       tagline={false}
-      primary={<Button label={copy.signOut} variant="secondary" size="cta" onPress={() => void signOut()} />}
+      primary={
+        <Button
+          label={copy.signOut}
+          variant="secondary"
+          size="cta"
+          onPress={() => void signOut()}
+        />
+      }
       secondary={
         <>
           <DeleteAccountSection label={copy.deleteMyAccount} />
-          <Button label={copy.wrongYear} variant="text" onPress={() => dispatch({ type: 'wrongYear' })} />
+          <Button
+            label={copy.wrongYear}
+            variant="text"
+            onPress={() => dispatch({ type: 'wrongYear' })}
+          />
         </>
       }
     >

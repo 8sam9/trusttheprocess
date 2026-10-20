@@ -14,3 +14,19 @@ jest.mock('@/lib/authStorage', () => {
   };
   return { authStorage: storage };
 });
+
+import '@/test/analyticsSpy';
+
+// Tests run as an Italian device (metric) unless they override getLocales.
+jest.mock('expo-localization', () => ({
+  getLocales: jest.fn(() => [{ regionCode: 'IT', languageTag: 'it-IT' }]),
+}));
+
+// jest's default window has fontScale 2, which would put every screen in the large-text layout.
+import { Dimensions } from 'react-native';
+beforeEach(() => {
+  Dimensions.set({
+    window: { width: 390, height: 844, scale: 3, fontScale: 1 },
+    screen: { width: 390, height: 844, scale: 3, fontScale: 1 },
+  });
+});

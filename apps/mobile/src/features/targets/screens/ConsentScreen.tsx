@@ -30,7 +30,11 @@ export default function ConsentScreen() {
             variant="secondary"
             size="cta"
             onPress={() => {
-              track({ name: 'health_consent_decided', decision: 'declined', surface: 'onboarding' });
+              track({
+                name: 'health_consent_decided',
+                decision: 'declined',
+                surface: 'onboarding',
+              });
               router.push('/onboarding/declined');
             }}
           />

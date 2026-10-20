@@ -87,9 +87,7 @@ export function TaskScreen({
         </ScrollView>
         {pinned ? (
           <View style={{ backgroundColor: c.background }}>
-            <View
-              style={[columnStyle, { paddingHorizontal: space.lg, paddingVertical: space.sm }]}
-            >
+            <View style={[columnStyle, { paddingHorizontal: space.lg, paddingVertical: space.sm }]}>
               {pinned}
             </View>
           </View>

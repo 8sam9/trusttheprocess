@@ -9,11 +9,11 @@ export const unstable_settings = { anchor: 'index' };
 
 function AppStack() {
   const c = useColors();
-  const status = useOnboardingGate();
+  const { status, retry } = useOnboardingGate();
 
   // Until we know whether onboarding is done, show neither Today nor onboarding (no flash of the wrong screen).
   if (status === 'checking') return <GateLoading />;
-  if (status === 'error') return <GateError />;
+  if (status === 'error') return <GateError onRetry={retry} />;
 
   return (
     <Stack

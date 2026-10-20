@@ -4,7 +4,7 @@ import { Button, Notice, StepHeader, TaskScreen, Text } from '@/components/ui';
 import { copy } from '../copy';
 import { GoalOptions } from '../components/Options';
 import { effectiveGoalOption, isGuarded } from '../derive';
-import { useBackCounter, useStepGuard, useStepViewed } from '../hooks';
+import { useStepGuard, useStepViewed } from '../hooks';
 import { useOnboarding } from '../OnboardingProvider';
 
 /** S3, step 2 of 5. Radio cards; Lose fat is unavailable when the age or BMI guard is active (AC 16). */
@@ -12,8 +12,7 @@ export default function GoalScreen() {
   const { draft, dispatch } = useOnboarding();
   const redirect = useStepGuard('goal');
   const [attempted, setAttempted] = useState(false);
-  useStepViewed('goal');
-  useBackCounter();
+  useStepViewed('goal', !redirect);
   if (redirect) return <Redirect href={redirect} />;
 
   const selected = effectiveGoalOption(draft);
@@ -31,7 +30,12 @@ export default function GoalScreen() {
       <Text variant="bodyRegular" tone="muted">
         {copy.goalIntro}
       </Text>
-      <GoalOptions draft={draft} dispatch={dispatch} guarded={isGuarded(draft)} selected={selected} />
+      <GoalOptions
+        draft={draft}
+        dispatch={dispatch}
+        guarded={isGuarded(draft)}
+        selected={selected}
+      />
     </TaskScreen>
   );
 }

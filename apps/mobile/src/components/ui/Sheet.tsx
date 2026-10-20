@@ -70,9 +70,12 @@ export function Sheet({
     return () => clearTimeout(id);
   }, [visible, title]);
 
-  useEffect(() => {
-    if (discardToken > 0) setConfirming(true);
-  }, [discardToken]);
+  // A new discardToken (a footer Cancel) opens the confirm: derived state, adjusted during render.
+  const [seenToken, setSeenToken] = useState(discardToken);
+  if (discardToken !== seenToken) {
+    setSeenToken(discardToken);
+    setConfirming(true);
+  }
 
   const requestClose = () => {
     if (onBack) return onBack();
@@ -133,7 +136,12 @@ export function Sheet({
                 accessibilityRole="button"
                 accessibilityLabel="Back"
                 onPress={onBack}
-                style={{ width: minTouch, height: minTouch, alignItems: 'center', justifyContent: 'center' }}
+                style={{
+                  width: minTouch,
+                  height: minTouch,
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                }}
               >
                 <RNText style={{ color: c.text, fontSize: 32 }}>{'‹'}</RNText>
               </Pressable>
@@ -145,7 +153,12 @@ export function Sheet({
               accessibilityRole="button"
               accessibilityLabel="Close"
               onPress={() => (dirty ? setConfirming(true) : onClose())}
-              style={{ width: minTouch, height: minTouch, alignItems: 'center', justifyContent: 'center' }}
+              style={{
+                width: minTouch,
+                height: minTouch,
+                alignItems: 'center',
+                justifyContent: 'center',
+              }}
             >
               <RNText style={{ color: c.text, fontSize: 22 }}>{'✕'}</RNText>
             </Pressable>
@@ -185,7 +198,12 @@ export function Sheet({
               <View
                 role="alertdialog"
                 accessibilityViewIsModal
-                style={{ backgroundColor: c.surface, borderRadius: radius.card, padding: space.lg, gap: space.sm }}
+                style={{
+                  backgroundColor: c.surface,
+                  borderRadius: radius.card,
+                  padding: space.lg,
+                  gap: space.sm,
+                }}
               >
                 <Text variant="title">{discard.title}</Text>
                 <Button
@@ -196,7 +214,11 @@ export function Sheet({
                     onClose();
                   }}
                 />
-                <Button label={discard.keep} variant="secondary" onPress={() => setConfirming(false)} />
+                <Button
+                  label={discard.keep}
+                  variant="secondary"
+                  onPress={() => setConfirming(false)}
+                />
               </View>
             </View>
           ) : null}
