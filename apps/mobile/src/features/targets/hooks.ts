@@ -1,5 +1,5 @@
 import type { Href } from 'expo-router';
-import { useFocusEffect } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { useCallback, useRef } from 'react';
 import { track } from '@/lib/analytics';
 import { GOAL_FOR_OPTION } from '@ttp/shared';
@@ -49,4 +49,10 @@ export function useStepGuard(step: 'goal' | 'activity' | 'pace' | 'reveal'): Hre
     return '/onboarding/pace';
   }
   return buildPlan(draft) ? null : '/onboarding/about-you';
+}
+
+/** Back from an onboarding step: the previous route (browser back stays in step), or the first step on a cold deep link. */
+export function goBackStep(): void {
+  if (router.canGoBack()) router.back();
+  else router.replace('/onboarding/about-you');
 }

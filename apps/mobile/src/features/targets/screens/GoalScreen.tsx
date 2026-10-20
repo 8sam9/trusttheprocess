@@ -4,7 +4,7 @@ import { Button, Notice, StepHeader, TaskScreen, Text } from '@/components/ui';
 import { copy } from '../copy';
 import { GoalOptions } from '../components/Options';
 import { effectiveGoalOption, isGuarded } from '../derive';
-import { useStepGuard, useStepViewed } from '../hooks';
+import { goBackStep, useStepGuard, useStepViewed } from '../hooks';
 import { useOnboarding } from '../OnboardingProvider';
 
 /** S3, step 2 of 5. Radio cards; Lose fat is unavailable when the age or BMI guard is active (AC 16). */
@@ -22,7 +22,7 @@ export default function GoalScreen() {
   };
   return (
     <TaskScreen
-      header={<StepHeader step={2} />}
+      header={<StepHeader step={2} onBack={goBackStep} />}
       notice={attempted && selected === null ? <Notice live>{copy.goalNone}</Notice> : undefined}
       primary={<Button label={copy.continue} onPress={onContinue} />}
     >

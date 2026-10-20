@@ -5,7 +5,7 @@ import { Button, StepHeader, TaskScreen, Text } from '@/components/ui';
 import { copy } from '../copy';
 import { PaceOptions } from '../components/Options';
 import { presetKg } from '../draft';
-import { useStepGuard, useStepViewed } from '../hooks';
+import { goBackStep, useStepGuard, useStepViewed } from '../hooks';
 import { useOnboarding } from '../OnboardingProvider';
 import { validatePace } from '../validate';
 
@@ -27,7 +27,7 @@ export default function PaceScreen() {
   };
   return (
     <TaskScreen
-      header={<StepHeader step={4} />}
+      header={<StepHeader step={4} onBack={goBackStep} />}
       primary={<Button label={copy.continue} onPress={onContinue} />}
     >
       <Text variant="display">{copy.paceTitle}</Text>

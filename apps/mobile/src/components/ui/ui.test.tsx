@@ -3,6 +3,7 @@ import { useState } from 'react';
 import type React from 'react';
 import { Dimensions, Text as RNText } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { insideScrollView } from '@/test/scroll';
 import {
   BreakdownRow,
   Button,
@@ -329,10 +330,10 @@ describe('Stepper', () => {
     const user = userEvent.setup();
     await render(<Harness />);
     await user.press(screen.getByRole('button', { name: 'Increase by 50' }));
-    expect(screen.getByRole('adjustable')).toHaveDisplayValue('1380');
+    expect(screen.getByRole('adjustable')).toHaveDisplayValue('1,380');
     await user.press(screen.getByRole('button', { name: 'Decrease by 50' }));
     await user.press(screen.getByRole('button', { name: 'Decrease by 50' }));
-    expect(screen.getByRole('adjustable')).toHaveDisplayValue('1280');
+    expect(screen.getByRole('adjustable')).toHaveDisplayValue('1,280');
   });
 
   it('shows the minus button as disabled at the minimum', async () => {
@@ -346,7 +347,7 @@ describe('Stepper', () => {
     const field = screen.getByRole('adjustable');
     await fireEvent.changeText(field, '1500');
     await fireEvent(field, 'blur');
-    expect(screen.getByRole('adjustable')).toHaveDisplayValue('1500');
+    expect(screen.getByRole('adjustable')).toHaveDisplayValue('1,500');
   });
 
   it('snaps a typed value below the minimum through the owner', async () => {
@@ -354,11 +355,59 @@ describe('Stepper', () => {
     const field = screen.getByRole('adjustable');
     await fireEvent.changeText(field, '900');
     await fireEvent(field, 'blur');
-    expect(screen.getByRole('adjustable')).toHaveDisplayValue('1200');
+    expect(screen.getByRole('adjustable')).toHaveDisplayValue('1,200');
+  });
+});
+
+describe('Stepper display', () => {
+  it('shows the value with a thousands separator, like every other calorie number', async () => {
+    await render(
+      <Stepper
+        value={1570}
+        min={1200}
+        max={6000}
+        step={50}
+        label="Daily calories"
+        onChange={jest.fn()}
+      />,
+    );
+    expect(screen.getByRole('adjustable')).toHaveDisplayValue('1,570');
+  });
+});
+
+describe('StepHeader back control', () => {
+  it('shows one Back button only when given onBack, and keeps the progress element', async () => {
+    const onBack = jest.fn();
+    const user = userEvent.setup();
+    const { rerender } = await render(<StepHeader step={1} />);
+    expect(screen.queryByRole('button', { name: 'Back' })).toBeNull();
+    await rerender(<StepHeader step={3} onBack={onBack} />);
+    await user.press(screen.getByRole('button', { name: 'Back' }));
+    expect(onBack).toHaveBeenCalledTimes(1);
+    expect(screen.getByRole('progressbar', { name: 'Step 3 of 5' })).toBeOnTheScreen();
   });
 });
 
 describe('Sheet', () => {
+  it('pins the notice outside the scrolling content, above the footer', async () => {
+    await render(
+      withSafeArea(
+        <Sheet
+          visible
+          title="T"
+          onClose={jest.fn()}
+          notice={<RNText>save failed</RNText>}
+          footer={<RNText>footer</RNText>}
+        >
+          <RNText>content</RNText>
+        </Sheet>,
+      ),
+    );
+    expect(screen.getByText('save failed')).toBeOnTheScreen();
+    expect(insideScrollView(screen.getByText('save failed'))).toBe(false);
+    expect(insideScrollView(screen.getByText('content'))).toBe(true);
+  });
+
   it('is a dialog with a title, a Close button and an optional Back', async () => {
     const onClose = jest.fn();
     const user = userEvent.setup();

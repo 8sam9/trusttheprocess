@@ -5,7 +5,7 @@ import { Button, Notice, StepHeader, TaskScreen, Text } from '@/components/ui';
 import { copy } from '../copy';
 import { ActivityOptions } from '../components/Options';
 import { effectiveGoalOption } from '../derive';
-import { useStepGuard, useStepViewed } from '../hooks';
+import { goBackStep, useStepGuard, useStepViewed } from '../hooks';
 import { useOnboarding } from '../OnboardingProvider';
 
 /** S4, step 3 of 5. Maintain goals skip the pace step and go straight to the reveal (AC 7). */
@@ -28,7 +28,7 @@ export default function ActivityScreen() {
   };
   return (
     <TaskScreen
-      header={<StepHeader step={3} />}
+      header={<StepHeader step={3} onBack={goBackStep} />}
       notice={
         attempted && draft.activity === null ? <Notice live>{copy.activityNone}</Notice> : undefined
       }

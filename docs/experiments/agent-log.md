@@ -13,6 +13,7 @@ One row per pipeline stage. "Rework" = times the stage was re-run because a late
 | 2026-10-20 | 001 onboarding & targets | backend-engineer → B1–B5 (migration, apply_targets, reset RPC, generated pgTAP, CI check) | sonnet | 3m19s | ~96k | 0 | 0 | 131 pgTAP ok on stand-in; green on real Supabase in CI first try (PR #3 draft) |
 | 2026-10-20 | 001 onboarding & targets | mobile-engineer → M1–M10 (8 routes, 11 ui components, sheet, settings, analytics, Maestro YAMLs) | sonnet | 36m11s | ~62k (+ tool output) | 0 | 0 | 255 mobile tests; skipped optional visual check; Maestro unrun (no simulator) |
 | 2026-10-20 | 001 onboarding & targets | qa-engineer → full AC map + browser exploratory run | sonnet | 15m09s | ~171k | — | 0 | QA: FAIL (2 major, 5 minor) — all found only by looking at rendered screens; unit tests were green. Orchestrator spotted 1 more (double header). QA wrongly said no Maestro flows exist |
+| 2026-10-20 | 001 onboarding & targets | mobile-engineer → QA fix loop 1 (8 bugs + 1 nit) | sonnet | 12m09s | ~151k | 1 | 0 | all fixed with tests; 1 fix (blank-screen route) only provable in browser, its jest test also passes without the fix |
 
 ## Feature-level summary
 | Feature | Total time | Total tokens | Rework loops | Escaped bugs (30d) | Human time | Verdict |

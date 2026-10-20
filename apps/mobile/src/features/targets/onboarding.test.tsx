@@ -405,6 +405,35 @@ describe('goal (AC 4, 5, 7, 16)', () => {
   });
 });
 
+describe('step navigation chrome (QA bugs 4 and 8)', () => {
+  it('shows one Back control per step, and it goes back a step', async () => {
+    const user = setupUser();
+    const view = await renderApp('/');
+    await press(user, 'I AGREE');
+    // I AGREE lands on About you directly, which has no Back.
+    expect(view.getPathname()).toBe('/onboarding/about-you');
+    expect(screen.queryByRole('button', { name: 'Back' })).toBeNull();
+    await fillAbout(user);
+    await press(user, 'CONTINUE');
+    await waitForText('WHAT ARE YOU TRAINING FOR?');
+    expect(screen.getAllByRole('button', { name: 'Back' })).toHaveLength(1);
+    await press(user, 'Back');
+    expect(view.getPathname()).toBe('/onboarding/about-you');
+  });
+
+  it('never renders the goal route on the way from consent to About you', async () => {
+    const user = setupUser();
+    await renderApp('/');
+    const viewed = eventsNamed('onboarding_step_viewed').length;
+    await press(user, 'I AGREE');
+    await waitForText('ABOUT YOU');
+    const steps = eventsNamed('onboarding_step_viewed')
+      .slice(viewed)
+      .map((e) => (e as { step?: string }).step);
+    expect(steps).toEqual(['about_you']);
+  });
+});
+
 describe('back navigation (AC 6)', () => {
   it('keeps earlier answers when going back and forward', async () => {
     const user = setupUser();
@@ -527,6 +556,14 @@ describe('activity and pace steps', () => {
       expect(screen.getByText('0.01 to 1.5 kg a week')).toBeOnTheScreen();
       const input = screen.getByLabelText('Custom pace in kg a week');
       expect(input.props.keyboardType).toBe('decimal-pad');
+    });
+
+    it('focuses the revealed input so it is in view (QA bug 6)', async () => {
+      const user = setupUser();
+      await toPace(user);
+      expect(screen.queryByLabelText('Custom pace in kg a week')).toBeNull();
+      await press(user, /^Custom/, 'radio');
+      expect(screen.getByLabelText('Custom pace in kg a week').props.autoFocus).toBe(true);
     });
 
     it('computes with the typed rate, with a live kcal line', async () => {

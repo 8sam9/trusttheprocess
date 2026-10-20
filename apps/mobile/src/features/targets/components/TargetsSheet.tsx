@@ -71,7 +71,7 @@ const PAGE_TITLES: Record<Exclude<Page, 'list'>, string> = {
   pace: copy.rowPace,
   activity: copy.rowActivity,
   about: copy.rowAbout,
-  consent: copy.rowAbout,
+  consent: copy.consentTitle,
 };
 
 /**
@@ -324,16 +324,6 @@ export function TargetsSheet(props: TargetsSheetProps) {
         ) : null}
 
         {!plan && guardBlocks ? <Notice live>{copy.chooseAnotherGoal}</Notice> : null}
-        {consentDeclined ? <Notice live>{copy.consentDeclinedInSettings}</Notice> : null}
-        {failure ? (
-          <Notice tone="danger" live>
-            {failure === 'offline'
-              ? copy.applyOffline
-              : failure === 'validation'
-                ? copy.saveValidation
-                : copy.applyServer}
-          </Notice>
-        ) : null}
       </View>
     );
   }
@@ -393,6 +383,20 @@ export function TargetsSheet(props: TargetsSheetProps) {
     return <Button label={copy.done} disabled={!plan} onPress={commit} />;
   })();
 
+  // Pinned above the footer (not in the scrolling list) so a failure is visible wherever the list is scrolled.
+  const notice =
+    page !== 'list' ? undefined : consentDeclined ? (
+      <Notice live>{copy.consentDeclinedInSettings}</Notice>
+    ) : failure ? (
+      <Notice tone="danger" live>
+        {failure === 'offline'
+          ? copy.applyOffline
+          : failure === 'validation'
+            ? copy.saveValidation
+            : copy.applyServer}
+      </Notice>
+    ) : undefined;
+
   return (
     <Sheet
       visible
@@ -402,6 +406,7 @@ export function TargetsSheet(props: TargetsSheetProps) {
       {...(page !== 'list' ? { onBack: donePage } : {})}
       discard={{ title: copy.discardTitle, discard: copy.discard, keep: copy.keepEditing }}
       discardToken={discardToken}
+      notice={notice}
       footer={footer}
     >
       {body}

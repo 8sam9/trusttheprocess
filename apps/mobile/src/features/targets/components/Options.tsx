@@ -1,7 +1,7 @@
 import { GOAL_FOR_OPTION, type ActivityLevel, type GoalOption } from '@ttp/shared';
 import { space } from '@ttp/ui';
-import { useEffect, useRef, type Dispatch } from 'react';
-import { View } from 'react-native';
+import { useEffect, useRef, useState, type Dispatch } from 'react';
+import { Platform, View, type TextInputInstance } from 'react-native';
 import { Notice, RadioCard, Text, TextField } from '@/components/ui';
 import { announce } from '@/lib/a11y';
 import { track } from '@/lib/analytics';
@@ -123,6 +123,15 @@ export function PaceOptions({
       ? customPaceInfo(draft, goal, customResult.kg)
       : null;
   const limit = recommendedLimitText(units);
+  // Selecting Custom reveals the input and focuses it (autoFocus), so the keyboard or browser brings it into view.
+  const [focusCustom, setFocusCustom] = useState(false);
+  const customInput = useRef<TextInputInstance>(null);
+  useEffect(() => {
+    if (!customSelected || !focusCustom || Platform.OS !== 'web') return;
+    (
+      customInput.current as unknown as { scrollIntoView?: (o: object) => void } | null
+    )?.scrollIntoView?.({ block: 'center' });
+  }, [customSelected, focusCustom]);
   const fasterText = copy.paceFaster(limit);
 
   useEffect(() => {
@@ -156,10 +165,15 @@ export function PaceOptions({
         tone={faster ? 'warning' : 'default'}
         accessibilityLabel={`Custom. ${copy.paceCustomRange(units)}.`}
         onPress={() => {
-          if (!customSelected) dispatch({ type: 'setCustomPaceText', text: '' });
+          if (!customSelected) {
+            setFocusCustom(true);
+            dispatch({ type: 'setCustomPaceText', text: '' });
+          }
         }}
       >
         <TextField
+          ref={customInput}
+          autoFocus={focusCustom}
           label={copy.paceCustomField(units)}
           accessibilityLabel={copy.paceCustomFieldSpoken(units)}
           value={customText}

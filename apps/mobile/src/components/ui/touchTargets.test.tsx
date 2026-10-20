@@ -106,28 +106,3 @@ describe('touch targets (AC 31)', () => {
     }
   });
 });
-
-// Known defect found by QA in a real browser (spec 001 QA report, bug 2). On web (react-native-web 0.21)
-// `accessibilityState={{ checked }}` is dropped, so no radio exposes aria-checked and the selected state is not
-// available to screen readers (WCAG 4.1.2). `it.failing` keeps the suite green and flips to a failure once the
-// component passes `aria-checked` (or `role` + `aria-checked`) so the marker can be removed.
-describe('web radio state (known defect)', () => {
-  it.failing('Choice and RadioCard expose aria-checked for react-native-web', async () => {
-    await render(
-      <>
-        <Choice
-          label="Units"
-          value="metric"
-          options={[
-            { value: 'metric', label: 'Metric' },
-            { value: 'imperial', label: 'Imperial' },
-          ]}
-          onChange={jest.fn()}
-        />
-        <RadioCard title="LOSE FAT" description="d" selected onPress={jest.fn()} />
-      </>,
-    );
-    expect(screen.getByRole('radio', { name: 'Metric' }).props['aria-checked']).toBe(true);
-    expect(screen.getByRole('radio', { name: /Lose fat/ }).props['aria-checked']).toBe(true);
-  });
-});

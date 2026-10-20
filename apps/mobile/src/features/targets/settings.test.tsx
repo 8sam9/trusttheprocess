@@ -2,6 +2,7 @@ import { fireEvent, screen, waitFor, within } from 'expo-router/testing-library'
 import { authStorage } from '@/lib/authStorage';
 import { eventsNamed } from '@/test/analyticsSpy';
 import { backend, makeProfile, makeTargets, rpc } from '@/test/backend';
+import { insideScrollView } from '@/test/scroll';
 import { press } from '@/test/flows';
 import { renderApp, setupUser } from '@/test/render';
 
@@ -124,6 +125,18 @@ describe('Edit targets sheet (AC 25, 26)', () => {
     expect(eventsNamed('targets_updated')).toHaveLength(1);
   });
 
+  it('keeps the preset name and the stored rate after switching to imperial (QA bug 7)', async () => {
+    backend.profile = { ...backend.profile, units: 'imperial' };
+    const user = setupUser();
+    await openSettings();
+    const sheet = await openEdit(user);
+    expect(sheet.getByRole('button', { name: /^Pace, Moderate/ })).toBeOnTheScreen();
+    expect(sheet.queryByText(/Custom/)).toBeNull();
+    // Still the stored 0.5 kg a week (1,330 kcal), nothing to apply.
+    expect(sheet.getByText('1,330 kcal')).toBeOnTheScreen();
+    expect(sheet.getByRole('button', { name: 'APPLY FROM TODAY' })).toBeDisabled();
+  });
+
   it('cancelling or discarding makes no call (AC 25)', async () => {
     const user = setupUser();
     await openSettings();
@@ -197,6 +210,8 @@ describe('Edit targets sheet (AC 25, 26)', () => {
         sheet.getByText("We couldn't save your new targets just now. Your changes are still here."),
       ).toBeOnTheScreen(),
     );
+    // Pinned above the footer, not inside the scrolling list (spec 001 QA bug 1).
+    expect(insideScrollView(screen.getByText(/couldn't save your new targets/))).toBe(false);
   });
 
   it('shows the under-16 message inline and does not call the server', async () => {
@@ -231,10 +246,14 @@ describe('consent in the Edit sheet (AC 10)', () => {
     await user.press(sheet.getByRole('button', { name: 'APPLY FROM TODAY' }));
     await waitFor(() => expect(sheet.getByRole('button', { name: 'I AGREE' })).toBeOnTheScreen());
     expect(rpc).not.toHaveBeenCalled();
+    // The page is titled for consent (not "ABOUT YOU").
+    expect(sheet.getByText('YOUR DATA, YOUR CALL')).toBeOnTheScreen();
+    expect(sheet.queryByText('ABOUT YOU')).toBeNull();
     await user.press(sheet.getByRole('button', { name: 'NO THANKS' }));
     expect(
       screen.getByText("We need your consent to save body stats. Your targets haven't changed."),
     ).toBeOnTheScreen();
+    expect(insideScrollView(screen.getByText(/We need your consent/))).toBe(false);
     expect(rpc).not.toHaveBeenCalled();
   });
 

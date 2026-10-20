@@ -29,22 +29,22 @@ export function Stepper({
   unitLabel?: string;
 }) {
   const c = useColors();
-  const [text, setText] = useState(String(value));
+  const [text, setText] = useState(formatInt(value));
   const [shownValue, setShownValue] = useState(value);
   if (value !== shownValue) {
     // The owner changed the value (a tap, or a clamp): show it.
     setShownValue(value);
-    setText(String(value));
+    setText(formatInt(value));
   }
 
   const commit = () => {
     const n = Number(text.replace(/[^\d]/g, ''));
     if (text.trim() === '' || !Number.isFinite(n)) {
-      setText(String(value));
+      setText(formatInt(value));
       return;
     }
     onChange(n);
-    setText(String(value));
+    setText(formatInt(value));
   };
   const dec = () => {
     haptics.selection();

@@ -33,6 +33,7 @@ export function Choice<T extends string>({
               accessibilityRole="radio"
               accessibilityLabel={o.label}
               accessibilityState={{ checked }}
+              aria-checked={checked} // react-native-web ignores accessibilityState.checked
               onPress={() => {
                 haptics.selection();
                 onChange(o.value);

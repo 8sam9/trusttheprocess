@@ -64,6 +64,7 @@ export function RadioCard({
         accessibilityRole="radio"
         accessibilityLabel={label}
         accessibilityState={{ checked: selected, disabled: !!unavailable }}
+        aria-checked={selected} // react-native-web ignores accessibilityState.checked
         disabled={unavailable}
         onPress={() => {
           haptics.selection();

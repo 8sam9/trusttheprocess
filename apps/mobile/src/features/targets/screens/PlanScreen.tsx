@@ -10,7 +10,7 @@ import { copy } from '../copy';
 import { TargetsSheet } from '../components/TargetsSheet';
 import { PlanBody } from '../components/PlanParts';
 import { buildPlan } from '../derive';
-import { useStepGuard, useStepViewed } from '../hooks';
+import { goBackStep, useStepGuard, useStepViewed } from '../hooks';
 import { useOnboarding } from '../OnboardingProvider';
 import { usePlanSaved } from '../planSaved';
 import { argsForPlan, durationBucket } from '../save';
@@ -96,9 +96,9 @@ export default function PlanScreen() {
 
   return (
     <>
-      <Stack.Screen options={{ gestureEnabled: !saving, headerBackVisible: !saving }} />
+      <Stack.Screen options={{ gestureEnabled: !saving }} />
       <TaskScreen
-        header={<StepHeader step={5} />}
+        header={<StepHeader step={5} onBack={goBackStep} backDisabled={saving} />}
         notice={
           failureText ? (
             <Notice tone="danger" live>

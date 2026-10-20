@@ -30,6 +30,8 @@ export interface SheetProps {
   /** Copy for the discard confirm. */
   discard?: { title: string; discard: string; keep: string };
   children: ReactNode;
+  /** Inline message pinned directly above the footer, so errors are visible without scrolling. */
+  notice?: ReactNode;
   footer?: ReactNode;
 }
 
@@ -46,6 +48,7 @@ export function Sheet({
   discardToken = 0,
   discard = { title: 'Discard your changes?', discard: 'Discard', keep: 'Keep editing' },
   children,
+  notice,
   footer,
 }: SheetProps) {
   const c = useColors();
@@ -170,6 +173,9 @@ export function Sheet({
           >
             {children}
           </ScrollView>
+          {notice ? (
+            <View style={{ paddingHorizontal: space.lg, paddingTop: space.sm }}>{notice}</View>
+          ) : null}
           {footer ? (
             <View
               style={{

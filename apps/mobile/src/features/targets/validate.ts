@@ -131,7 +131,8 @@ export function validatePace(
 ): { error: string | null; kg: number | null } {
   if (pace === null) return { error: copy.paceCustomError(units), kg: null };
   if (pace.kind === 'preset') {
-    const kg = presetKgFor(pace.id);
+    // A stored rate that matched a preset of the other unit system keeps its exact kg (see matchPace).
+    const kg = pace.kg ?? presetKgFor(pace.id);
     return kg === null ? { error: copy.paceCustomError(units), kg: null } : { error: null, kg };
   }
   const v = parseDecimal(pace.text);

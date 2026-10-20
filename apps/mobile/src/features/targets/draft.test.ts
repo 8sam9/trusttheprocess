@@ -67,7 +67,12 @@ describe('draftFromProfile (AC 3, 15)', () => {
     expect(lose(0.75)).toEqual({ kind: 'preset', id: 'faster' });
     expect(lose(0.2549)).toEqual({ kind: 'preset', id: 'steady' });
     expect(lose(0.45, 'imperial')).toEqual({ kind: 'preset', id: 'moderate' });
-    expect(lose(0.5, 'imperial')).toEqual({ kind: 'custom', text: '1.1' });
+    // Stored kg rates match presets by kg value whatever the display units (spec 001 QA bug 7).
+    expect(lose(0.5, 'imperial')).toEqual({ kind: 'preset', id: 'moderate', kg: 0.5 });
+    expect(lose(0.45)).toEqual({ kind: 'preset', id: 'moderate', kg: 0.45 });
+    expect(lose(0.23)).toEqual({ kind: 'preset', id: 'steady', kg: 0.23 });
+    expect(lose(0.68, 'metric')).toEqual({ kind: 'preset', id: 'faster', kg: 0.68 });
+    expect(lose(0.6, 'imperial')).toEqual({ kind: 'custom', text: '1.32' });
     expect(lose(1.2)).toEqual({ kind: 'custom', text: '1.2' });
     expect(lose(null)).toEqual({ kind: 'preset', id: 'moderate' });
   });

@@ -299,7 +299,7 @@ export function paceSummary(d: TargetsDraft): string {
     const shown = rateKg !== null ? oneOrTwoDecimals(rateToDisplay(rateKg, d.units)) : d.pace.text;
     return `${sentence(copy.paceCustomTitle)} · ${shown} ${unit} a week`;
   }
-  const kg = presetKg(goal, d.units, d.pace.id);
+  const kg = d.pace.kg ?? presetKg(goal, d.units, d.pace.id);
   return `${sentence(copy.paceNames[d.pace.id])} · ${copy.paceRate(kg !== null ? presetRateText(kg, d.units) : '', d.units)}`;
 }
 

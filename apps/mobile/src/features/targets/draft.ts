@@ -19,7 +19,9 @@ import {
 } from './units';
 
 export type PaceId = 'steady' | 'moderate' | 'faster';
-export type PaceChoice = { kind: 'preset'; id: PaceId } | { kind: 'custom'; text: string };
+/** `kg` is set only when a stored rate matched a preset of the other unit system, so it keeps its exact value. */
+export type PaceChoice =
+  { kind: 'preset'; id: PaceId; kg?: number } | { kind: 'custom'; text: string };
 
 /**
  * The user's answers while onboarding or editing targets. It lives in memory only (spec OQ 6) and keeps the raw
@@ -112,8 +114,14 @@ function withInputChange(prev: TargetsDraft, next: TargetsDraft): TargetsDraft {
 
 function matchPace(goal: 'lose' | 'gain', units: UnitSystem, rateKg: number | null): PaceChoice {
   if (rateKg === null || rateKg <= 0) return defaultPaceFor(goal);
-  const preset = PACE_PRESETS[goal][units].find((p) => Math.abs(p.kg - rateKg) <= 0.005);
-  if (preset) return { kind: 'preset', id: preset.id };
+  // Match by kg value in the current units first, then in the other system, so a stored 0.5 kg keeps its
+  // preset name after switching to imperial (and a stored 0.45 kg after switching to metric).
+  const other: UnitSystem = units === 'metric' ? 'imperial' : 'metric';
+  const near = (p: { kg: number }) => Math.abs(p.kg - rateKg) <= 0.005;
+  const own = PACE_PRESETS[goal][units].find(near);
+  if (own) return { kind: 'preset', id: own.id };
+  const foreign = PACE_PRESETS[goal][other].find(near);
+  if (foreign) return { kind: 'preset', id: foreign.id, kg: rateKg };
   return { kind: 'custom', text: trimNumber(rateToDisplay(rateKg, units), 2) };
 }
 
