@@ -1396,3 +1396,22 @@ Not run: any Maestro flow (no simulator), real screen readers, Dynamic Type, hap
 All 7 original bugs, the double header and N1 are fixed and verified in the browser. No blocker or major bug found. Two minor new findings (R1 needs a human call on severity).
 
 QA: PASS
+
+---
+## Code review (code-reviewer, 2026-10-20) — REVIEW: APPROVE
+No must-fix. Nits: [nit] client `Intl` vs server `pg_timezone_names` timezone lists can differ (stuck save) · [nit] Today reads targets with the stored profile timezone, save uses the device zone — document as deliberate · [nit] two `eslint-disable exhaustive-deps` need a stable memo / justification · [nit] raw font/glyph sizes in Stepper, Sheet, StepHeader, ListRow, RadioCard, TextField, Choice, Consent, (app)/_layout — add glyph/badge tokens or document exemption · [nit] DESIGN_SYSTEM.md still lists "stepper" as planned · [nit] blank-screen jest test doesn't prove the fix (browser check does) · [nit] onboarding.test.tsx 957 lines — split · [nit] under-16 reset retry fires on every gate mount — add backoff.
+Verified correct: single formula source + generated SQL fixture, column-level grants, RPC-only writes with row lock, local-date handling, per-user query keys and gate cache, error mapping.
+
+## Security review (security-privacy-reviewer, 2026-10-20) — SECURITY: APPROVE
+Critical: none. High: none.
+- **M1** Withdrawing consent leaves body stats + `daily_targets` stored and displayed (GDPR 7(3)/9/17). → **Human decision at Gate 3** (erase-on-withdraw RPC vs documented retention basis).
+- **M2** Blanket `onboarding_completed_at = null` reset is guarded only by a comment. → fix now (fail unless explicitly allowed / no completed rows).
+- **M3** `onboarding_blocked{low_bmi_guard|under_min_age}`, `goal`, `floor_applied`, `pace_band` are personal/health-adjacent under a persistent analytics id. → **Human decision before any analytics SDK**: separate analytics consent, anonymous counting for `onboarding_blocked`.
+- **L1** underage-reset flag survives sign-out/deletion; cached kcal/macros are health-derived. → fix (clear flag; document cache fields).
+- **L2** `p_bmr`/`p_maintenance_kcal` only range-checked by table constraints. → fix (sanity bounds in RPC).
+- **L3** timezone choice can backdate a target row by a day (violates AC 23 spirit). → fix (clamp to latest effective_from).
+- **L4** constraint errors return the failing row in DETAIL. → fix (validate in RPC; strip `error.details` when Sentry lands).
+- **L5** `pg_timezone_names` scan ~8 ms, no rate limit. → fix the check; rate limiting later at gateway.
+- **L6** privacy-policy URL falls back to example.com; env var undocumented. → fix.
+- **L7** under-16 birth year edit in Settings for a completed user leaves data. → product/legal note.
+- **L8** `pnpm audit --prod`: 2 high / 2 moderate in Expo/Metro/Jest build tooling, pre-existing. → track SDK updates.

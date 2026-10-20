@@ -14,6 +14,9 @@ One row per pipeline stage. "Rework" = times the stage was re-run because a late
 | 2026-10-20 | 001 onboarding & targets | mobile-engineer → M1–M10 (8 routes, 11 ui components, sheet, settings, analytics, Maestro YAMLs) | sonnet | 36m11s | ~62k (+ tool output) | 0 | 0 | 255 mobile tests; skipped optional visual check; Maestro unrun (no simulator) |
 | 2026-10-20 | 001 onboarding & targets | qa-engineer → full AC map + browser exploratory run | sonnet | 15m09s | ~171k | — | 0 | QA: FAIL (2 major, 5 minor) — all found only by looking at rendered screens; unit tests were green. Orchestrator spotted 1 more (double header). QA wrongly said no Maestro flows exist |
 | 2026-10-20 | 001 onboarding & targets | mobile-engineer → QA fix loop 1 (8 bugs + 1 nit) | sonnet | 12m09s | ~151k | 1 | 0 | all fixed with tests; 1 fix (blank-screen route) only provable in browser, its jest test also passes without the fix |
+| 2026-10-20 | 001 onboarding & targets | qa-engineer → re-run 1 | sonnet | 7m47s | ~74k | — | 0 | QA: PASS; all 8 fixes confirmed; 2 new minor (R1 hidden disclaimer/warning — orchestrator upgraded to must-fix, R2 wrong Maestro assertion) |
+| 2026-10-20 | 001 onboarding & targets | code-reviewer | sonnet | 1m23s | ~58k | — | 0 | REVIEW: APPROVE, 8 nits |
+| 2026-10-20 | 001 onboarding & targets | security-privacy-reviewer | opus | 22m04s | ~67k | — | 0 | SECURITY: APPROVE; 3 medium (2 need human decisions), 8 low; ran live adversarial SQL probes |
 
 ## Feature-level summary
 | Feature | Total time | Total tokens | Rework loops | Escaped bugs (30d) | Human time | Verdict |
