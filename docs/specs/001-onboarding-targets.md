@@ -733,3 +733,29 @@ No new colours are proposed.
 10. **Consent recorded on tap vs at final save.** Recording at final save would let the whole flow run offline (AC 28's spirit) and still satisfy AC 8. Recording on tap gives a cleaner consent timestamp. The design records on tap; the architect may choose otherwise without UI changes beyond the error placement.
 11. **Settings form reshape.** Body stats move from the Profile form into Daily targets (S9), because AC 25 requires a preview for them. The Profile Save button is replaced by autosave. Flagging it because it changes an existing screen.
 12. **Today first landing (S8).** A target card replaces the placeholder "set up your profile" copy. This is minimal and doesn't render the diary ring, which stays in 003, but please confirm it's in scope.
+
+---
+## Gate 2 change requests (from Samuele, 2026-10-20)
+
+### CR-1 — Custom pace (step 4, S5; also the Pace row in S7/S10)
+- Add a fourth `RadioCard` **CUSTOM** after the presets, label "0.01 to 1.5 kg a week" (imperial: "0.02 to 3.3 lb a week").
+  When selected it reveals a decimal input "kg a week" (accessible label "Custom pace in kg a week"), the live line
+  "About N kcal a day below maintenance" (above, for gain), and the floor hint when it applies.
+- **Allowed range: 0.01–1.5 kg a week** (inclusive). Outside it: inline error "Enter a pace between 0.01 and 1.5 kg a week." and CONTINUE is blocked.
+- **Recommendation is always visible:** an info `Notice` between the subline and the options:
+  "**We strongly suggest no more than 0.75 kg a week.** Slower is easier to keep up and protects muscle."
+- **Above 0.75 kg a week** (custom only): the card outline turns `warning` (amber) and a polite status line appears:
+  "Faster than we recommend. We strongly suggest 0.75 kg a week or less. You can still go ahead." No extra confirmation step; the safety calorie floor still applies on top.
+- Applies to **lose and gain** with the same range and the same 0.75 recommendation.
+- Mockup: design canvas, board "001 · 4 · Pace (with custom)" (interactive).
+
+**Knock-on changes for the architect:**
+- `profiles.weekly_rate_kg` check constraint `0..1` → `0..1.5` (new migration; `numeric(3,2)` already fits).
+- `@ttp/shared`: `ProfileInput.weeklyRateKg` and `ProfileUpdate.weekly_rate_kg` max `1` → `1.5`; add `RECOMMENDED_MAX_WEEKLY_RATE_KG = 0.75` and `MIN/MAX` constants; tests for 0.01, 0.75, 0.76, 1.5, 1.51.
+- Store the custom value as-is (2 decimals); the reveal eyebrow shows "LOSE FAT · CUSTOM · 1.0 KG A WEEK".
+- Analytics: `pace_option` gains the value `custom`, plus a coarse `pace_band` enum (`le_0_75` | `gt_0_75`) — no raw numbers.
+
+**New acceptance criteria** (append to §3):
+- AC 33 — Given the pace step, when the user selects Custom and enters a value from 0.01 to 1.5 kg a week, then targets compute with that rate; values outside the range show the inline error and CONTINUE is blocked.
+- AC 34 — Given a custom value above 0.75 kg a week, then the amber outline and the "Faster than we recommend…" message are shown and announced, and the user can still continue.
+- AC 35 — The 0.75 kg recommendation Notice is visible on the pace step whenever it is shown (onboarding and the Pace row of the adjust/edit sheets).
