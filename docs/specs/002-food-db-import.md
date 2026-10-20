@@ -1,6 +1,6 @@
 # Spec 002: Food database import (USDA FoodData Central + Open Food Facts)
 
-Status: **Approved at Gate 1 (2026-10-20) with change requests CR-1 (Italian products in scope) and CR-2 (Free plan, 300 MB budget, US + Italy for beta); all open questions decided below. No user-facing screens (attribution page moved to 011), so the design stage is skipped. Next: architect.**
+Status: **Approved at Gate 1 (2026-10-20) with change requests CR-1 (Italian products in scope) and CR-2 (Free plan, 300 MB budget, US + Italy for beta); all open questions decided below. No user-facing screens (attribution page moved to 011), so the design stage is skipped. Technical plan drafted by the architect (2026-10-20): split into 002a/002b, ADRs 0006 to 0008. Next: backend-engineer (002a).**
 Branch: `feat/002-food-db-import`. Roadmap: Milestone 1, item 002. Product spec: F3 (food data), N5 (data-quality layer, data side only); prerequisite for F4 (004), N1 (008) and the badges in 009.
 Sections below the Product section (Design, Technical plan, QA report, reviews) are filled in by later stages.
 
@@ -211,3 +211,657 @@ Each has a recommended default. If you approve the spec without answers, the def
 13. **Which markets does the beta cohort need?** **Decided (human, 2026-10-20):** Italy is a launch market alongside the six English-speaking ones, and products sold in Italy are accepted with Italian names (AC 4a, 4b). Still open: (a) Italian products add database size, so the architect re-checks the budget in question 1 with Italy included (architect to confirm); (b) Italian packs use the EU basis, so most Italian rows are carbs `available` (question 4); (c) typed search in Italian for generic foods ("pane", "riso") will be weak until 003 adds aliases, while branded Italian products are found by name or barcode. **Default:** accept (a) to (c) for beta; add other countries only on request.
 14. **Scope split.** **Decided (human, 2026-10-20): default accepted — architect decides; if split, the AC 6a budget, 4a and 4b go with the OFF half (002b), and AC 44 has moved to 011.** This is large for one PR (schema impact, two importers, rules, clustering, fixtures, golden list, attribution page). **Default:** keep it as one spec, but the architect should say in the technical plan if it needs splitting; the natural cut is 002a (USDA importer, shared normalisation and rules, fixtures, golden list, run report, RLS; AC 1 to 2, 7 to 24, 30 to 42, 46 to 54 for USDA) and 002b (OFF importer, selection, clustering and separability, attribution page; AC 3 to 6, 25 to 29, 43 to 45), with USDA first because it alone makes 003 usable.
 15. **Liquids at 1 g per ml (AC 12).** **Decided (human, 2026-10-20): default accepted; densities (e.g. for oils) may come in a later feature.** **Default:** accept the approximation with a flag. Alternative: skip all per-100 ml products until densities are available, which would drop most OFF drinks. I recommend accepting.
+
+---
+
+# Technical plan
+
+Status: **drafted by the architect, 2026-10-20.** ADRs: [0006 food catalogue schema and access boundary](../decisions/0006-food-catalogue-schema-and-access-boundary.md), [0007 plan-then-apply import pipeline](../decisions/0007-food-import-plan-then-apply-pipeline.md), [0008 food data size budget on the Free plan](../decisions/0008-food-data-size-budget-free-plan.md). `docs/ARCHITECTURE.md` (data model, import box) has been updated to match. There is no Design section (no screens; Gate 1).
+
+**How facts were checked.** From this environment, the USDA and OFF download hosts return HTTP 403 through the proxy, so no data file (not even a sample) was downloaded. Facts below come from:
+- **USDA:** fdc.nal.usda.gov download page and field-descriptions PDF (via the web fetcher), the data.gov catalogue entry, and the GBFPD one-pager (Aug 2026).
+- **OFF:** the OFF server source and API schema docs on GitHub (`openfoodfacts/openfoodfacts-server@main`: `scripts/export_database.pl`, `lib/ProductOpener/{Config_off,Nutrition,Products,ProductSchemaChanges,Food}.pm`, `docs/api/ref/schemas/*.yaml`, `docs/api/ref-barcode-normalization.md`, `taxonomies/states.txt`), plus the OFF /data and /countries pages.
+- **GS1:** gs1.org/prefixes.
+- **Supabase:** docs on database size and on connecting to Postgres.
+- **npm:** registry metadata and the shipped type files for the libraries below.
+
+Anything not verified this way is marked **(unverified)**, and the owning task verifies it against a real file. Sizes in T2 were **measured** on a throwaway local PostgreSQL 16 in /tmp with 220k synthetic rows of the planned shape (no Supabase project was touched).
+
+## T1. Key decisions
+
+| # | Question | Decision | Why |
+|---|---|---|---|
+| 1 | Split? | **Yes: 002a then 002b** (T9). 002a covers the schema, read RPCs, access module, shared rules, the importer engine, USDA generic datasets (Foundation, SR Legacy, FNDDS), golden list and fixtures. 002b covers USDA Branded, OFF (incl. Italy), markets, clustering, the size budget and OFF separability. *Deviation from Q14's natural cut:* Branded moves to 002b, because its popularity signal comes from OFF (T2.4) and it is the only USDA dataset that needs the budget. | 002a alone (~14k verified foods, ~10 MB) unblocks 003 and fits easily. The budget, popularity, clusters and ODbL questions all arrive together in 002b. The 001 retro showed large PRs slow review. |
+| 2 | Where foods live | Schema `food` (not exposed to the Data API). One table `food.foods` with provenance on every row. Servings are inline `jsonb`. Clusters are implicit by barcode. No FK from user data. Deterministic uuidv5 ids. | ADR 0006. This satisfies PRODUCT_SPEC §5 "separate" as *separable* (AC 43), keeps one canonical row per barcode enforceable, and saves ~18 MB on servings. |
+| 3 | How clients read | Only through `public.get_foods`, `public.lookup_barcode` and `public.search_foods` (SECURITY INVOKER, `authenticated` only), called from **one module**, `apps/mobile/src/lib/foodData.ts` (owner: mobile-engineer). | AC 6b, AC 39. A second free project later is an env change. |
+| 4 | Importer | `tools/food-import` (Node 24, TS strict, tsx, vitest). It reads the JSON/JSONL dumps (not CSV), works plan-then-apply, writes only content-hash diffs in 1,000-row transactions, and runs as role `food_importer` from `FOOD_IMPORT_DATABASE_URL` (env only). | ADR 0007. AC 30, 36, 37, 52. No service-role key anywhere. |
+| 5 | Budget | 300 MB covering every relation in schema `food`. Selection targets 90 percent of it (10 percent churn reserve). Hard ceiling: 450 MB total database size before any apply. | ADR 0008, AC 6a. The Free plan goes read-only at 500 MB. |
+| 6 | Popularity | OFF uses `unique_scans_n` (then `popularity_key`). USDA Branded uses the OFF `unique_scans_n` of the same GTIN, used only for ranking and never stored. | USDA has no popularity field (field-descriptions PDF). ADR 0008. Needs H2. |
+| 7 | USDA identity | `source_ref` = stable upstream key: Foundation and SR Legacy use `ndbNumber`, FNDDS uses `foodCode`, Branded uses the normalised GTIN-14 (fallback `fdc:<fdcId>`). The current `fdcId` is kept in `upstream_id`. | The FDC help page says "each time the data in a food record changes, that food item receives a new FDC_ID". Keying on fdcId would create a new row per release and break AC 31 and AC 33 for every user link. Changes AC 2's mechanics (T12.1, H4). |
+| 8 | OFF nutrients | Values come from `nutrition.input_sets[]` with `preparation = "as_sold"`, source ≠ `estimate`. The `aggregated_set` and CSV `_100g` columns are never used. | OFF's aggregated set **prefers `prepared` over `as_sold`** (`Nutrition.pm` `%preparation_priority`), and the CSV exports it. Using it would silently break AC 11. |
+| 9 | Refresh | Operator-run command. Each run is either a declared full snapshot or partial. No scheduler. | Spec Q8. |
+
+## T2. Size estimate (AC 6, 6a) and how the importer computes it
+
+### T2.1 Measured bytes per row (local PG 16, planned schema, 220k synthetic rows)
+- **Heap:** about 321 bytes per row on average. Tuple averages: 382 bytes for generic foods (58-char names, about 3 servings) and about 300 bytes for branded (40-char names, 0.5 to 0.9 servings). This includes line pointers and page overhead.
+- **Indexes:** primary key 42 bytes, partial unique barcode index 29 bytes, `last_run_id` 7 bytes, partial trigram GIN on `name || ' ' || brand` 52 bytes for 44-char text. Total is about 130 bytes per row.
+- **Totals:** about 450 bytes per row overall; about 455 per branded row, about 535 per generic row.
+- **Servings:** inline jsonb about 54 bytes per serving, against 104 bytes as a table row with primary key. This is why ADR 0006 point 3 keeps them inline.
+- **003 reserve:** 25 bytes per row is added for the search indexes 003 is expected to add (for example, unaccent/FTS). The measured `simple` FTS GIN was 10 to 16 bytes per row.
+- **Constants used by the estimator** (in `config/budget.json`; recalibrated after the first full run from `actual/estimated`):
+
+| Segment | bytes/row used |
+|---|---|
+| USDA generic (Foundation, SR Legacy, FNDDS) | 650 (longer names, up to 10 portions) |
+| US branded (USDA Branded, OFF US) | 480 |
+| Italy (OFF IT; 30 percent carry an alt name) | 520 |
+
+### T2.2 Rows and bytes (beta selection: US + Italy)
+
+| Segment | Candidate rows after rules (estimate) | Basis | Bytes |
+|---|---|---|---|
+| USDA generic: SR Legacy about 7.8k, FNDDS 2021-23 about 5.4k, Foundation about 0.4k | about 14k | well known upstream counts **(unverified)**; all kept | about 9 MB |
+| OFF Italy | 150k to 260k (planning value 180k) | 260,733 OFF products tagged Italy (OFF /countries, 2026-10-20); about 70 percent pass name, barcode, as-sold core four and rules **(assumption)** | 78 to 135 MB (planning value 94 MB) |
+| US branded canonical candidates | about 580k | USDA Branded about 450k products (GBFPD one-pager) minus discontinued; OFF US 821k tagged, about 55 percent pass; about 60 percent of those share a GTIN with USDA (OFF imported USDA data historically) **(assumption)** | 280 MB if all were kept, so it does not fit |
+| Non-surfacing rows (superseded, non-canonical cluster members) | about 270k | the overlap above | dropped first under budget (T12.2) |
+| `food.import_runs`, `food.releases` | small | about 50 KB per report | under 1 MB |
+
+**Fit:** 300 MB budget × 0.9 = 270 MB selection target. Generic 9 MB + Italy 94 MB = 103 MB, leaving about **167 MB for US branded, about 350k rows** (about 260k if Italy turns out to be 260k candidates). So **about 60 percent of US branded canonical candidates fit, ordered by popularity**. The rest are served by 004's live lookup.
+
+**Room for user data:** 500 MB − 300 MB food − about 25 MB platform schemas (auth, storage; **unverified**, measured by the report as `pg_database_size − food`) leaves about 175 MB.
+- A diary entry with indexes is about 450 bytes. 50 beta users × 15 entries a day ≈ 120 MB a year, so the beta is comfortable.
+- The report prints `free_for_user_data`.
+- When 004 (lookup cache) or 008 (embeddings) add bytes, they come out of the 300 MB (ADR 0008 point 6).
+
+### T2.3 How AC 6a is computed
+1. **Plan phase.** For each candidate:
+   - `estBytes = base[segment] + utf8Len(name) + utf8Len(brand) + utf8Len(altNames) + 26 × servings + 1.3 × utf8Len(name + ' ' + brand) − baseNameAllowance[segment]`.
+   - `base` and `baseNameAllowance` come from the measurements above. The engineer fits them in B12 so that the fixture's estimate matches its actual size within 5 percent.
+2. **Selection.** Candidates are sorted by priority:
+   1. generic (never dropped);
+   2. Italy canonical, then Italy non-canonical;
+   3. US canonical, then US non-canonical, then superseded.
+
+   Within each group the order is popularity desc, then the tie-breaks in ADR 0008. Rows are accumulated until the selection target is reached. Each dropped row counts as `over_budget` per source and market. If it already exists in the DB, it is hidden with `over_budget`.
+3. **Before apply:** `ceilingCheck = sum(pg_database_size) + Σ estBytes(new rows) − Σ estBytes(newly hidden or dropped) ≤ 450 MB`, otherwise abort.
+4. **After finalise:** the actual size is `Σ pg_total_relation_size(c.oid)` for relations in schema `food` (plus the database total). The run is `failed` if `actual > budget × 1.10`. The report states the budget, the estimate, the actual size, `actual/estimated` and drops per source and market.
+
+### T2.4 Popularity signal
+- **OFF:** `unique_scans_n`, the unique-IP scans in the official OFF app over the last full year, computed yearly upstream (`product_misc.yaml`). Ties break on `popularity_key`, then the newest `last_modified_t`, then `code`. `popularity_tags` is not used: the upstream docs warn that one scan can earn "top-90-percent" in thin countries.
+- **USDA Branded:** the same OFF `unique_scans_n`, looked up by GTIN-14 from the OFF input in the same run (an in-memory `Map<gtin14, scans>`, about 1M entries, about 60 MB RAM). This only works when Branded and OFF are imported in one run. When Branded runs alone, it uses the previous run's stored OFF `popularity` (by barcode). Ties break on `dataSource = 'GDSN'`, then the newest `modifiedDate`, then the GTIN.
+
+## T3. Schema changes
+
+**002a migration:** `supabase/migrations/20261021090000_food_catalogue.sql`. Additive only; no destructive statements.
+
+```sql
+create extension if not exists pg_trgm with schema extensions;
+create schema food;
+comment on schema food is 'Food catalogue (spec 002, ADR 0006). Not exposed to the Data API; read via public RPCs.';
+revoke all on schema food from public, anon, authenticated;
+grant usage on schema food to authenticated;            -- needed by SECURITY INVOKER RPCs
+
+create type food.source as enum ('usda', 'off');
+create type food.dataset as enum ('usda_foundation', 'usda_sr_legacy', 'usda_fndds', 'usda_branded', 'off');
+create type food.tier as enum ('verified', 'brand', 'community');
+create type food.carbs_basis as enum ('total', 'available', 'unknown');
+create type food.market as enum ('us', 'it', 'gb', 'ie', 'ca', 'au', 'nz');
+create type food.reason_code as enum (
+  -- soft flags (stored in reasons[])
+  'energy_from_kj', 'volume_basis_assumed', 'invalid_barcode', 'restricted_barcode', 'energy_atwater_mismatch',
+  'sugars_over_carbs', 'satfat_over_fat', 'sodium_implausible', 'energy_unit_mismatch',
+  -- hide reasons (stored in hidden_reason)
+  'superseded', 'removed_upstream', 'not_selected', 'over_budget',
+  'missing_core', 'negative_value', 'mass_over_100g', 'energy_too_high', 'energy_implausible', 'no_name');
+-- Skip-only reasons (no_accepted_name, not_in_market, no_valid_barcode, prepared_only, non_food, discontinued, parse_error)
+-- exist only in the importer/report, never in the DB.
+
+create role food_importer nologin;   -- a human enables login on a remote project (H5); never the app
+
+create table food.releases (
+  id smallint generated always as identity primary key,
+  dataset food.dataset not null,
+  label text not null check (char_length(label) between 1 and 64),        -- e.g. '2026-04-30', OFF dump date
+  file_sha256 text not null check (file_sha256 ~ '^[0-9a-f]{64}$'),
+  created_at timestamptz not null default now(),
+  unique (dataset, label, file_sha256)
+);
+
+create type food.run_status as enum ('running', 'succeeded', 'failed', 'aborted');
+create table food.import_runs (
+  id integer generated always as identity primary key,
+  status food.run_status not null default 'running',
+  mode text not null check (mode in ('full', 'partial')),   -- dry runs are never persisted (AC 52)
+  tool_version text not null,
+  started_at timestamptz not null default now(),
+  finished_at timestamptz,
+  report jsonb                                              -- RunReport (T5.6); no user, diary or contributor data
+);
+
+create table food.foods (
+  id uuid primary key,                                      -- uuidv5(FOOD_ID_NAMESPACE, dataset || ':' || source_ref)
+  source food.source not null,
+  dataset food.dataset not null,
+  tier food.tier not null,
+  carbs_basis food.carbs_basis not null,
+  is_canonical boolean not null default false,
+  barcode_restricted boolean not null default false,
+  release_id smallint not null references food.releases (id),
+  last_run_id integer not null references food.import_runs (id),
+  hidden_reason food.reason_code check (hidden_reason is null or hidden_reason in (
+    'superseded','removed_upstream','not_selected','over_budget','missing_core','negative_value',
+    'mass_over_100g','energy_too_high','energy_implausible','no_name')),
+  -- canonical nutrients per 100 g (as published; carbs on carbs_basis). NULL = unknown, 0 = known zero (AC 10).
+  kcal real not null check (kcal between 0 and 905),
+  protein_g real not null check (protein_g between 0 and 100),
+  carbs_g real not null check (carbs_g between 0 and 100),
+  fat_g real not null check (fat_g between 0 and 100),
+  fibre_g real check (fibre_g between 0 and 100),
+  sugars_g real check (sugars_g between 0 and 100),
+  satfat_g real check (satfat_g between 0 and 100),
+  sodium_mg real check (sodium_mg between 0 and 100000),
+  popularity integer check (popularity >= 0),               -- OFF unique_scans_n only; null for USDA
+  content_hash bigint not null,                             -- first 8 bytes of sha256(canonical JSON of normalised row)
+  upstream_modified_at timestamptz,
+  created_at timestamptz not null default now(),
+  updated_at timestamptz not null default now(),            -- the importer sets it explicitly only when it writes a change
+  source_ref text not null check (char_length(source_ref) between 1 and 64),
+  upstream_id text check (char_length(upstream_id) <= 64),  -- current fdcId (USDA); null for OFF
+  barcode text check (barcode ~ '^[0-9]{14}$'),             -- normalised GTIN-14; null if absent or invalid
+  name_lang text not null check (name_lang in ('en', 'it')),
+  markets food.market[] not null default '{}',
+  reasons food.reason_code[] not null default '{}',
+  name text not null check (char_length(name) between 1 and 200),
+  brand text check (char_length(brand) between 1 and 120),
+  alt_names jsonb check (alt_names is null or jsonb_typeof(alt_names) = 'object'),   -- {"it": "..."}
+  servings jsonb not null default '[]' check (jsonb_typeof(servings) = 'array' and jsonb_array_length(servings) <= 10)
+  -- each item {"label": text 1..80, "grams": number (0, 5000]}; validated by the importer (zod), not by SQL
+);
+comment on table food.foods is
+  'Upstream foods (USDA FDC, Open Food Facts). Written only by tools/food-import as food_importer. No user data. OFF rows: ODbL, see food.off_foods.';
+
+create index foods_last_run_idx on food.foods (last_run_id);                                    -- AC 54
+create unique index foods_one_canonical_per_barcode on food.foods (barcode)                       -- AC 25-27
+  where is_canonical and hidden_reason is null and barcode is not null and not barcode_restricted;
+create index foods_search_trgm_idx on food.foods
+  using gin ((name || ' ' || coalesce(brand, '')) extensions.gin_trgm_ops)
+  where is_canonical and hidden_reason is null;                                                 -- AC 50; 003 may replace
+
+-- RLS
+alter table food.foods enable row level security;
+alter table food.releases enable row level security;
+alter table food.import_runs enable row level security;
+revoke all on all tables in schema food from public, anon, authenticated;
+grant select on food.foods to authenticated;                                  -- hidden rows readable by id (AC 27, 33)
+create policy "foods: authenticated read" on food.foods for select to authenticated using (true);
+-- no insert/update/delete grant or policy for authenticated or anon (AC 39); import_runs/releases: none (AC 53)
+
+grant usage on schema food to food_importer;
+grant select, insert, update on food.foods, food.releases, food.import_runs to food_importer;   -- no DELETE
+grant maintain on food.foods to food_importer;                                                     -- PG 17: VACUUM/ANALYZE
+create policy "foods: importer read"   on food.foods for select to food_importer using (true);
+create policy "foods: importer insert" on food.foods for insert to food_importer with check (true);
+create policy "foods: importer update" on food.foods for update to food_importer using (true) with check (true);
+-- same three policies on food.releases and food.import_runs
+
+-- Canonical recompute (AC 26, 29), run by the importer in one transaction after all batches.
+-- Two statements so the non-deferrable partial unique index never sees two canonical rows:
+--   1) clear is_canonical where the computed winner differs; 2) set is_canonical for new winners.
+-- Winner per barcode among visible, non-restricted rows: order by tier (verified>brand>community),
+-- source (usda>off), upstream_modified_at desc nulls last, source_ref asc. Rows without a barcode or with a
+-- restricted barcode: canonical = visible. Hidden rows: canonical = false. Changed rows get last_run_id = p_run, updated_at = now().
+create function food.recompute_canonical(p_run integer) returns integer
+language plpgsql security invoker set search_path = '' as $$ ... $$;
+revoke execute on function food.recompute_canonical(integer) from public;
+grant execute on function food.recompute_canonical(integer) to food_importer;
+```
+
+**Read RPCs (002a, `public`, `SECURITY INVOKER`, `stable`, `set search_path = ''`, execute granted to `authenticated` only and revoked from `public` and `anon`):**
+- `public.get_foods(p_ids uuid[]) returns setof <FoodRow columns>`. Raises `too_many_ids` above 200. Returns hidden rows too (AC 27, 33), with `hidden boolean` derived from `hidden_reason`.
+- `public.lookup_barcode(p_gtin14 text)` returns 0 or 1 row: the visible canonical row with that barcode (non-restricted). It raises `invalid_input` unless the input matches `^[0-9]{14}$`. The client normalises with `normaliseGtin` from `@ttp/shared`, so GTIN logic exists once, in TS.
+- `public.search_foods(p_query text, p_limit int default 20)`, with `p_limit` capped at 50. It returns visible canonical rows where `name || ' ' || brand` matches `ILIKE '%' || q || '%'` or trigram similarity `operator(extensions.%)`, ordered by `extensions.similarity` desc. This is a **functional baseline for AC 50 only**. 003 owns ranking and may replace the body while keeping the signature.
+
+The `FoodRow` columns are: id, source, dataset, source_ref, name, name_lang, alt_names, brand, barcode, kcal, protein_g, carbs_g, fat_g, fibre_g, sugars_g, satfat_g, sodium_mg, carbs_basis, tier, reasons, hidden, is_canonical, servings, updated_at. Internal columns are not returned: content_hash, popularity, release_id, last_run_id, upstream_id, markets, barcode_restricted.
+
+**002b migration:** `supabase/migrations/<timestamp after 002a>_food_off_separability.sql`.
+- `create view food.off_foods with (security_invoker = true) as select * from food.foods where source = 'off'` (AC 43 list and export). There is no grant to clients.
+- `food.remove_off_data() returns jsonb` (`SECURITY INVOKER`). It deletes `where source = 'off'`, then calls `food.recompute_canonical`, and returns counts.
+  - Execute is revoked from `public` and from `food_importer`. It is run only by `postgres` after human confirmation (CLAUDE.md: destructive).
+  - OFF-derived values never live on USDA rows (the USDA popularity signal is not stored, ADR 0008), so after removal no OFF-derived byte remains.
+- No other schema change is needed for OFF: markets, alt names, popularity and carbs basis are already in 002a's table, so 002b only adds data.
+
+**Logs and export.** No user data is involved:
+- account deletion and F15 export are unaffected;
+- run reports hold counts, reason codes, file names and hashes, and timings only;
+- importer logs never print record contents beyond `dataset:source_ref` (AC 41, 53).
+
+## T4. Contracts in `packages/shared` (C1; both sides depend on these; land first)
+
+| File | Exports |
+|---|---|
+| `src/foods.ts` (new) | **Enums (zod):** `FoodSource` (`usda`,`off`), `FoodDataset`, `FoodTier`, `CarbsBasis`, `FoodMarket`, `FoodFlagCode` (the 9 soft flags), `FoodHiddenReason` (the 10 hide reasons). **Constants:** `FOOD_TIER_LABEL = { verified: 'Verified', brand: 'Brand', community: 'Community' }` (copy fixed in §7; 009 renders it), `MAX_SERVINGS = 10`, `MAX_SERVING_GRAMS = 5000`, `MAX_FOOD_NAME = 200`, `GET_FOODS_MAX_IDS = 200`, `SEARCH_FOODS_MAX_LIMIT = 50`. **Shapes:** `FoodServing = z.strictObject({ label: z.string().min(1).max(80), grams: z.number().gt(0).max(5000) })`; `FoodRow = z.object({...})` matching the RPC columns (numbers nullable for the four optional nutrients; `updated_at` a plain string as in `db.ts`). **RPC args:** `GetFoodsArgs = z.strictObject({ p_ids: z.array(z.uuid()).min(1).max(200) })`, `LookupBarcodeArgs = z.strictObject({ p_gtin14: z.string().regex(/^\d{14}$/) })`, `SearchFoodsArgs = z.strictObject({ p_query: z.string().trim().min(1).max(100), p_limit: z.int().min(1).max(50).optional() })`. **Errors:** `FoodRpcErrorCode = z.enum(['too_many_ids','invalid_input'])`. |
+| `src/gtin.ts` (new) | `normaliseGtin(raw: string): { ok: true; gtin14: string; restricted: boolean; kind: 'gtin8'\|'gtin12'\|'gtin13'\|'gtin14' } \| { ok: false; reason: 'non_numeric'\|'bad_length'\|'bad_check_digit' }` and `isRestrictedGtin14(g: string): boolean`. Rules in T6.1. Used by the importer (AC 14 to 16) and by 004's scanner. It is pure and 100 percent unit-tested. |
+| `src/index.ts` | re-export both. |
+
+**Importer-internal schemas (in `tools/food-import/src/schemas/`, not shared):** `MarketsConfig`, `RulesConfig` (every threshold in AC 19 to 21), `BudgetConfig`, `Manifest`, `UsdaFood` (Foundation, SR, Survey and Branded record shapes), `OffProductProjection` (the allowlist, T6.2) and `RunReport`.
+
+## T5. Importer (`tools/food-import`)
+
+### T5.1 Package and libraries (versions from the npm registry, 2026-10-20)
+- **Workspace and tooling:**
+  - add `'tools/*'` to `pnpm-workspace.yaml`;
+  - package `@ttp/food-import` (`"type": "module"`, private);
+  - tsconfig like `packages/shared`, but `"module": "NodeNext", "moduleResolution": "NodeNext"` (stream-json 3 is ESM-only and documents node16/nodenext resolution), `types: ["node"]`.
+- **Runtime dependencies:** `zod` (workspace version), `pg` 8.23, `yauzl` 3.4 (+ `@types/yauzl`), `stream-json` 3.7 (ships its own types; Node ≥ 22), `uuid` 14 (`v5`).
+- **Dev dependencies:** `tsx` 4.23, `vitest` 5, `typescript` ~6.0, `@types/node`, `@types/pg`.
+- **No native modules.** Node built-ins cover the rest: `node:zlib` gunzip, `node:readline` for JSONL, `node:crypto` sha256, `node:util` `parseArgs`.
+- **APIs checked:**
+  - stream-json 3: `import { parser } from 'stream-json'`, `import { pick } from 'stream-json/filters/pick.js'`, `import { streamArray } from 'stream-json/streamers/stream-array.js'`, `import chain from 'stream-chain'`, so the pipeline is `chain([zipEntryStream, parser(), pick({ filter: 'BrandedFoods' }), streamArray()])`. `pick.d.ts` was read from the 3.7.0 tarball; the StreamArray wiki page has the `chain` example.
+  - `yauzl.open(path, { lazyEntries: true })` → `openReadStream(entry)`.
+  - uuid `v5(name, namespace)` per the README.
+
+  The Pick wiki page could not be fetched (the request timed out), so the engineer confirms the `filter` option against `pick.d.ts` (`FilterBaseOptions`) in B5.
+- **Scripts:**
+  - `test` (unit; runs in CI `app` job via turbo);
+  - `test:pipeline` (needs the local DB; CI `food-import` job);
+  - `lint`, `typecheck`.
+- **Root scripts:** `food:import` (`pnpm --filter @ttp/food-import exec tsx src/cli.ts import`), `food:load-fixture`, `food:cut-fixture`, `food:release-check`.
+
+### T5.2 CLI and target safety
+```
+food-import import  --manifest <file.json> [--apply] [--target local|remote] [--confirm-remote <project-ref>]
+                    [--allow-mass-removal] [--report-dir tools/food-import/.reports] [--throttle-ms 0]
+food-import load-fixture             # = import --manifest fixtures/manifest.v1.json --apply --target local
+food-import cut-fixture  --from <dir of real downloads> --ids fixtures/fixture-ids.json   # operator, not CI
+food-import release-check --checks golden,italian-barcodes,size --target local|remote     # read-only
+food-import download --dataset usda_branded|usda_foundation|...|off --out <dir>           # optional helper
+```
+- **Dry run by default.** Without `--apply`, nothing is written (AC 52). Dry runs print and save the report file but do not insert a run row.
+- **Choosing the database.**
+  - `--target local` (default) uses `postgresql://postgres:postgres@127.0.0.1:54322/postgres`. It refuses any non-loopback host.
+  - `--target remote` reads `FOOD_IMPORT_DATABASE_URL` (env only, documented in `.env.example` under a "tools/food-import/.env (operator machine only)" heading; `.env` is already gitignored). It requires `--confirm-remote <ref>` equal to the project ref parsed from the URL. It refuses port 6543 (transaction pooler: no session advisory lock), so the operator uses the session pooler (5432) or a direct connection (Free plan direct is IPv6-only, per Supabase docs). It refuses any user other than `food_importer` (direct) or `food_importer.<ref>` (pooler username form).
+- Agents and CI only ever use `--target local`.
+- **Concurrency:** `pg_try_advisory_lock(hashtext('ttp.food_import'))` is taken at start. If the lock is held, the run exits with a message. Any `running` row older than the lock holder is set to `aborted`.
+- **Test hook:** the fault-injection env var `FOOD_IMPORT_FAULT_AFTER_BATCHES=N` is honoured only with `--target local` (AC 37 test).
+
+### T5.3 Manifest (input declaration)
+`{ mode: 'full'|'partial', inputs: [{ dataset, path, releaseLabel, snapshot: boolean }] }`
+- The file's sha256 is computed and stored in `food.releases`.
+- `snapshot: true` (full mode only) enables absence-based hiding for that dataset (AC 33, 35).
+- One run may contain several inputs. Budget and USDA popularity need Branded and OFF in the same run (T2.4).
+- **Preflight (AC 5, 38), before any DB write:**
+  - files exist and archives open;
+  - USDA top-level key is one of `FoundationFoods | SRLegacyFoods | SurveyFoods | BrandedFoods` and matches the dataset;
+  - for OFF: the file name is not `openbeautyfacts`/`openpetfoodfacts`/`openproductsfacts`, **and** the first 1,000 records all have `product_type` absent or `food` (else `non_food_file`);
+  - the first 1,000 records parse against the zod upstream schema (else name the missing field);
+  - delimiter and CSV issues cannot arise, because CSV is rejected outright with the message "use the JSON/JSONL dump".
+
+### T5.4 Pipeline (ADR 0007)
+1. **Stream and normalise** each input:
+   - read with zip/gzip → stream-json or readline;
+   - project to the allowlist;
+   - check with zod (`safeParse`; failures count as `parse_error`, and the run fails if they exceed 1 percent of records);
+   - normalise and apply rules, which gives a candidate, a reject, or a skip.
+
+   Candidates go to `.work/<run>/<dataset>.ndjson.gz`. In memory we keep only `{id, segment, priority, estBytes, hash, barcode}`.
+2. **Read DB state** for the datasets in the run: `select id, content_hash, hidden_reason, barcode from food.foods where dataset = any($1)`, in pages of 50k by id.
+3. **Select:** apply markets (OFF), latest-per-GTIN (Branded), cross-source canonical *preview* (for budget priority) and the budget (T2.3).
+4. **Diff:**
+   - `insert` (id not in the DB);
+   - `update` (hash differs, or the row was hidden for a reason that no longer applies, i.e. an unhide);
+   - `unchanged`;
+   - `hide` (in the DB, visible, and now absent in a snapshot, failing a reject rule, not selected, superseded or over budget);
+   - `keep-hidden`.
+
+   For AC 34, hidden rows keep their last stored values: a failing update sets only `hidden_reason`, `last_run_id` and `updated_at`.
+5. **Guards, before any write:**
+   - **Mass removal:** per source, `hides / visible_now > 0.10` stops the run unless `--allow-mass-removal` is passed (AC 36).
+   - **Budget ceiling** (T2.3).
+   - **Reconciliation:** `read == Σ outcomes` (AC 51).
+6. **Apply:**
+   - insert the run row (`running`);
+   - for each batch of 1,000 rows, run one transaction with `insert into food.foods select * from jsonb_populate_recordset(null::food.foods, $1) on conflict (id) do update set … where food.foods.content_hash is distinct from excluded.content_hash or food.foods.hidden_reason is distinct from excluded.hidden_reason`. New rows enter with `is_canonical = false`;
+   - write hides in batches by id;
+   - optionally sleep `--throttle-ms` between batches (Free compute is small).
+7. **Finalise** (each step idempotent):
+   - `select food.recompute_canonical($run)` (one transaction);
+   - `vacuum (analyze) food.foods` (plain VACUUM; does not block reads);
+   - measure sizes;
+   - check the budget (T2.3);
+   - write the report into `food.import_runs.report`, set the status and release the lock.
+
+**Why reads are never blocked:** writes take only row locks, in short transactions. There is no DDL, `TRUNCATE`, `LOCK`, `VACUUM FULL` or `REINDEX` in a run. MVCC means readers see either the old row or the new one. Between the batches and the recompute, new rows are not yet canonical, so they don't surface; old canonical rows keep surfacing. After an interruption, re-running finishes the job (AC 37).
+
+### T5.5 Normalisation and rules (pure functions in `src/rules/`, one file per rule, thresholds from `config/rules.json`)
+- **Energy:** kcal if present. Otherwise kJ / 4.184, rounded to 1 decimal, with flag `energy_from_kj`. If both are present and differ by more than 10 percent, flag `energy_unit_mismatch`.
+  - USDA: nutrient id 1008 (Energy, kcal). Foundation records often carry only 2047 (Atwater General) or 2048 (Atwater Specific), so the fallback order is 1008, then 2048, then 2047, then kJ from 1062 **(nutrient ids unverified; B4/B5 confirm on fixture records)**.
+- **Sodium:** sodium if present. Otherwise salt × 400 (salt g / 2.5 × 1000 mg). OFF stores salt and sodium in g; mg and µg inputs are converted.
+- **Unknown versus zero:** a missing value stays `null`; an upstream `0` is stored as `0` (AC 10).
+- **OFF unit conversion:** only g, mg, µg/mcg, kJ and kcal are accepted for the canonical nutrients. Any other unit (`% DV`, IU…) makes that nutrient unknown, and for the core four the product is skipped as `missing_core`.
+- **OFF modifier `<`:** the value is used as published.
+- **Basis:**
+  - per 100 g is used as is;
+  - per 100 ml is stored as per 100 g, flag `volume_basis_assumed`;
+  - per serving is converted only with `per_quantity ≥ 5` in g, or in ml with the flag. Otherwise the nutrient is unknown.
+- **Carbs basis** (AC 13; T6.4): USDA is always `total`. The stored value is always as published.
+- **Names:**
+  - NFC, trim and whitespace collapse;
+  - ALL CAPS (at least 4 letters and no lower-case letter) becomes sentence case for names and title case for brands;
+  - truncate at 200 code points, or 120 for brands;
+  - empty after trimming means `no_name`.
+- **Rules (AC 19 to 22):**
+  - the reject list and soft flags exactly as in the spec;
+  - the Atwater estimate adds 2 × fibre only when the basis is `available`;
+  - the Atwater check is skipped if alcohol is reported (USDA 1018; OFF `alcohol`);
+  - all-zero rows pass.
+- **Tier (AC 23):** USDA generic rows are `verified`. USDA Branded rows are `brand`. OFF rows are `brand` iff `states_tags` contains `en:nutrition-facts-completed` and no soft flag applies, else `community`. Any soft-flagged row is `community`.
+- **Servings (AC 18):**
+  - USDA portions: the label joins `amount`, `measureUnit.name` (omitted when `undetermined`), `modifier` and `portionDescription` as appropriate per dataset. The engineer derives the exact join per dataset from fixture records and pins it with tests. Weight is `gramWeight`.
+  - USDA Branded: `householdServingFullText`, falling back to "1 serving", with grams = `servingSize` when the unit is g (or ml with the flag).
+  - OFF: label `serving_size` (≤ 80), grams `serving_quantity` when `serving_quantity_unit` is g (ml with the flag).
+  - All sources: drop a serving if its weight is ≤ 0 or > 5,000 g; dedupe by label; keep the first 10 by upstream order.
+- **Content hash:** sha256 over the canonical JSON of `{all stored upstream-derived columns except ids/run/timestamps}` with sorted keys and fixed number formatting. The first 8 bytes are stored as a signed bigint.
+
+### T5.6 Run report (AC 6, 6a, 51)
+`RunReport` (zod) contains:
+- **run:** `{ id|null, mode, dryRun, startedAtUtc, finishedAtUtc, durationSeconds, toolVersion, status, failureReason? }`;
+- **per input:** `{ dataset, releaseLabel, fileSha256 }`;
+- **per source × dataset:** `read, insertedNew, updated, unchanged, hidden, unhidden, flagged{code:n}, rejected{code:n}, skippedBySelection{reason:n}`;
+- **per source:** `foodsByTier{tier:n}` (visible), `clustersCreated`, `clustersChangedCanonical`;
+- **budget:** `{ budgetBytes, targetBytes, estimatedBytes, actualBytes, actualOverEstimated, droppedForBudget{source:{market:n}}, dbTotalBytes, freeForUserDataBytes, deadTuples }`;
+- **checks:** `{ reconciled: boolean, massRemoval: {source: ratio}, parseErrorRate }`.
+
+The report is printed as a table and also written as JSON to `--report-dir` (gitignored). For applied runs it is stored in `food.import_runs.report`. It contains no record contents other than `dataset:source_ref` in the "first 20 examples per reason" lists.
+
+## T6. Items flagged "architect to confirm"
+
+### T6.1 GTIN normalisation and restricted ranges (AC 14 to 16)
+- **Normalisation:**
+  - strip whitespace;
+  - digits only (else `non_numeric`);
+  - lengths 8, 12, 13 and 14 are accepted, and 9 to 11 are left-padded to 13 as OFF does (others give `bad_length`);
+  - left-pad to 14;
+  - GS1 mod-10 check digit (else `bad_check_digit`).
+
+  GTIN-8 can't collide with a padded GTIN-13, because GS1 leaves `0000001-0000099` unused "to avoid collision with GTIN-8". An 8-digit code is treated as EAN-8. UPC-E (zero-suppressed) expansion is not done; OFF stores UPC-E as found **(risk R6)**.
+- **Restricted (gs1.org/prefixes), on the GTIN-14 key `0` + GTIN-13** (a 12-digit UPC has an implied leading zero, so UPC prefix 2 and 4 are covered by GTIN-13 02x and 04x):
+  - GTIN-13 prefix `020-029` (geographic RCN, often variable-weight);
+  - GTIN-13 prefix `040-049` (company RCN);
+  - GTIN-13 prefix `200-299` (geographic RCN). This also covers OFF's own codes for products without a barcode, which "start with the 200 reserved prefix" (`product_base.yaml`);
+  - GTIN-8 starting `0` or `2` (company RCN-8);
+  - `980` (refund receipts), `981-984` and `99` (coupons).
+
+  Restricted codes are stored, flagged `restricted_barcode`, never clustered and never returned by `lookup_barcode`.
+- `977-979` (ISSN/ISBN) are valid and not restricted. GTIN-14 indicator digits 1 to 9 (case level) are valid and kept as they are.
+
+### T6.2 OFF fields
+- **Input:** `openfoodfacts-products.jsonl.gz`, the MongoDB `products` collection export (`scripts/mongodb_dump.sh`). `products_obsolete` is a separate file and is never read; any record with `obsolete` true is skipped as well.
+- **Allowlist (the projection; everything else is dropped right after `JSON.parse`):** `code`, `product_type`, `schema_version`, `lang`, `lc`, `product_name`, `product_name_en`, `product_name_it` (plus `product_name_<l>` for the accepted languages of enabled markets), `brands`, `countries_tags`, `states_tags`, `obsolete`, `last_modified_t`, `unique_scans_n`, `popularity_key`, `serving_size`, `serving_quantity`, `serving_quantity_unit`, `nutrition.input_sets[].{preparation, per, per_quantity, per_unit, source, nutrients.{energy-kcal, energy-kj, energy, proteins, carbohydrates, carbohydrates-total, fat, saturated-fat, fiber, sugars, salt, sodium, alcohol}.{value, unit, modifier}}`, `nutrition.no_nutrition_data_on_packaging`. For records with `schema_version < 1003`, the legacy fields are read instead: `nutriments.<n>_100g` / `<n>_unit` and `<n>_prepared_100g` (prepared, so ignored), `nutrition_data_per`, `nutrition_data_prepared`, `no_nutrition_data`. The export script notes that products are dumped without schema upgrades, so both shapes occur.
+- **Never read** (contributor and personal data, AC 41): `creator`, `editors_tags`, `informers_tags`, `photographers_tags`, `checkers_tags`, `correctors_tags`, `last_editor`, `last_modified_by`, `last_checker`, `owner`, `owners_tags`, `teams`, `teams_tags`, `sources`, `sources_fields`, `images` (uploader ids), `entry_dates_tags`, `last_edit_dates_tags`, `rev`, `update_key`, `input_sets[].source_description`, `ingredients*`, all `*_url`. These are listed only for the sentinel fixture; the allowlist is what protects us.
+- **Nutrition-facts completed:** `states_tags` contains `en:nutrition-facts-completed` (`taxonomies/states.txt`). Finding: upstream sets it when the product has **any non-estimated nutrition input set**, or "no nutrition data on packaging" (`Products.pm`). Almost every product passing our core-four filter therefore qualifies, so OFF rows will be mostly `brand`. Implemented as decided; see H3.
+- **Markets:** `countries_tags` values `en:united-states`, `en:italy`, `en:united-kingdom`, `en:ireland`, `en:canada`, `en:australia`, `en:new-zealand`, mapped in `config/markets.json`. Tags survive the 2026-05 tags refactor (schema 1004 removed `*_hierarchy`/`*_lc`, not `*_tags`).
+- **Names per language:** `product_name_<lc>`, and `product_name` is the name in `lang`. Rule:
+  - the accepted languages are the union over the product's enabled markets;
+  - the display name is English if available, otherwise Italian if accepted (`name_lang`);
+  - other accepted-language names go to `alt_names`;
+  - with no accepted name, the product is skipped as `no_accepted_name` (AC 4a).
+- **Brand:** the first comma-separated entry of `brands`. If `brands` turns out to be absent after schema 1004 **(unverified)**, B10 falls back to the last segment of the first `brands_tags` entry, de-slugged.
+- **As sold versus prepared (AC 11):** choose the input set with `preparation = as_sold` and `source` in `manufacturer > packaging > usda` (never `estimate`), and `per` in `100g > 100ml > serving`. A product with only `prepared` sets is skipped as `prepared_only` (reported as `missing_core`, per AC 11's wording).
+
+### T6.3 USDA fields **(record shapes unverified here; B5/B9 pin them with zod against fixture records)**
+`fdcId`, `description`, `publicationDate`, `ndbNumber` (Foundation/SR), `foodCode` (Survey), `foodNutrients[].{nutrient.{id,number,unitName}, amount}`, `foodPortions[].{gramWeight, amount, modifier, portionDescription, measureUnit.{name,abbreviation}, sequenceNumber}`. Branded additionally has `gtinUpc`, `brandOwner`, `brandName`, `dataSource`, `modifiedDate`, `availableDate`, `discontinuedDate`, `marketCountry`, `servingSize`, `servingSizeUnit`, `householdServingFullText`. These match the field-descriptions PDF (CSV names in snake_case).
+
+**Branded rules:**
+- `marketCountry` must map to an enabled market (only "United States" for beta);
+- `discontinuedDate` set means skipped as `discontinued`;
+- per GTIN the latest `publicationDate` wins (then `modifiedDate`, then the highest fdcId), and the others count as `superseded`.
+
+**Formats:** FNDDS is read from the JSON zip (64 MB unzipped), not the 1.6 GB CSV.
+
+### T6.4 Carb basis inference for OFF (AC 13)
+OFF now has separate nutrients, per `nutrients_v3_base.yaml`: `carbohydrates-total` ("US/Canada definition … includes fiber") and `carbohydrates` ("available … excluding fiber").
+1. If the chosen set has `carbohydrates-total`, the basis is `total`.
+2. Otherwise, if the set source is `usda`, the basis is `total`.
+3. Otherwise, if it has `carbohydrates`: use the product's markets (among *all configured* markets, enabled or not). Only `us`/`ca` gives `total`, because legacy US entries put total carbs in `carbohydrates`. Only other markets gives `available`. Mixed or none gives `unknown`.
+4. Neither present: skipped as `missing_core`.
+
+Expect most Italian rows to be `available` (spec Q13b).
+
+### T6.5 Italian staples with a USDA generic match (spec Q12)
+This is from the architect's knowledge of SR Legacy and FNDDS descriptions, **unverified against the files**. B7 confirms each against the real files via `cut-fixture` and moves misses to the AC 4b barcode list.
+- **Likely in SR Legacy:**
+  - pasta: cooked enriched pasta, whole-wheat spaghetti;
+  - cheeses: mozzarella (whole milk), parmesan (hard and grated), ricotta (whole milk), provolone;
+  - cured meats: Italian pork salami, mortadella;
+  - olive oil, canned tomato purée (≈ passata), pesto sauce (ready-to-serve), espresso (brewed);
+  - vegetables and pulses: arugula, zucchini, cannellini (canned white beans), chickpeas;
+  - plain breadsticks (≈ grissini).
+- **Likely in FNDDS:** prosciutto, potato gnocchi, risotto, polenta, cheese pizza, biscotti, focaccia (uncertain).
+- **Probably no USDA match** (left to AC 4b barcodes): bresaola, burrata, mascarpone (uncertain), pancetta, taralli, fette biscottate.
+
+### T6.6 Do long imports block app reads?
+No, by construction (T5.4): only row locks in short transactions, no DDL and no exclusive locks. The residual effect is **CPU and IO contention** on Free compute during a multi-hour run. Mitigations are `--throttle-ms`, running off-peak, and the signal in R9.
+
+## T7. Fixtures, local load and CI (AC 46 to 47)
+- **Layout:** `tools/food-import/fixtures/`.
+  - `usda/{foundation,sr_legacy,fndds,branded}.v1.json` and `branded.v2.json`, in the same top-level shape as the real files but plain JSON (diffable). The zip path is tested by zipping a fixture in a temp dir at test time.
+  - `off/products.v1.jsonl` and `products.v2.jsonl`, `off/not-food.jsonl` (AC 5).
+  - `golden-list.json`: about 100 entries plus about 15 Italian staples (T6.5), each `{ dataset, sourceRef, referenceName, kcalRange: [min,max], expectedServingLabel? }`.
+  - `italian-barcodes.json`: about 30 GTINs; the PM drafts and the human completes from real packs (AC 4b).
+  - `manifest.v1.json` and `manifest.v2.json`, plus `LICENCES.md`.
+- **Content:**
+  - real records cut from upstream releases, **pruned** by `cut-fixture` to the allowlisted fields (USDA `foodNutrients` reduced to the ids we read), so a few hundred records stay small;
+  - synthetic rule rows (AC 8 to 22), with `source_ref` prefixed `synthetic-`, names starting "Test ", and barcodes under GS1 prefix `050-059` ("GS1 US reserved for future use", valid check digits, never real products);
+  - one cross-source GTIN in UPC-A, EAN-13 and GTIN-14 forms;
+  - an OFF record carrying sentinel contributor strings in every never-read field (AC 41);
+  - v2 files with a changed nutrient, a removed product, a newly failing product and a re-appearing product (AC 30 to 36).
+- **Licences:** `LICENCES.md`, plus a `meta` block in each manifest, records for every file the upstream release, the cut date and the licence:
+  - USDA: U.S. public domain;
+  - OFF: "Contains data from Open Food Facts, available under the Open Database License (ODbL); contents DbCL". The OFF fixture is itself an ODbL extract and stays under ODbL;
+  - synthetic rows: our own.
+- **Size check:** a unit test asserts the fixtures directory is ≤ 5 MB. The estimate is 2 to 3 MB.
+- **One-line local load (AC 47):** after `pnpm db:start` (or `pnpm db:reset`), run `pnpm food:load-fixture`. It needs no network.
+  - Rejected alternative: a generated `seed.sql`. It would duplicate the importer output and need a staleness check, and the pipeline tests must exercise the importer anyway.
+- **CI impact:**
+  - `pnpm-workspace.yaml` gains `tools/*`, so lint, typecheck and unit tests run in the existing `app` job (adds about 20 s);
+  - new job `food-import` ("Importer pipeline on fixtures"): checkout, pnpm and node 24, `supabase/setup-cli@v3`, `supabase db start`, `pnpm install --frozen-lockfile`, `pnpm --filter @ttp/food-import test:pipeline` (adds about 2 to 4 min, in parallel with the other jobs);
+  - a secrets scan step (gitleaks `dir`, pinned official image) added to `app`, because AC 40 refers to "the secrets check in CI", which does not exist yet;
+  - the existing `database` job runs the new pgTAP files automatically.
+- **Fixture provenance problem:** the agent environment can't reach the data hosts, so real records can't be cut by an agent (H1).
+
+## T8. Client plan
+- **Screens and routes:** none. Attribution is item 011. **Binding note for 003 and 004:** no OFF-derived row may be shown until 011 ships. `foodData.ts` therefore exposes `includeOff` (default `false`) until 011 flips it. The RPCs accept `p_include_off boolean default false` and filter `source <> 'off'` when false. For lookup this is applied before choosing the canonical row, so a USDA member is returned when available.
+- **Food read module:** `apps/mobile/src/lib/foodData.ts` (owner: mobile-engineer, task M1).
+  - Exports `getFoods(ids)`, `lookupBarcode(raw)` (normalises with `normaliseGtin`; restricted or invalid input returns null without a call), and `searchFoods(query, limit?)`. Each validates its args with the C1 zod schemas and parses results with `FoodRow`.
+  - The client is `createClient(EXPO_PUBLIC_FOOD_DATA_URL, EXPO_PUBLIC_FOOD_DATA_PUBLISHABLE_KEY)` when both are set, otherwise the existing `src/lib/supabase.ts` client. Both vars are optional and documented in `.env.example`.
+  - A jest architecture test fails if any file in `apps/mobile/src` other than `lib/foodData.ts` contains `get_foods`, `lookup_barcode`, `search_foods` or `schema('food')`.
+  - The edge-function twin, `supabase/functions/_shared/foodData.ts`, is created by the first function that needs food (008); the same grep test then covers `supabase/functions`.
+- **State:** server only (TanStack Query in 003). Nothing is cached on the device in 002. The full catalogue will never be synced to SQLite (about 270 MB). 010 decides what to cache offline (recents and favourites snapshots).
+- **Offline behaviour:** not applicable to 002. Food RPC failures surface through 003/004.
+
+## T9. Split, AC mapping and task list
+
+**002a (first PR, `feat/002a-food-db-usda-core`, or this branch if the orchestrator prefers):** AC 1 (Foundation, SR Legacy, FNDDS), 6 (sizes reported), 6b, 7, 8, 9 and 12 (rules as units; pipeline proof in 002b), 10, 13 (USDA = `total`), 14 to 16 (normaliser plus pgTAP lookup; pipeline proof in 002b), 17 to 24, 30 to 40, 42, 45, 46 (USDA and synthetic part), 47, 48, 49, 50 (name part), 51 to 54.
+**002b (second PR):** AC 1 (Branded), 2, 3, 4, 4a, 4b, 5, 6a, 11, 13 (OFF inference), 25 to 29, 41, 43, 46 (OFF part), 50 (barcode part), plus pipeline proofs for 8, 9, 12, 14 to 16 on OFF records.
+**AC 44:** moved to 011. Binding note in T8.
+
+Each task is independently testable. **C1 is the contract every other task depends on.** After C1, B1/B2 (SQL) and B3 to B5 (tool) can proceed in parallel. M1 needs C1 and B2.
+
+*002a*
+- **CONTRACT C1 (backend-engineer, first):** `packages/shared/src/foods.ts` and `gtin.ts` (T4), fully implemented, since they are pure. Tests: every GTIN form and range in T6.1 (AC 14 to 16 unit), schema boundaries (200 ids, 10 servings, 5,000 g, limit 50).
+- **BACKEND B1:** migration part 1: schema, enums, role, tables, indexes, RLS, grants, `recompute_canonical`.
+  - New pgTAP `food_rls.test.sql`, covering AC 39 and 53:
+    - authenticated: select works; insert, update and delete on `food.foods` raise 42501; select on `food.import_runs` and `food.releases` raises 42501;
+    - anon: everything raises 42501;
+    - `food_importer`: insert and update work, delete raises 42501;
+    - RLS enabled on all three tables.
+  - New pgTAP `food_structure.test.sql`, covering AC 32 and 42:
+    - no FK from any `public` table to `food.foods`;
+    - no triggers on `food.foods`;
+    - provenance columns are NOT NULL;
+    - the unique canonical-per-barcode index exists.
+  - New pgTAP `recompute_canonical.test.sql`, covering AC 26 and 29 at SQL level:
+    - ordering ties;
+    - a hidden canonical hands over to the next member;
+    - a cluster with all members hidden has no canonical;
+    - re-running gives no change and touches 0 rows;
+    - the two-statement swap never violates the index.
+- **BACKEND B2:** `get_foods`, `lookup_barcode` and `search_foods` RPCs, including `p_include_off`. pgTAP `food_rpcs.test.sql`:
+  - hidden row by id;
+  - only canonical rows by barcode;
+  - restricted codes not returned;
+  - `invalid_input` and `too_many_ids` errors;
+  - `p_include_off = false` returns the USDA member;
+  - anon can't execute;
+  - `search_foods` finds an inserted row by partial name.
+- **BACKEND B3:** tool scaffold (workspace, tsconfig, eslint, scripts):
+  - zod config schemas, plus `config/{markets,rules,budget}.json`;
+  - CLI with `parseArgs` and the target-safety rules (T5.2);
+  - the download helper with the host allowlist `{fdc.nal.usda.gov, static.openfoodfacts.org}` and User-Agent `TrustTheProcess-food-import/<version> (<contact from env FOOD_IMPORT_CONTACT>)`.
+
+  Unit tests: AC 45 (allowlist, UA, a source scan for non-allowlisted hosts and for competitor names), target-safety refusals, config validation.
+- **BACKEND B4:** normalisation and rules (T5.5) as pure modules. Unit tests:
+  - AC 7 (egg record, expected values written out);
+  - AC 8 to 10, 12, 13 (USDA), 17, 18;
+  - AC 19 to 22: each rule passing and failing;
+  - AC 23 tiers;
+  - AC 24: thresholds come from config only (a test mutates the config).
+- **BACKEND B5:** USDA readers: zip and stream-json for Foundation, SR Legacy and Survey; identity (T1 #7); portion labels. Unit tests on fixture records; streaming test with a synthetic 50k-record file to check memory stays flat. AC 1 (generic).
+- **BACKEND B6:** engine:
+  - work files, DB-state read, diff, content hash, batching and upsert;
+  - hide and unhide, mass-removal guard, advisory lock, preflight;
+  - dry run, fault hook, finalise and persisted run report.
+
+  Pipeline tests against the local DB: AC 30, 31, 33 to 38, 51, 52, 54. AC 37 compares a whole-table digest after a killed run plus re-run against an uninterrupted run.
+- **BACKEND B7:** fixtures for USDA generic plus synthetic rows, the golden list (including the Italian staples check), `LICENCES.md`, `cut-fixture`, `load-fixture` and `release-check` (golden and size), the fixture size test, and the CI `food-import` job. Pipeline tests: AC 46 (USDA part), 47, 48, 50 (name).
+- **BACKEND B8:** docs and ops:
+  - `docs/SETUP.md` "Food data" section: local load; remote run as `food_importer` via the session pooler, including the one-time human-only `alter role food_importer login password …`; the `--confirm-remote` flow;
+  - release-check runbook (AC 4b, 6, 49);
+  - `.env.example` entries;
+  - gitleaks CI step (AC 40);
+  - the PRODUCT_SPEC §5 fix in T13 (after human approval).
+- **MOBILE M1:** `apps/mobile/src/lib/foodData.ts` plus the architecture grep test, and unit tests with a mocked client (arg validation, `FoodRow` parsing, normalise-before-lookup, env switch). AC 6b.
+
+*002b*
+- **BACKEND B9:** USDA Branded reader: latest per GTIN, discontinued and market filter, Branded serving rules. Pipeline: AC 1 (Branded), AC 2 (as reinterpreted in T12.1).
+- **BACKEND B10:** OFF reader:
+  - JSONL streaming and the allowlist projection;
+  - schema 1003+ and legacy shapes;
+  - `product_type` check, names and languages, markets, as-sold selection;
+  - carb basis (T6.4) and OFF tier.
+
+  Unit and pipeline tests: AC 3, 4 (changing the config changes the result), 4a (with `gb` enabled in a test config, since UK is off for beta), 5, 11, 13 (OFF), 41 (sentinel strings: a scan of every text and jsonb column in every table finds none).
+- **BACKEND B11:** cross-source clustering in the plan phase (canonical preview for budget) and the full pipeline through `recompute_canonical`. Pipeline: AC 25 to 29, 50 (barcode in three forms).
+- **BACKEND B12:** budget: size model and calibration on the fixture, popularity (T2.4), selection and `over_budget` hides, the 450 MB ceiling, measured sizes and failure at more than 10 percent. Pipeline: AC 6a using a tiny budget in a test config (drop order and counts in the report, failure path); AC 6 report fields.
+- **BACKEND B13:** separability migration (`food.off_foods`, `food.remove_off_data()`). pgTAP `off_separability.test.sql`, run in a transaction and rolled back: removes exactly the OFF rows; USDA rows unchanged (digest compared); a stand-in `public` user table is unchanged; canonical moves to the USDA member. AC 43.
+- **BACKEND B14:** OFF and Branded fixtures and the v2 data, the Italian barcode list file, `release-check italian-barcodes` (AC 4b), and runbook updates. AC 46 (OFF part).
+
+**Task count: 16** (002a: C1, B1 to B8, M1 = 10; 002b: B9 to B14 = 6).
+
+## T10. Test plan (every AC)
+
+Layers: **unit** (vitest in `tools/food-import` or `packages/shared`), **pipeline** (vitest plus the local Supabase DB, CI job `food-import`), **pgTAP** (CI job `database`), **jest** (mobile), **release** (operator runs against the full real files; not in CI). There is no component or Maestro testing, since there are no screens.
+
+| AC | Unit | Pipeline | pgTAP | Release / other |
+|---|---|---|---|---|
+| 1 | dataset detection | rows with source `usda` from the four datasets, with dataset and release (002a: three; 002b: Branded) | provenance NOT NULL | full run report |
+| 2 | latest-per-GTIN selection | one row per GTIN with the latest values; older counted `superseded` (T12.1) | | |
+| 3 | each skip reason | only the conforming product stored; distinct report counts | | |
+| 4 | config schema | changing `markets.json` changes the imported set | | |
+| 4a | name and language choice | IT-only stored `it`; both names give en display and it alt; IT-only name sold in UK skipped `no_accepted_name` (gb enabled in test config) | | |
+| 4b | | | | `release-check italian-barcodes` ≥ 90 percent, misses with reasons |
+| 5 | product_type and filename detection | not-food file refused, DB unchanged | | |
+| 6 | report schema | report has per-tier counts and sizes | | full-run sizes against budget |
+| 6a | estimator, ordering | tiny budget: drop order (US non-canonical, then US by popularity, then IT), counts, failure above +10 percent; ceiling abort | | first real run: actual/estimated |
+| 6b | | | | jest architecture grep test; M1 unit tests |
+| 7 | egg record exact values | | | |
+| 8 | kJ conversion, both present | OFF kJ-only record (002b) | | |
+| 9 | salt to sodium | OFF record (002b) | | |
+| 10 | null vs 0 | stored null vs 0 | | |
+| 11 | set selection | prepared-only skipped; as-sold values stored | | |
+| 12 | per 100 ml | flag stored | | |
+| 13 | USDA total; OFF inference table | carbs_basis per fixture row | enum, NOT NULL | |
+| 14 | three forms give one key | lookup by each form returns the same food (002b) | `lookup_barcode` by GTIN-14 | |
+| 15 | bad check digit, letters, length | stored without barcode, `invalid_barcode` | | |
+| 16 | every range in T6.1 | stored, not clustered, flagged | lookup excludes restricted | |
+| 17 | trim, collapse, caps, NFC, truncate | | | |
+| 18 | portion labels, bounds, max 10 | servings stored | jsonb length check | |
+| 19 | each reject code | rejected counts | value checks | |
+| 20 | Atwater flag, reject and alcohol skip | | | |
+| 21 | each soft flag | stored `community` with code | | |
+| 22 | all-zero passes | | | |
+| 23 | tier table | one tier per row | NOT NULL | |
+| 24 | pass/fail per rule; config-driven thresholds | | | |
+| 25 | | USDA and OFF same GTIN in different forms: both stored, one canonical | unique canonical index | |
+| 26 | canonical comparator | re-run keeps the canonical | `recompute_canonical` ordering and idempotence | |
+| 27 | | | lookup and search return canonical only; `get_foods` returns non-canonical | |
+| 28 | | similar names without a shared barcode are not linked | | |
+| 29 | | canonical removed upstream hands over; all hidden gives none | SQL handover | |
+| 30 | | second run: 0/0/0, `updated_at` unchanged | | |
+| 31 | | v2: same id, new values, later marker | | |
+| 32 | | | no FK or trigger from food to user tables (003 adds the diary snapshot test) | |
+| 33 | | absent gives `removed_upstream`, still readable by id; re-appears visible | `get_foods` hidden by id | |
+| 34 | | newly failing gives hidden with code, values kept | | |
+| 35 | | partial mode hides nothing | | |
+| 36 | guard maths | more than 10 percent stops before write; override proceeds | | |
+| 37 | | fault after N batches, re-run: digest equals uninterrupted | | |
+| 38 | preflight messages | missing field, CSV given, corrupt zip: abort, DB unchanged | | |
+| 39 | | | authenticated read only; writes 42501; anon none | |
+| 40 | target-safety refusals | | | gitleaks CI step; web export has no `FOOD_IMPORT` or `postgresql://` |
+| 41 | projection drops fields | sentinel strings absent from every column | | |
+| 42 | | every row has source, ref, dataset, release, run | NOT NULL, FKs | |
+| 43 | | | `remove_off_data` in a rolled-back transaction | |
+| 44 | — | — | — | moved to 011; binding via `includeOff` default false (M1 test) |
+| 45 | host allowlist, UA, source scan | | | |
+| 46 | fixture ≤ 5 MB, licence manifest present | fixture covers rules (test per rule references a fixture row) | | |
+| 47 | | `load-fixture` from empty DB, no network | | documented in SETUP |
+| 48 | golden schema | every golden entry visible, `verified`, in range, with serving | | |
+| 49 | | | | `release-check golden` on full USDA |
+| 50 | | barcode in three forms; name query per golden entry | `search_foods` | |
+| 51 | reconciliation | report fields and reconciled = true | | |
+| 52 | | dry run: counts and markers identical before and after | | |
+| 53 | | report contains no user ids | `import_runs` not readable by clients | log scan in pipeline test |
+| 54 | | select by `last_run_id` returns exactly the changed rows | index exists | |
+
+## T11. Risks and how we'll know
+
+| # | Risk | Signal | Mitigation |
+|---|---|---|---|
+| R1 | Size estimate is wrong (synthetic calibration, unknown pass rates) | `actualOverEstimated` outside 0.9 to 1.1; T2 counts differ by more than 30 percent | Recalibrate `budget.json` after the first dry and full run. The ceiling guard protects in between. |
+| R2 | Free project goes read-only (over 500 MB) | `dbTotalBytes` approaching 450 MB; writes fail with SQLSTATE 25006 | 450 MB ceiling; budget at 90 percent target; plan the Pro upgrade at M2 (ADR 0008). |
+| R3 | Initial load fills the 1 GB Free **disk** with WAL (not counted in database size) | Supabase dashboard disk usage; `pg_ls_waldir` total (operator as postgres) | Load in stages (generic, then IT, then US) with `--throttle-ms`. If needed, the human runs the first load with the trigram index created afterwards (a one-off, human-confirmed step). |
+| R4 | OFF schema still changing (1003 "under active development", 1004 tags refactor); mixed legacy and new shapes | `parseErrorRate` > 0.1 percent; run fails above 1 percent | zod-pinned projection; failures name the field; update schemas (AC 38 behaviour). |
+| R5 | OFF tier signal is weak (nearly all `brand`) | `foodsByTier.off.brand` above 95 percent | H3: stricter criterion after the first run. |
+| R6 | Barcode edge cases: UPC-E stored unexpanded, the same product under two codes, GTIN reuse | 004 scan misses for known products; clusters with odd members | Add UPC-E expansion in 004 if scans show it; report the top cluster sizes. |
+| R7 | Italian coverage below target (names only in other languages, missing core nutrients) | AC 4b below 90 percent; `skippedBySelection.no_accepted_name` for IT | Accept more name languages for Italy? (human); live lookup in 004. |
+| R8 | USDA popularity signal sparse (few Branded GTINs scanned on OFF) | Share of US Branded candidates with `scans = 0` above 70 percent | Ties fall back to manufacturer-supplied and most recent. Consider category quotas later. |
+| R9 | Import slows the app (Free compute) | App p95 latency and Supabase CPU graph during a run | `--throttle-ms`, off-peak runs, smaller batches. |
+| R10 | Foundation and SR Legacy duplicates of the same generic food crowd search | 003 golden-search results showing near-duplicates | Out of scope (no name merging, AC 28); 003 ranking or 009. |
+| R11 | Real fixture records can't be cut from the agent environment | B5/B7 blocked on golden USDA rows | H1: the human runs `cut-fixture` once; synthetic, upstream-shaped records until then. |
+| R12 | Refresh churn causes bloat | `deadTuples` in report; size grows between runs with stable counts | Hash-diff writes only; VACUUM in finalise. `VACUUM FULL` only with human confirmation. |
+| R13 | Two catalogue projects later (AC 6b fallback) need auth for food reads | Decision at that time | Access module isolates callers; noted in ADR 0006. |
+
+## T12. Spec ambiguities resolved by the architect
+1. **AC 2 with stable identity:** a Branded product is one row keyed by GTIN. Within a file, older versions of the same GTIN are not stored but are counted `superseded` in the report. Across releases, the same row is updated in place (AC 31). `superseded` remains a hide reason for the case where a GTIN's row is replaced by a different `source_ref` (e.g. a fallback `fdc:` row once its GTIN becomes valid). This differs from AC 2's literal "the older one is hidden"; it is needed for AC 31 and AC 33 to hold on real USDA data. H4.
+2. **Budget order details:** within each market group, non-surfacing rows (non-canonical cluster members, superseded) are dropped before surfacing ones. This is consistent with AC 6a's "least useful first" and keeps AC 25's "both stored" true whenever the budget allows (always on the fixture).
+3. **Deselected rows:** a stored OFF product that drops out of selection (no longer in a market, a market switched off) is hidden as `not_selected`. It is never deleted.
+4. **Hidden rows keep their last good values** when they become hidden because they fail a rule (AC 34). They update again when they pass.
+5. **Name length limit:** 200 code points for names, 120 for brands, 80 for serving labels.
+6. **AC 32** can only be proven structurally in 002, because `diary_entries` doesn't exist yet. 003 adds the snapshot pgTAP once the table exists.
+7. **AC 40:** the CI secrets check is added by B8, because it doesn't exist today.
+8. **AC 11 wording:** prepared-only products are counted under `missing_core` (with a sub-count `prepared_only`).
+9. **Run reports for dry runs** go to a file only (AC 52 forbids DB changes).
+
+## T13. Proposed documentation fixes (for the human to approve; not edited by the architect)
+- **PRODUCT_SPEC §5, USDA row:** replace "Public domain (CC0)" with "U.S. Government public domain (data.gov label: U.S. Public Domain, https://www.usa.gov/publicdomain/label/1.0/); not CC0. Suggested citation per FDC." Also list "Foundation, SR Legacy, FNDDS, Branded".
+- **PRODUCT_SPEC §5, OFF row:** replace "keep OFF data in a separate table" with "keep OFF-derived data separable: identifiable, exportable and removable as a unit (ADR 0006)".
+- **ARCHITECTURE.md:** done in this stage (data model, "operator-run imports").
+
+## T14. Needs a human decision (defaults applied)
+- **H1: Real fixture records.** The agent environment can't download from the USDA or OFF hosts. **Default:** engineers build upstream-shaped synthetic records (from the documented schemas and OFF's GitHub test data) so B4 to B6 can proceed. Before 002a QA, you run `pnpm food:cut-fixture` once on your machine with real downloads (about 30 min, about 4 GB disk) so the golden USDA rows are real.
+- **H2: OFF scan counts rank USDA Branded** for the budget. The values are never stored on USDA rows, so OFF stays separable. **Default:** yes.
+- **H3: OFF tier criterion.** `en:nutrition-facts-completed` turns out to be set for nearly every product with entered nutrition, so most OFF rows will be `brand`. **Default:** implement as decided at Gate 1, report the share, and revisit after the first full run. The alternative is `brand` only when the as-sold set's source is `manufacturer`.
+- **H4: AC 2 reinterpretation** (T12.1) and dropping non-surfacing rows first under the budget (T12.2). **Default:** yes.
+- **H5: Remote operations are yours.** You enable `food_importer` login once on the Free project (`alter role food_importer with login password '…'` in the SQL editor), store the URL only on your machine, and run the first remote import yourself with `--apply --target remote --confirm-remote <ref>`. Applying the migrations remotely (`supabase db push`) also needs your confirmation. Agents never do any of this.
+- **H6: Split** into 002a/002b, with USDA Branded moved to 002b (differs from Q14's suggested cut). **Default:** split as in T9. The orchestrator decides whether 002a stays on this branch.

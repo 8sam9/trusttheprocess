@@ -14,7 +14,7 @@
         │ pg_trgm + FTS food search  │         │ → Claude API, zod output) │
         │ RLS on every user table    │         │ barcode-lookup (OFF API)  │
         └───────▲────────────────────┘         │ export · delete-account   │
-                │ nightly import jobs          └───────────────────────────┘
+                │ operator-run imports         └───────────────────────────┘
         ┌───────┴───────────────┐
         │ tools/food-import     │  USDA FDC + Open Food Facts dumps → normalised `foods`
         └───────────────────────┘
@@ -53,8 +53,15 @@ docs/                   spec, ADRs, feature specs, experiment log
 - `profiles` (user_id, sex, birth_year, height_cm, weight_kg + weight_recorded_on (until 007), activity_level, goal, goal_option, weekly_rate_kg, units, timezone, consent + onboarding timestamps). Body stats are written only through `apply_targets()` (ADR 0004).
 - `daily_targets` (user_id, effective_from local date, kcal, protein_g, carbs_g, fat_g, calculated_kcal, floor_applied, derivation snapshot, formula_version): effective-dated, never recomputed, written only through `apply_targets()` (ADR 0004). Per-meal goals arrive with F12.
 - Health-data writes record consent in the same transaction (ADR 0005).
-- `foods` (id, source enum[usda|off|user|ai], source_ref, name, brand, barcode, nutrients per 100g jsonb, verified bool)
-- `servings` (food_id, label, grams)
+- `food.foods` (schema `food`, not exposed to the Data API; ADR 0006): one row per upstream food from USDA FDC or Open Food Facts. Each row holds:
+  - provenance: `source` (`usda|off`), `dataset`, `source_ref`, `release_id`, `last_run_id`;
+  - name, `name_lang`, `alt_names`, brand, normalised GTIN-14 `barcode`;
+  - the eight canonical nutrients per 100 g as typed columns, with null meaning unknown, plus `carbs_basis`;
+  - quality: `tier`, `reasons`, `hidden_reason`;
+  - `is_canonical`, and `servings` as an inline jsonb array of `{label, grams}`.
+
+  Clients read it only through `public.get_foods` / `lookup_barcode` / `search_foods` (SECURITY INVOKER) via `apps/mobile/src/lib/foodData.ts`. It is written only by `tools/food-import` as role `food_importer` (ADR 0007), within a 300 MB budget on the Free plan (ADR 0008). Barcode clusters are implicit: rows sharing a barcode, at most one canonical. User-created foods (006) are not in this table.
+- `food.import_runs` (run reports; no client access) · `food.releases` (upstream release ids).
 - `diary_entries` (id uuid client-generated, user_id, date, meal, food_id nullable, grams, nutrients snapshot jsonb, origin enum[search|barcode|text|photo|voice|quick], ai_confidence, updated_at, deleted_at)
 - `weights` (user_id, date, kg) · `water` · `exercises`
 
