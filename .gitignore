@@ -15,3 +15,7 @@ supabase/.temp/
 supabase/functions/.env
 coverage/
 supabase/.branches/
+
+# tools/food-import work files and run reports (spec 002)
+tools/food-import/.work/
+tools/food-import/.reports/

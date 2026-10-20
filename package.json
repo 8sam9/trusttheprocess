@@ -18,7 +18,11 @@
     "db:test": "supabase test db",
     "gen:pgtap": "node packages/shared/scripts/gen-pgtap-cases.mjs",
     "gen:pgtap:check": "node packages/shared/scripts/gen-pgtap-cases.mjs --check",
-    "db:types": "supabase gen types typescript --local > packages/shared/src/db.types.ts"
+    "db:types": "supabase gen types typescript --local > packages/shared/src/db.types.ts",
+    "food:import": "pnpm --filter @ttp/food-import exec tsx src/cli.ts import",
+    "food:load-fixture": "pnpm --filter @ttp/food-import exec tsx src/cli.ts load-fixture",
+    "food:cut-fixture": "pnpm --filter @ttp/food-import exec tsx src/cli.ts cut-fixture",
+    "food:release-check": "pnpm --filter @ttp/food-import exec tsx src/cli.ts release-check"
   },
   "devDependencies": {
     "prettier": "^3.6.2",

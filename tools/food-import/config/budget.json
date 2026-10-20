@@ -1,0 +1,13 @@
+{
+  "budgetBytes": 314572800,
+  "targetFraction": 0.9,
+  "hardCeilingBytes": 471859200,
+  "failOverFraction": 0.1,
+  "bytesPerServing": 26,
+  "trigramFactor": 1.3,
+  "segments": {
+    "usda_generic": { "baseBytes": 650, "baseNameAllowance": 58 },
+    "us_branded": { "baseBytes": 480, "baseNameAllowance": 40 },
+    "it": { "baseBytes": 520, "baseNameAllowance": 40 }
+  }
+}

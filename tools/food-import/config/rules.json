@@ -1,0 +1,17 @@
+{
+  "massOver100": { "singleMaxG": 100, "sumMaxG": 105 },
+  "energyMaxKcal": 905,
+  "energyImplausible": { "relative": 0.5, "absoluteKcal": 100 },
+  "atwaterMismatch": { "relative": 0.2, "absoluteKcal": 25 },
+  "roundingAllowanceG": 0.5,
+  "sodiumImplausibleMg": 40000,
+  "energyUnitMismatchRelative": 0.1,
+  "limits": {
+    "nameMaxCodePoints": 200,
+    "brandMaxCodePoints": 120,
+    "servingLabelMaxChars": 80,
+    "maxServings": 10,
+    "maxServingGrams": 5000,
+    "minPerServingQuantityG": 5
+  }
+}

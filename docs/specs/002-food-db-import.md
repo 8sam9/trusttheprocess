@@ -893,3 +893,96 @@ Coverage: all GTIN forms (UPC-A, EAN-13, GTIN-14, EAN-8, 9 to 11 digit padding, 
 5. **All-zero codes** (for example `00000000`) pass the check digit and normalise (as a restricted GTIN-8). Not specified; left as is.
 6. **`FoodRow.reasons`** is typed as `FoodFlagCode[]` (soft flags only), so a row carrying a hide reason in `reasons[]` would fail parsing. This matches T3's comments ("soft flags stored in reasons[]"), but the SQL column type is the full `reason_code[]`; B2/M1 must keep hide reasons out of `reasons`.
 7. **`FoodRow.hidden`** is exposed as a boolean; `hidden_reason` is not in the T3 column list, so it is not in the contract.
+
+---
+
+# Mobile notes
+
+## Mobile notes: M1 (food data access module, 2026-10-20)
+
+Files: `apps/mobile/src/lib/foodData.ts`, `foodData.test.ts`, `foodData.architecture.test.ts`; `apps/mobile/src/test/nodeShim.d.ts` (minimal `node:fs`/`node:path` typings for the architecture test, so the app needs no `@types/node`); `.env.example` (two optional vars). No UI, no routes.
+
+API: `getFoods(ids)`, `lookupBarcode(raw)`, `searchFoods(query, limit?)`, `FoodDataError` (`code`: `too_many_ids | invalid_input | invalid_args | invalid_response | request_failed`), `includeOff` (const, `false` until 011), `resolveFoodClient(env, fallback, create?)` and `hasSeparateFoodProject` (env switch, exported for tests).
+
+Behaviour:
+- Args are validated with the C1 schemas (`GetFoodsArgs`, `LookupBarcodeArgs`, `SearchFoodsArgs`) before any call; results are parsed with `FoodRow.array()`. A bad row throws `invalid_response`. `FoodRow.reasons` holds soft flags only and `hidden_reason` is not in `FoodRow` (C1 notes 6 and 7), so a hide reason in `reasons` fails parsing.
+- `lookupBarcode` runs `normaliseGtin` first. Invalid or restricted (in-store) codes return `null` with no network call; UPC-A, EAN-13 and GTIN-14 forms send the same `p_gtin14`.
+- Env switch: a client is created from `EXPO_PUBLIC_FOOD_DATA_URL` + `EXPO_PUBLIC_FOOD_DATA_PUBLISHABLE_KEY` only when both are non-blank (anonymous, no session persistence, since a second project cannot verify the main project's JWTs, ADR 0006); otherwise the main `supabase` client. The client is resolved lazily on first call.
+- Architecture test: walks `apps/mobile/src` and fails if any file other than `lib/foodData.ts` (and its two tests) contains `get_foods`, `lookup_barcode`, `search_foods` or `schema('food')`.
+
+Results: `jest` 25 suites, 304 tests (new: 2 suites, 29 tests: 26 in foodData.test.ts, 3 in the architecture test); `tsc --noEmit` clean; `expo lint --max-warnings 0` clean; prettier clean on `apps/mobile`.
+
+Deviations and points for the backend/architect:
+1. **`p_include_off` is sent on every call** (`false` today), per T8. The C1 arg schemas are `strictObject` and do not include it, so the module validates with the C1 schemas and then adds the flag itself. B2 must accept `p_include_off boolean default false` on all three RPCs, or PostgREST will reject the unknown argument. Suggest adding it to the C1 schemas as optional in a follow-up.
+2. **Defence in depth:** rows with `source = 'off'` are also dropped client-side while `includeOff` is false (AC 44).
+3. `getFoods([])` returns `[]` without a call (the C1 schema requires at least 1 id). More than 200 ids throws `invalid_args`; callers chunk.
+4. Server errors are mapped by substring match of `too_many_ids` / `invalid_input` in the message; this assumes B2 raises with those words as the message (T3).
+5. `lookup_barcode` is read as a `setof` (array of 0 or 1 rows).
+6. Hand-typed `FoodRpcClient` interface plus one `as unknown as` cast at each of the two client boundaries (supabase-js `rpc` is generically typed against a database type we do not generate).
+7. Web/iOS/Android: no native APIs used; the module only uses supabase-js, so it behaves the same on all three. Not run on a device or browser in this task.
+8. `pnpm install --offline` was run to undo an accidental `@types/node` add; `pnpm-lock.yaml` and `pnpm-workspace.yaml` differ from HEAD because of the backend's `tools/*` workspace, not because of M1. M1 adds no dependency.
+
+## Backend notes: B1/B2 (SQL, 2026-10-20)
+
+Files: `supabase/migrations/20261021090000_food_catalogue.sql`; pgTAP `supabase/tests/food_rls.test.sql` (33), `food_structure.test.sql` (46), `recompute_canonical.test.sql` (28), `food_rpcs.test.sql` (56) = 163 new assertions.
+
+Command output summary:
+- pgTAP on the stand-in (throwaway local Postgres 16 + pgTAP + minimal auth stub, `/var/tmp/pgsim/run-repo.sh`; the 001 harness had to be rebuilt, pgTAP installed with apt): all 3 migrations apply; 9 files, 318 `ok`, 0 `not ok` (155 existing + 163 new). The `supabase` CLI is not installed here, so real Supabase (PG17, `grant maintain`, PostgREST, `supabase db lint`) is verified only in CI.
+- `pnpm --filter @ttp/shared test`: 9 files, 203 tests passed. `typecheck`, `lint`: clean. `prettier --check packages/shared docs/specs`: clean (run before this note was appended).
+
+Contract with M1 (orchestrator message): all three RPCs take `p_include_off boolean default false`; errors are raised as the bare messages `too_many_ids` / `invalid_input` (SQLSTATE P0001); `lookup_barcode` returns 0 or 1 rows. Signatures: `get_foods(p_ids uuid[], p_include_off)`, `lookup_barcode(p_gtin14 text, p_include_off)`, `search_foods(p_query text, p_limit int default 20, p_include_off)`.
+
+### Deviations and additions (record for review)
+1. **`food.is_restricted_gtin14(text)`** (SQL twin of `isRestrictedGtin14`, parity-tested on the gtin.test.ts cases) and **`food.soft_flags(reason_code[])`** are small helpers not in T3. The first guards `lookup_barcode` (restricted input returns no row); the second implements C1's "reasons = soft flags only" by filtering hide reasons out of the returned array. No table or column was added.
+2. **RPC shape follows C1:** returns the 24 `FoodRow` columns only (`hidden` = `hidden_reason is not null`, `hidden_reason` not returned). Enum columns are returned as the `food.*` enum types (JSON strings over PostgREST). `real` columns serialise as plain numbers.
+3. **`lookup_barcode` with `p_include_off = false`:** if the cluster canonical is OFF, the best visible non-restricted USDA member is returned (T8 wording). `search_foods` does not do this (it needs `is_canonical` for the trigram index), so a USDA row whose canonical is OFF is not searchable until OFF is included. Irrelevant in 002a (no OFF data); 002b/003 should decide.
+4. `p_limit` above 50 is capped (not an error); below 1 raises `invalid_input`. `p_ids` null raises `invalid_input`, empty returns nothing. `get_foods` returns rows in the order of the requested ids.
+5. `recompute_canonical` adds `id` as a final ordering tie-break (after `source_ref`) so the choice is total; it returns the number of changed rows.
+6. `create role food_importer` and `grant maintain` are guarded (role exists; PG17 only). A best-effort `grant food_importer to <migration user> with set true` lets `postgres` run `set role food_importer` (PG16+ non-superuser creators lack SET); failure only warns. Checked on a non-superuser role in the stand-in, not on real Supabase.
+7. pgTAP tests `grant usage on schema extensions to food_importer` (rolled back) so the importer can call pgTAP helpers; the migration does not.
+
+### Open questions
+- Add `check (reasons <@ soft flags)` on `food.foods`? Currently only the RPC filters; a CHECK would make the invariant database-enforced (schema change, so not done).
+- C1's `SearchFoodsArgs` / `GetFoodsArgs` / `LookupBarcodeArgs` are strict objects without `p_include_off`; M1 sends it, so C1 may need the optional field.
+- The architect's T3 file said `grant maintain` unconditionally; that fails on PG16 (the stand-in), hence the guard.
+
+## Backend notes — B3/B4/B5 (importer scaffold, rules, USDA readers, 2026-10-20)
+
+Scope: `tools/food-import` (new workspace package `@ttp/food-import`), plus wiring in `pnpm-workspace.yaml` (`tools/*`), root `package.json` (`food:import`, `food:load-fixture`, `food:cut-fixture`, `food:release-check`), `.gitignore` (`tools/food-import/.work/`, `.reports/`) and `pnpm-lock.yaml`. Nothing under `supabase/` or `apps/mobile` was touched. No commit, no push.
+
+**What exists**
+- B3: zod config schemas and `config/{markets,rules,budget}.json`; manifest schema; `parseArgs` CLI (`args.ts`, `cli.ts`); target safety (`target.ts`); download helper with host allowlist and User-Agent (`download.ts`); deterministic ids (`identity.ts`).
+- B4: pure rules in `src/rules/`, one file per rule (`missing-core`, `negative-value`, `mass-over-100g`, `energy-too-high`, `energy-implausible`, `energy-atwater-mismatch`, `sugars-over-carbs`, `satfat-over-fat`, `sodium-implausible`), plus `energy`, `sodium`, `names`, `servings`, `tier` and `applyRules`. Thresholds are read only from `RulesConfig`.
+- B5: `src/usda/` with pinned zod shapes, nutrient map, portion labels, `normaliseUsdaGeneric`, and the zip/plain-JSON streaming reader (`yauzl` + `stream-json` `pick` + `streamArray`) with a top-level-key preflight.
+- Not built (later tasks): DB access (`pg`), engine, work files, content hash, report schema, fixtures, `load-fixture`/`cut-fixture`/`release-check`. These CLI commands validate the target and then exit 2 with "not built yet (B6/B7)". `food-import import` therefore does nothing yet.
+
+**Commands and results**
+- `pnpm --filter @ttp/food-import test`: 11 files, 122 tests passed (config/manifest 7, target 9, args 4, cli 6, download 14, clean-room scan 3, rules 38, usda normalise 21, portions 5, reader 14 incl. bad-input cases, streaming 1). Duration about 30 s, almost all in the streaming test.
+- `pnpm --filter @ttp/food-import typecheck` (tsc --noEmit), `lint` (eslint src test): clean.
+- `pnpm exec prettier --check .` (whole repo): clean.
+- Repo-wide `pnpm test`: 5/5 tasks successful (shared 9 files, food-import 11 files, mobile 25 suites / 304 tests). `pnpm typecheck` and `pnpm lint`: all tasks successful. One earlier run had `mobile adjust.test.tsx` fail 14 tests while the 50k streaming test ran in parallel (CPU contention, timeouts); it passes alone and in the next full run. Watch for flakiness in CI if the runner is small.
+- `supabase test db` not run (no SQL in this slice).
+
+**Streaming test (B5)**: `test/streaming.test.ts` spawns `test/scripts/stream-memory.ts` with `--expose-gc`. It writes a synthetic zipped Foundation-shaped file of 50,000 records (81 MB uncompressed, 1.9 MB zipped; streaming zip writer in `test/helpers/zip.ts`) and reads it through zip, stream-json, zod and the normaliser. Heap after GC, sampled every 5,000 records: 12.5 MB baseline, then 12.8 to 13.9 MB throughout (growth after the first sample well under 1 MB; the test allows 15 MB). All 50,000 records become candidates.
+
+**Synthetic data (H1)**: all USDA records used in tests are hand-written, upstream-shaped and marked SYNTHETIC in `test/helpers/synthetic-usda.ts` (including the whole-egg record with approximate values). The zod shapes in `src/usda/schemas.ts` and the nutrient ids in `src/usda/nutrients.ts` are NOT verified against real files. The human must re-pin them against real records when running `cut-fixture` (check in particular: `ndbNumber`/`foodCode` types, `publicationDate` format, portion `modifier` and `portionDescription` content per dataset, nutrient ids 1008/2047/2048/1062/2000/1063/1079/1258/1093/1018, and that `unitName` is upper-case "G"/"MG"/"KCAL").
+
+**Deviations from the plan**
+1. **tsconfig uses `module: ESNext` and `moduleResolution: Bundler`, not NodeNext (T5.1).** `packages/shared/src/index.ts` uses extensionless relative imports, which NodeNext rejects (TS2835). Changing shared was out of scope. stream-json 3 resolves fine under Bundler. Runtime is `tsx`/vitest, which handle both.
+2. `stream-chain` is not a direct dependency: the reader uses `node:stream` `pipeline` with `pick.withParserAsStream` and `streamArray.asStream`, so backpressure and error propagation come from Node. `pg` and `@types/pg` were not added (first needed in B6). `@types/node` is `^26.6.5` (the version already in the lockfile) to avoid re-resolving mobile's jest peers; runtime Node here is 22.
+3. `budget.json` sizes: 300 MB = 314,572,800 bytes, ceiling 450 MB = 471,859,200 bytes (binary megabytes). `baseNameAllowance` values (58 generic, 40 branded and Italy) are placeholders taken from T2.1's average name lengths; B12 fits them.
+4. Hide-reason names are the `FoodHiddenReason` enum from C1; `RejectReason` in `src/rules/index.ts` is its six reject members including `no_name`. `no_name` is checked first (before nutrients), not last as listed in AC 19; only matters for which single reason a multiply-broken record is counted under.
+5. `FOOD_ID_NAMESPACE` (`src/identity.ts`) is a fresh random UUID chosen by me; ADR 0006 names the constant but gives no value. It must never change after the first import.
+6. The `download` command requires `--url` for USDA datasets (file names carry the release date and I could not read the download page). For OFF it defaults to the `static.openfoodfacts.org` JSONL dump URL from T6.2, which is unverified. Redirects are followed manually and each hop is re-checked against the allowlist and the dataset's own host. The User-Agent is sent on every download request.
+7. The FOOD_IMPORT_FAULT_AFTER_BATCHES hook is a pure function that throws if set with a remote target (instead of ignoring it); the engine will call it.
+
+**Open questions (architect / human)**
+1. **Which flags demote a row to `community` (AC 20, 21, 23)?** T5.5 says "any soft-flagged row is community" but all 9 `FoodFlagCode`s live in `reasons[]`. I treat only the five quality flags (`energy_atwater_mismatch`, `sugars_over_carbs`, `satfat_over_fat`, `sodium_implausible`, `energy_unit_mismatch`) as demoting. `energy_from_kj`, `volume_basis_assumed`, `invalid_barcode` and `restricted_barcode` are informational and keep the tier (a kJ-only Foundation row stays `verified`). Literal reading would make those four demote too. Confirm; it is one set in `src/rules/tier.ts`.
+2. **Atwater relative deviation base.** AC 19/20 do not say "percent of what". I use the Atwater estimate (deviation / estimate; estimate 0 with any deviation counts as infinite relative). Using the stated energy instead would change borderline rows. Confirm.
+3. **Alcohol "reported" (AC 20).** Atwater checks are skipped only when alcohol is known and greater than 0 (USDA often publishes 0). If you want any published alcohol value (even 0) to skip, change `atwaterEstimate`.
+4. **Energy unit mismatch denominator.** The 10 percent test uses the larger of the stated kcal and kJ/4.184. Two zeros are consistent. Confirm or specify.
+5. **USDA portion labels.** Pinned from the documented fields only: `portionDescription` is used verbatim when present (placeholder "Quantity not specified" dropped); otherwise `amount unit, modifier` with "undetermined" units and purely numeric modifier codes omitted; portions with neither unit nor modifier are dropped. Real Foundation/SR/FNDDS records may need adjustments (T5.5 already says the engineer derives them from fixtures); re-check after `cut-fixture`. Labels are not re-cased.
+6. **`source_ref` fallback `fdc:<fdcId>`** is used for Foundation/SR/FNDDS records without `ndbNumber`/`foodCode` (T1 #7 only specifies the fallback for Branded). Such a row would change identity if the stable key later appears.
+7. **Name case conversion** (sentence case for names, title case for brands, 4+ letters and no lower-case letter) is crude: acronyms inside an all-caps name are lower-cased ("USDA" in "USDA COMMODITY" is only protected when the whole name is under 4 letters). Acceptable per AC 17, flagged for the golden-list review.
+8. **Content hash, `RunReport` schema and `Manifest` semantics** beyond shape (file existence, sha256, `food.releases` writes) are left to B6. `NormalisedFood` in `src/types.ts` is my proposed engine input and is not yet used by anything but the USDA normaliser; B6/B10 may reshape it.
+9. **Secrets scan / CI**: the new package adds a vitest streaming test that spawns a child process (about 25 s). B7's CI job `food-import` and the existing `app` job both run `pnpm test`; confirm that is acceptable for the `app` job's time budget, or move the streaming test behind a separate script.

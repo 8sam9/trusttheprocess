@@ -1,6 +1,7 @@
 packages:
   - 'apps/*'
   - 'packages/*'
+  - 'tools/*'
 
 # pnpm 10 blocks install scripts by default; allow only the ones we need.
 onlyBuiltDependencies:

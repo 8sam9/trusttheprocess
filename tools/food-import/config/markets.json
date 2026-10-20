@@ -1,0 +1,53 @@
+{
+  "markets": {
+    "us": {
+      "enabled": true,
+      "offCountryTag": "en:united-states",
+      "usdaMarketCountry": "United States",
+      "nameLanguages": ["en"],
+      "carbsBasis": "total"
+    },
+    "it": {
+      "enabled": true,
+      "offCountryTag": "en:italy",
+      "usdaMarketCountry": null,
+      "nameLanguages": ["en", "it"],
+      "carbsBasis": "available"
+    },
+    "gb": {
+      "enabled": false,
+      "offCountryTag": "en:united-kingdom",
+      "usdaMarketCountry": null,
+      "nameLanguages": ["en"],
+      "carbsBasis": "available"
+    },
+    "ie": {
+      "enabled": false,
+      "offCountryTag": "en:ireland",
+      "usdaMarketCountry": null,
+      "nameLanguages": ["en"],
+      "carbsBasis": "available"
+    },
+    "ca": {
+      "enabled": false,
+      "offCountryTag": "en:canada",
+      "usdaMarketCountry": null,
+      "nameLanguages": ["en"],
+      "carbsBasis": "total"
+    },
+    "au": {
+      "enabled": false,
+      "offCountryTag": "en:australia",
+      "usdaMarketCountry": null,
+      "nameLanguages": ["en"],
+      "carbsBasis": "available"
+    },
+    "nz": {
+      "enabled": false,
+      "offCountryTag": "en:new-zealand",
+      "usdaMarketCountry": null,
+      "nameLanguages": ["en"],
+      "carbsBasis": "available"
+    }
+  }
+}
