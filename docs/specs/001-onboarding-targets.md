@@ -1266,7 +1266,7 @@ Screenshots are in `/tmp/claude-0/qa-001/`. Walk: sign in -> consent -> about yo
 
 What was checked and is fine: floor and custom-pace copy, SEE YOU AT 16 flow including the reset RPC, declined consent screen, save failure and retry on the reveal, timezone row selection, extremes in About you (0 kg, 0 cm, 1e9, negatives, letters, year 1800 and 9999), imperial round trip, units autosave in Settings ("1.1 lb a week"), Settings consent-off line, discard confirm.
 
-Not testable here: real offline (Playwright `setOffline` with `page.route` makes routed requests hang, so offline save was simulated by aborting the `apply_targets` request), midnight rollover (Playwright fake clock stalls the app; covered by unit tests of `localDateIn` and `targetForDate`), page reload on a deep route (the static `http.server` returns 404 for non-root paths, a harness limit, not a bug), Dynamic Type, real screen readers, haptics, Maestro flows (none present in `apps/mobile/.maestro/`, no simulator), real two-device sync.
+Not testable here: real offline (Playwright `setOffline` with `page.route` makes routed requests hang, so offline save was simulated by aborting the `apply_targets` request), midnight rollover (Playwright fake clock stalls the app; covered by unit tests of `localDateIn` and `targetForDate`), page reload on a deep route (the static `http.server` returns 404 for non-root paths, a harness limit, not a bug), Dynamic Type, real screen readers, haptics, Maestro flows (they exist in `apps/mobile/e2e/*.yaml`, correction made in re-run 1; no simulator here, so they were only checked statically), real two-device sync.
 
 Screenshots worth a look: `01-consent`, `03-about-filled`, `07-plan`, `08-adjust`, `09-today`, `10-settings`, `21-pace-custom-1.0`, `26-custom-1.6-after-continue`, `30-under16`, `40-save-fail`, `51-floor-plan`, `90-guard-goal`, `111-consent-in-sheet`, `130-apply-fail`, `123-light-320-floor-plan`.
 
@@ -1307,3 +1307,92 @@ Nits (not counted): N1 the Stepper shows "1570" while everything else shows "1,5
 Two major bugs (error feedback invisible in the Edit sheet, radio state not exposed on web). Everything else passes.
 
 QA: FAIL (7 bugs)
+
+---
+
+## QA report - re-run 1
+
+QA re-run after fix loop 1, 2026-10-20, branch `feat/001-onboarding-targets` at ec5e7a0. Product code untouched. Screenshots: `/tmp/claude-0/qa-001-r2/`. Scripts: `/tmp/claude-0/pw3/` (the original `s0` to `s14` against a fresh web export, plus `r2-offline.mjs`, `r2-med.mjs`, `r2-warn.mjs`).
+
+**Correction to the first report:** the Maestro flows do exist, at `apps/mobile/e2e/*.yaml` (4 flows plus a README). They cannot run here (no simulator). Static check below.
+
+### Commands
+
+| Command | Result |
+|---|---|
+| `pnpm lint` | PASS, 0 errors (only the known `no-require-imports` warnings in test files). |
+| `pnpm typecheck` | PASS, 3/3. |
+| `pnpm test` | PASS. shared 120, mobile 18 suites / 269 tests. The `it.failing` marker for bug 2 is gone (no `failing` left in `touchTargets.test.tsx`). |
+| `pnpm format:check` | PASS. |
+| `pnpm gen:pgtap:check` | PASS, 51 cases up to date. |
+| pgTAP via `/var/tmp/pgsim/run-repo.sh` | PASS, 131 `ok`, 0 `not ok` (stand-in harness, not real Supabase). |
+| Web export rebuilt, Playwright s0 to s14 | Ran against the fresh export. No page errors. Only console errors are the browser's own lines for the deliberate 500 and aborted requests. |
+
+### Original bugs
+
+| # | Original summary | Status | Evidence |
+|---|---|---|---|
+| 1 | Sheet error/notice below the fold | FIXED | `130-apply-fail.png`: danger Notice at y=610 above TRY AGAIN and CANCEL, text "We couldn't save your new targets just now. Your changes are still here." Consent-declined notice also visible (box y=622, h=46, in view). |
+| 2 | No `aria-checked` on web radios | FIXED | s9/s10: every Choice and RadioCard has `aria-checked` true/false, the unavailable Lose fat card has `aria-checked=false,aria-disabled=true`. |
+| 3 | Consent in Edit sheet titled "ABOUT YOU" | FIXED | `111-consent-in-sheet.png`: title "YOUR DATA, YOUR CALL", intro "You turned off health-data consent...". |
+| 4 | Blank 0.6 s after I AGREE | FIXED | s3: About you text present 6 ms after the click, URL goes straight to `/onboarding/about-you`. |
+| 5 | Offline mid-flow, unvisited steps blank (web) | FIXED | Offline from About you: Goal, Activity, Pace, Plan and Adjust all render and work (`63-offline-pace.png`, `64-offline-plan.png`). |
+| 6 | Custom input under the footer | FIXED | s5: input y=642..694 after selecting Custom, footer starts at 744. Error line y=702..725 visible. `25-custom-just-selected.png`. |
+| 7 | Stored 0.5 kg shows "Custom" in imperial Edit sheet | FIXED | s14: Edit sheet Pace row reads "Moderate · 1.1 lb a week", Apply stays inactive, 0 target calls. |
+| 8 (engineer) | Double header on onboarding steps | FIXED | `04-goal.png`, `07-plan.png`, `122-light-320-pace.png`: a single "back chevron + TTP + step counter" header on every step. |
+| N1 | Stepper "1570" vs "1,570" | FIXED | Adjust sheet shows "1,570" (`124-light-320-adjust.png` shows "1,200"). |
+
+### New findings
+
+| # | Severity | Owner | Summary |
+|---|---|---|---|
+| R1 | minor (borderline major, human to decide) | mobile | Content that belongs on first paint sits behind the pinned footer at 390x844: "Not medical advice." on the plan screen and the "Faster than we recommend..." warning on the pace screen. Both are reachable by scrolling. |
+| R2 | minor | mobile | Maestro `onboarding-under-16.yaml` asserts the wrong copy, so the flow would fail. |
+
+**R1.** Plan screen, any normal case (metric, Lose fat, Moderate, 390x844 viewport): both required lines exist in the DOM in the right order, "This is a starting estimate. Your body is the real guide, and you can change it any time." and then "Not medical advice." (D2 S6 items 6 and 7, C-r5, C-r6). But "Not medical advice." is at y=678..698 and the pinned LET'S GO button is at y=680..737, so it is fully covered on first paint (`07-plan.png`, which is why the orchestrator could not see it). The scroll area is only about 50 px taller than its viewport, and scrolling shows it (`66-plan-scrolled.png`). Nothing hints that there is more. At the floor case and at 320 px more content is hidden (`123-light-320-floor-plan.png`). Same pattern on the Pace step: custom 1.0 gives an amber outline, but the warning text is at y=758..798, under the CONTINUE button at y=744..800 (`21-pace-custom-1.0.png`, `67-pace-1.0-warning.png`); it is still announced through the live region. This was already true in the first run (my earlier 21 screenshot shows it) and I did not flag it then. Expected: the disclaimer and the warning visible without scrolling, or a visible scroll cue (fade or partial row) above the footer. Fix options: reduce plan spacing, move the disclaimer into the footer area next to the Trust line, or scroll the warning into view when it appears. Severity: I rate it minor because every line is reachable and nothing is wrong or missing in the DOM; if the human treats a legal disclaimer or the 0.75 warning as must-be-seen, it becomes major.
+
+**R2.** `apps/mobile/e2e/onboarding-under-16.yaml` ends with `assertVisible: 'You need to be 16 or over to use TrustTheProcess.*'`. That is the Edit-sheet copy (C-ed8). The onboarding stop screen shows "SEE YOU AT 16" and "TrustTheProcess is for people 16 and over, so we can't set this up for you yet..." (C-u1, C-u2). Fix: assert `SEE YOU AT 16`.
+
+### Plan screen check (item 4)
+
+S6 shows both lines, in this order, in the DOM and in the rendered page: "This is a starting estimate. Your body is the real guide, and you can change it any time." (visible on first paint in `07-plan.png`) and "Not medical advice." (present, but covered by the footer on first paint, see R1; visible after a 50 px scroll in `66-plan-scrolled.png`).
+
+### Copy check against D4
+
+Extracted all 88 C-rows. Every single-string row matches `copy.ts` verbatim; the multi-string rows were checked by grep on the key strings (C-s0b, C-e10, C-sv3, C-j6, C-st4, C-ed5, C-ed7, C-r7, C-d4) and spot-checked in the browser on consent, About you, Goal (guard note), Activity, Pace, plan (normal, floor, custom), save failure, offline, under-16, declined, Today, Settings, Edit sheet and Adjust sheet. No deviations found.
+
+### Regression pass
+
+| Scenario | Result |
+|---|---|
+| Full happy path (consent to Settings edit and apply) | PASS. 1,330 / 104 / 129 / 44 on reveal, Today, Settings; after Activity edit 1,570 / 104 / 171 / 52. |
+| Custom pace 1.0 | PASS. Amber outline, Continue works, floor applies on top (plan 1,200 with safety tag). |
+| Custom pace 1.6 | PASS. Blocked with "Enter a pace between 0.01 and 1.5 kg a week." (`26-custom-1.6-after-continue.png`). 0.01, 1.5, "1,2" accepted; 0.009, 0, "abc" blocked. |
+| Under 16 | PASS. SEE YOU AT 16, one reset RPC, wrong-year returns to consent, nothing stored. |
+| Floor case | PASS. 1,200, SAFETY MINIMUM, C-f1 copy, about 0.1 kg a week, deficit -143. |
+| Save failure | PASS. 500 then retry succeeds, answers kept, 2 apply calls. Offline abort gives the offline copy. |
+| Imperial round trip | PASS. Sent 165.1 cm / 65 kg / 0.23 kg a week, Settings "5 ft 5 in · 143.3 lb". |
+| Light mode at 320 px | PASS. No horizontal overflow, no clipped controls (`120` to `124`). |
+| Time zones | PASS for Kiritimati, Pago_Pago, Rome (right row each). Fake-clock midnight rollover still stalls the app in the harness (unchanged, covered by unit tests). |
+| Hung request (`setOffline` with `page.route`) | Harness limit as before: the routed request hangs, so no TRY AGAIN appears within 20 s. A real browser fails fast. Worth a manual check that the native client has a request timeout. |
+
+Minor leftover, not counted: in the Edit sheet's consent page the "By tapping I agree..." paragraph is partly under the pinned buttons until scrolled (`111-consent-in-sheet.png`). The nits N2 to N5 from the first report are unchanged.
+
+### Maestro flows (static)
+
+Selectors checked against the labels in `copy.ts` and the components. Case differences (`DAILY TARGETS`, `YOUR GAME PLAN`, `CONTINUE`) are fine because Maestro text matching is a case-insensitive regex, and the app's own labels are the source strings.
+
+| Flow | Result |
+|---|---|
+| `onboarding-happy-path.yaml` | Selectors match (consent title, I AGREE, Female, Year of birth, Height (cm), Current weight, goal and activity labels, CONTINUE, YOUR GAME PLAN, 1,330, LET'S GO, TODAY'S TARGET). |
+| `onboarding-custom-pace.yaml` | Matches: the 0.75 Notice text, `Custom.*`, input label "Custom pace in kg a week", the range error string. |
+| `settings-edit-targets.yaml` | Matches: "Profile & settings" button, DAILY TARGETS, Edit targets, EDIT YOUR TARGETS, Very active, DONE, "x → y kcal", APPLY FROM TODAY, "New targets in effect from today." |
+| `onboarding-under-16.yaml` | MISMATCH, see R2. |
+
+Not run: any Maestro flow (no simulator), real screen readers, Dynamic Type, haptics, real two-device sync.
+
+### Verdict
+
+All 7 original bugs, the double header and N1 are fixed and verified in the browser. No blocker or major bug found. Two minor new findings (R1 needs a human call on severity).
+
+QA: PASS
