@@ -29,7 +29,7 @@ import { draftReducer, draftSignature, presetKg, type TargetsDraft } from '../dr
 import { validatePace } from '../validate';
 import { AboutYouForm, useAboutValidation } from './AboutYouForm';
 import { ConsentBody } from './Consent';
-import { ActivityOptions, GoalOptions, PaceOptions } from './Options';
+import { ActivityOptions, GoalOptions, PaceFasterNotice, PaceOptions } from './Options';
 import { MathsCard, planMacros } from './PlanParts';
 
 type Page = 'list' | 'goal' | 'pace' | 'activity' | 'about' | 'consent';
@@ -385,7 +385,9 @@ export function TargetsSheet(props: TargetsSheetProps) {
 
   // Pinned above the footer (not in the scrolling list) so a failure is visible wherever the list is scrolled.
   const notice =
-    page !== 'list' ? undefined : consentDeclined ? (
+    page === 'pace' ? (
+      <PaceFasterNotice draft={work} />
+    ) : page !== 'list' ? undefined : consentDeclined ? (
       <Notice live>{copy.consentDeclinedInSettings}</Notice>
     ) : failure ? (
       <Notice tone="danger" live>

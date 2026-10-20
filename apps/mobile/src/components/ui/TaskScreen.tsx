@@ -21,6 +21,7 @@ export function TaskScreen({
   primary,
   secondary,
   tagline = true,
+  footnote,
 }: {
   header?: ReactNode;
   children: ReactNode;
@@ -29,6 +30,8 @@ export function TaskScreen({
   primary: ReactNode;
   secondary?: ReactNode;
   tagline?: boolean;
+  /** Small muted text pinned directly above the primary action (e.g. a disclaimer that must be on first paint). */
+  footnote?: string;
 }) {
   const c = useColors();
   const large = useLargeText();
@@ -36,10 +39,16 @@ export function TaskScreen({
   const showTagline = tagline && !large && !keyboard;
 
   const footerGap = { gap: space.sm } as const;
+  const note = footnote ? (
+    <Text variant="small" tone="muted">
+      {footnote}
+    </Text>
+  ) : null;
   const scrollingFooter =
     large && !keyboard ? (
       <View style={footerGap}>
         {notice}
+        {note}
         {primary}
         {secondary}
       </View>
@@ -51,6 +60,7 @@ export function TaskScreen({
   ) : (
     <View style={footerGap}>
       {notice}
+      {note}
       {primary}
       {secondary}
       {showTagline ? (

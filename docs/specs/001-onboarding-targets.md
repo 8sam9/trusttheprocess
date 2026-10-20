@@ -1415,3 +1415,10 @@ Critical: none. High: none.
 - **L6** privacy-policy URL falls back to example.com; env var undocumented. → fix.
 - **L7** under-16 birth year edit in Settings for a completed user leaves data. → product/legal note.
 - **L8** `pnpm audit --prod`: 2 high / 2 moderate in Expo/Metro/Jest build tooling, pre-existing. → track SDK updates.
+
+---
+## Review fix round (2026-10-20)
+- Backend: M2 guarded pre-launch reset (DO block, `ttp.allow_prelaunch_reset`), L2 server sanity bounds mirrored in `ApplyTargetsArgs`, L3 no backdating (clamp to latest `effective_from`; side effect: after a westward timezone move a same-day edit replaces the latest row, which may be dated up to ~1 day ahead), L4 text-length checks, L5 cheap timezone validation; Europe/Kyiv and America/Nuuk accepted. 155 pgTAP ok, 66 fixture cases.
+- Mobile: R1 "Not medical advice." pinned as footnote above LET'S GO and the >0.75 pace warning pinned above CONTINUE (verified 390×844 and 375×667), R2 Maestro under-16 assertion, L1 underage flag cleared on sign-out/deletion, L6 `EXPO_PUBLIC_PRIVACY_URL` (production shows "Privacy policy coming soon" when unset), tokens for glyph/badge/type sizes, test split, 0 lint warnings. 275 mobile tests.
+- Open for Gate 3 (human): **M1** consent withdrawal vs stored health data; **M3** analytics consent before any SDK; **L7** under-16 birth-year edit in Settings for completed users; confirm **L3** side effect.
+- Cosmetic, not fixed: on the plan screen at 390×844 the "starting estimate" line is partly below the fold (scrolls into view).

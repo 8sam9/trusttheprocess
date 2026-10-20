@@ -17,6 +17,8 @@ One row per pipeline stage. "Rework" = times the stage was re-run because a late
 | 2026-10-20 | 001 onboarding & targets | qa-engineer → re-run 1 | sonnet | 7m47s | ~74k | — | 0 | QA: PASS; all 8 fixes confirmed; 2 new minor (R1 hidden disclaimer/warning — orchestrator upgraded to must-fix, R2 wrong Maestro assertion) |
 | 2026-10-20 | 001 onboarding & targets | code-reviewer | sonnet | 1m23s | ~58k | — | 0 | REVIEW: APPROVE, 8 nits |
 | 2026-10-20 | 001 onboarding & targets | security-privacy-reviewer | opus | 22m04s | ~67k | — | 0 | SECURITY: APPROVE; 3 medium (2 need human decisions), 8 low; ran live adversarial SQL probes |
+| 2026-10-20 | 001 onboarding & targets | backend-engineer → review fixes (M2, L2–L5, tz) | sonnet | 3m28s | ~48k | 1 | 0 | 155 pgTAP ok, 66 fixture cases; flagged L3 west-travel side effect |
+| 2026-10-20 | 001 onboarding & targets | mobile-engineer → review fixes (R1, R2, L1, L6, 8 nits) | sonnet | 8m54s | ~90k | 1 | 0 | 0 lint warnings; R1 verified at 390×844 + 375×667 |
 
 ## Feature-level summary
 | Feature | Total time | Total tokens | Rework loops | Escaped bugs (30d) | Human time | Verdict |

@@ -161,8 +161,9 @@ describe('activity and pace steps', () => {
       await user.type(input, '1');
       await user.clear(input);
       await user.type(input, '0.76');
-      const status = screen.getByText(faster);
-      expect(status.props.accessibilityLiveRegion).toBe('polite');
+      // R1: the message lives in the pinned notice slot above CONTINUE, announced as a polite alert.
+      expect(screen.getByText(faster)).toBeOnTheScreen();
+      expect(screen.getByRole('alert').props.accessibilityLiveRegion).toBe('polite');
       expect(screen.getByRole('radio', { name: /^Custom/ }).parent?.props.style.borderColor).toBe(
         '#FFB020',
       );

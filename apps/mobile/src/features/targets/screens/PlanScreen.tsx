@@ -99,6 +99,7 @@ export default function PlanScreen() {
       <Stack.Screen options={{ gestureEnabled: !saving }} />
       <TaskScreen
         header={<StepHeader step={5} onBack={goBackStep} backDisabled={saving} />}
+        footnote={copy.notMedical}
         notice={
           failureText ? (
             <Notice tone="danger" live>

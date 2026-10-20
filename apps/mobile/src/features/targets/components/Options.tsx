@@ -3,7 +3,6 @@ import { space } from '@ttp/ui';
 import { useEffect, useRef, useState, type Dispatch } from 'react';
 import { Platform, View, type TextInputInstance } from 'react-native';
 import { Notice, RadioCard, Text, TextField } from '@/components/ui';
-import { announce } from '@/lib/a11y';
 import { track } from '@/lib/analytics';
 import { copy } from '../copy';
 import type { DraftAction, TargetsDraft } from '../draft';
@@ -95,9 +94,31 @@ export function ActivityOptions({
   );
 }
 
+/** The "Faster than we recommend" text when a valid custom pace is above 0.75 kg a week, else null. */
+export function paceFasterText(draft: TargetsDraft): string | null {
+  if (draft.pace?.kind !== 'custom') return null;
+  const { kg } = validatePace(draft.pace, draft.units, () => null);
+  return kg !== null && paceBandFor(kg) === 'gt_0_75'
+    ? copy.paceFaster(recommendedLimitText(draft.units))
+    : null;
+}
+
+/**
+ * Pinned notice for the pace warning. Callers place it in the footer notice slot (TaskScreen / Sheet) so it is
+ * visible on first paint above the action; it is announced politely when it appears.
+ */
+export function PaceFasterNotice({ draft }: { draft: TargetsDraft }) {
+  const text = paceFasterText(draft);
+  return text ? (
+    <Notice tone="warning" live>
+      {text}
+    </Notice>
+  ) : null;
+}
+
 /**
  * Pace cards (S5): presets with live kcal lines, then the CR-1 Custom card. The 0.75 recommendation Notice is
- * always visible (AC 35); a custom value above it turns the outline amber and adds a polite status (AC 34).
+ * always visible (AC 35); a custom value above it turns the outline amber and the message itself is PaceFasterNotice, pinned by the caller (AC 34).
  */
 export function PaceOptions({
   draft,
@@ -131,12 +152,7 @@ export function PaceOptions({
     (
       customInput.current as unknown as { scrollIntoView?: (o: object) => void } | null
     )?.scrollIntoView?.({ block: 'center' });
-  }, [customSelected, focusCustom]);
-  const fasterText = copy.paceFaster(limit);
-
-  useEffect(() => {
-    if (faster) announce(fasterText);
-  }, [faster, fasterText]);
+  }, [customSelected, focusCustom, faster]); // `faster` adds the pinned notice, which shrinks the scroll area
 
   if (goal === 'maintain') return null;
 
@@ -190,16 +206,6 @@ export function PaceOptions({
           </Text>
         ) : null}
         {info?.hint ? <Text variant="small">{info.hint}</Text> : null}
-        {faster ? (
-          <Text
-            variant="small"
-            tone="warning"
-            accessibilityLiveRegion="polite"
-            accessibilityRole="alert"
-          >
-            {fasterText}
-          </Text>
-        ) : null}
       </RadioCard>
     </View>
   );

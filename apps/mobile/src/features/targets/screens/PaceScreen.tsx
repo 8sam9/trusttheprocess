@@ -3,7 +3,7 @@ import { Redirect, router } from 'expo-router';
 import { useState } from 'react';
 import { Button, StepHeader, TaskScreen, Text } from '@/components/ui';
 import { copy } from '../copy';
-import { PaceOptions } from '../components/Options';
+import { PaceFasterNotice, PaceOptions } from '../components/Options';
 import { presetKg } from '../draft';
 import { goBackStep, useStepGuard, useStepViewed } from '../hooks';
 import { useOnboarding } from '../OnboardingProvider';
@@ -28,6 +28,7 @@ export default function PaceScreen() {
   return (
     <TaskScreen
       header={<StepHeader step={4} onBack={goBackStep} />}
+      notice={<PaceFasterNotice draft={draft} />}
       primary={<Button label={copy.continue} onPress={onContinue} />}
     >
       <Text variant="display">{copy.paceTitle}</Text>

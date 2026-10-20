@@ -96,9 +96,6 @@ export function PlanBody({ plan }: { plan: PlanModel }) {
       <Text variant="bodyRegular" tone="muted">
         {copy.estimateNote}
       </Text>
-      <Text variant="small" tone="muted">
-        {copy.notMedical}
-      </Text>
     </View>
   );
 }
