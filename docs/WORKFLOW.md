@@ -36,7 +36,8 @@ One feature = one branch `feat/NNN-<slug>` = one PR.
 
 ## Definition of Done
 - [ ] Acceptance criteria in spec all have a passing test (unit, pgTAP or Maestro)
-- [ ] `pnpm lint && pnpm typecheck && pnpm test` green
+- [ ] `pnpm lint && pnpm typecheck && pnpm test && pnpm format:check` green (+ `pnpm gen:pgtap:check` when the fixture or SQL changed)
+- [ ] UI changes checked visually: web export rendered and screenshotted at 390×844 and 375×667 (dark + light), screenshots looked at
 - [ ] RLS tests for any new table
 - [ ] No secrets in client bundle; new env vars documented in `.env.example`
 - [ ] Analytics events from spec implemented

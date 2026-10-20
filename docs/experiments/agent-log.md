@@ -23,4 +23,4 @@ One row per pipeline stage. "Rework" = times the stage was re-run because a late
 ## Feature-level summary
 | Feature | Total time | Total tokens | Rework loops | Escaped bugs (30d) | Human time | Verdict |
 |---|---|---|---|---|---|---|
-| 001 onboarding & targets | ~2h40m agent wall time (19 Oct 19:40 → 20 Oct ~11:00 incl. human gates) | ~1.3M | 2 (QA loop + review loop) | tbd | 3 gates + 1 change request + mockup review | pending Gate 3 — notes: bugs were found by looking at rendered screens, not by unit tests; parallel backend/mobile on disjoint files worked; reviewers found real issues (consent withdrawal, guarded reset) |
+| 001 onboarding & targets | ~2h40m agent wall time (19 Oct 19:40 → 20 Oct ~11:00 incl. human gates) | ~1.3M | 2 (QA loop + review loop) | tbd | 3 gates + 1 change request + mockup review | merged 2026-10-20 (PR #3) after Gate 3 — notes: bugs were found by looking at rendered screens, not by unit tests; parallel backend/mobile on disjoint files worked; reviewers found real issues (consent withdrawal, guarded reset) |
