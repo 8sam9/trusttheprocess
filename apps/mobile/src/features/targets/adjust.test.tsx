@@ -5,8 +5,8 @@ import { backend, from, rpc } from '@/test/backend';
 import { goToReveal, press } from '@/test/flows';
 import { renderApp, setupUser } from '@/test/render';
 
-jest.mock('@/lib/supabase', () => ({ supabase: require('@/test/backend').supabase }));
-jest.mock('@/lib/auth', () => require('@/test/backend').authModule);
+jest.mock('@/lib/supabase', () => ({ supabase: jest.requireActual('@/test/backend').supabase }));
+jest.mock('@/lib/auth', () => jest.requireActual('@/test/backend').authModule);
 
 beforeEach(() => {
   backend.reset();

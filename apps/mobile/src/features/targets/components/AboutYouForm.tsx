@@ -91,8 +91,9 @@ export function AboutYouForm({
               ? heightFt
               : heightCm;
     target.current?.focus();
-    // Only a new submit (a new focus request) moves focus.
-    // eslint-disable-next-line react-hooks/exhaustive-deps
+    // Only a new submit (a new focus request, `focus.n`) may move focus. `focus.field`, `imperial` and the refs
+    // are read at that moment; listing them would steal focus whenever the user switches units while typing.
+    // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional, see above
   }, [focus?.n]);
 
   const L = copy.labels;

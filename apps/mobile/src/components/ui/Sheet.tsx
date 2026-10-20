@@ -1,4 +1,4 @@
-import { minTouch, radius, space } from '@ttp/ui';
+import { glyph, minTouch, radius, space } from '@ttp/ui';
 import { useEffect, useRef, useState, type ComponentRef, type ReactNode } from 'react';
 import {
   AccessibilityInfo,
@@ -146,7 +146,7 @@ export function Sheet({
                   justifyContent: 'center',
                 }}
               >
-                <RNText style={{ color: c.text, fontSize: 32 }}>{'‹'}</RNText>
+                <RNText style={{ color: c.text, ...glyph.lg }}>{'‹'}</RNText>
               </Pressable>
             ) : null}
             <View ref={titleRef} accessible focusable={Platform.OS === 'web'} style={{ flex: 1 }}>
@@ -163,7 +163,7 @@ export function Sheet({
                 justifyContent: 'center',
               }}
             >
-              <RNText style={{ color: c.text, fontSize: 22 }}>{'✕'}</RNText>
+              <RNText style={{ color: c.text, ...glyph.sm }}>{'✕'}</RNText>
             </Pressable>
           </View>
           <ScrollView

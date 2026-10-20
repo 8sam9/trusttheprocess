@@ -95,16 +95,19 @@ export function useCurrentTargets(): CurrentTargets {
     },
   });
 
+  // Deliberate: Today reads the target for "today" in the stored profile timezone (the zone the user saved with),
+  // while a save uses the device zone. They differ only while travelling; the save RPC keeps rows consistent, and
+  // Today stays stable instead of flipping rows when the phone changes zone.
   const timeZone = profile.data?.timezone ?? deviceTimeZone();
   const row = rows.data ? targetForDate(rows.data, localDateIn(timeZone)) : null;
   const cached = useMemo(() => (uid ? gateCache.read(uid) : null), [uid]);
-  const summary = row ? toSummary(row) : rows.data ? null : (cached?.targets ?? null);
+  // Stable while the row is the same object, so the cache effect below only runs when the target changes.
+  const rowSummary = useMemo(() => (row ? toSummary(row) : null), [row]);
+  const summary = rowSummary ?? (rows.data ? null : (cached?.targets ?? null));
 
-  const summaryKey = row ? JSON.stringify(toSummary(row)) : '';
   useEffect(() => {
-    if (uid && row) gateCache.update(uid, { targets: toSummary(row) });
-    // eslint-disable-next-line react-hooks/exhaustive-deps -- keyed on the serialised summary
-  }, [uid, summaryKey]);
+    if (uid && rowSummary) gateCache.update(uid, { targets: rowSummary });
+  }, [uid, rowSummary]);
 
   return {
     row,

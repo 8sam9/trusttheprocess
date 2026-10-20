@@ -40,6 +40,7 @@ export const copy = {
     }, // C-c7
   ],
   privacyLink: 'Read the privacy policy', // C-c8
+  privacyComingSoon: 'Privacy policy coming soon', // production build without EXPO_PUBLIC_PRIVACY_URL
   consentStatement:
     "By tapping I agree, you confirm you're 16 or older and agree to us storing this health data to calculate your targets.", // C-c9
   agree: 'I AGREE', // C-c10

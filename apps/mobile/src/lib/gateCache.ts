@@ -4,7 +4,15 @@ import { authStorage } from './authStorage';
 /**
  * Per-user device cache for the onboarding gate (spec 001 T1 #6). It lives in the synchronous localStorage
  * (expo-sqlite's polyfill on native, the browser's on web) so the first render already knows where to go,
- * and a completed user opens to Today offline. It holds a flag and a coarse targets summary, never body stats.
+ * and a completed user opens to Today offline.
+ *
+ * PRIVACY: exactly these fields are cached per user, nothing else:
+ *   - `ttp:v1:gate:<uid>`: `v`, `onboardingCompleted` (boolean), `cachedAt` (ISO time) and an optional targets
+ *     summary: `effective_from`, `kcal`, `protein_g`, `carbs_g`, `fat_g`, `is_custom`, `floor_applied`.
+ *     The kcal and macro numbers are health-derived, so they are removed on sign-out and account deletion.
+ *   - `ttp:v1:underage-reset:<uid>`: the flag '1' (no data).
+ * Never body stats (birth year, sex, height, weight), never goal, activity or pace.
+ * `clear(uid)` removes both keys and is called on sign-out (lib/auth.tsx) and account deletion (profile/api.ts).
  */
 const gateKey = (uid: string) => `ttp:v1:gate:${uid}`;
 const underageKey = (uid: string) => `ttp:v1:underage-reset:${uid}`;
@@ -47,9 +55,11 @@ export const gateCache = {
     }
   },
 
+  /** Removes everything cached for this user (the gate value and the pending under-16 reset flag). */
   clear(uid: string): void {
     try {
       storage()?.removeItem(gateKey(uid));
+      storage()?.removeItem(underageKey(uid));
     } catch {
       // ignore
     }

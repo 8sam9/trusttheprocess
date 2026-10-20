@@ -13,4 +13,4 @@ appId: app.trusttheprocess
 - inputText: '45'
 - hideKeyboard
 - tapOn: 'CONTINUE'
-- assertVisible: 'You need to be 16 or over to use TrustTheProcess.*'
+- assertVisible: 'SEE YOU AT 16'

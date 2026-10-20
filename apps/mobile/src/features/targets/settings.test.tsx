@@ -6,8 +6,8 @@ import { insideScrollView } from '@/test/scroll';
 import { press } from '@/test/flows';
 import { renderApp, setupUser } from '@/test/render';
 
-jest.mock('@/lib/supabase', () => ({ supabase: require('@/test/backend').supabase }));
-jest.mock('@/lib/auth', () => require('@/test/backend').authModule);
+jest.mock('@/lib/supabase', () => ({ supabase: jest.requireActual('@/test/backend').supabase }));
+jest.mock('@/lib/auth', () => jest.requireActual('@/test/backend').authModule);
 
 const DONE_AT = '2026-10-19T08:00:00+00:00';
 const applyCalls = () => rpc.mock.calls.filter(([name]) => name === 'apply_targets');

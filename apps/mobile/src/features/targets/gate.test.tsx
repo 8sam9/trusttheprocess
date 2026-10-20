@@ -5,8 +5,8 @@ import { backend, makeProfile, makeTargets, rpc } from '@/test/backend';
 import { renderApp, setupUser } from '@/test/render';
 import { press } from '@/test/flows';
 
-jest.mock('@/lib/supabase', () => ({ supabase: require('@/test/backend').supabase }));
-jest.mock('@/lib/auth', () => require('@/test/backend').authModule);
+jest.mock('@/lib/supabase', () => ({ supabase: jest.requireActual('@/test/backend').supabase }));
+jest.mock('@/lib/auth', () => jest.requireActual('@/test/backend').authModule);
 
 const completed = makeProfile({
   onboarding_completed_at: '2026-10-19T08:00:00+00:00',

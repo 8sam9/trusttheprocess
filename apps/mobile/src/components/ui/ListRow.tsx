@@ -1,4 +1,4 @@
-import { space } from '@ttp/ui';
+import { glyph, space } from '@ttp/ui';
 import { Pressable, Text as RNText, View } from 'react-native';
 import { useColors } from '@/lib/theme';
 import { Text } from './Text';
@@ -40,7 +40,7 @@ export function ListRow({
       <RNText
         accessibilityElementsHidden
         importantForAccessibility="no-hide-descendants"
-        style={{ color: c.textMuted, fontSize: 24 }}
+        style={{ color: c.textMuted, ...glyph.md }}
       >
         {'›'}
       </RNText>

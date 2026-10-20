@@ -32,7 +32,7 @@ export function TextField({
         aria-invalid={error ? true : undefined}
         placeholderTextColor={c.textMuted}
         style={[
-          typeScale.bodyRegular,
+          typeScale.input,
           {
             minHeight: 52,
             borderWidth: 1.5,
@@ -41,7 +41,6 @@ export function TextField({
             paddingHorizontal: space.sm + 2,
             color: c.text,
             backgroundColor: c.surface,
-            fontSize: 17,
           },
         ]}
         {...rest}

@@ -1,4 +1,4 @@
-import { fonts } from '@ttp/ui';
+import { fonts, type as typeScale } from '@ttp/ui';
 import { Stack } from 'expo-router';
 import { useOnboardingGate } from '@/features/targets/gate';
 import { PlanSavedProvider } from '@/features/targets/planSaved';
@@ -20,7 +20,7 @@ function AppStack() {
       screenOptions={{
         headerStyle: { backgroundColor: c.background },
         headerTintColor: c.text,
-        headerTitleStyle: { fontFamily: fonts.title, fontSize: 18 },
+        headerTitleStyle: { fontFamily: fonts.title, fontSize: typeScale.navTitle.fontSize },
         headerShadowVisible: false,
         contentStyle: { backgroundColor: c.background },
       }}

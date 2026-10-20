@@ -51,7 +51,8 @@ export function Choice<T extends string>({
               <RNText
                 style={[
                   checked ? typeScale.body : typeScale.bodyRegular,
-                  { color: c.text, fontSize: 15 },
+                  { fontSize: typeScale.chip.fontSize, lineHeight: typeScale.chip.lineHeight },
+                  { color: c.text },
                 ]}
               >
                 {o.label}

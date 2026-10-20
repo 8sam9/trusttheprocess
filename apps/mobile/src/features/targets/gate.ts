@@ -6,6 +6,13 @@ import { useResetUnderage } from './api';
 
 export type GateStatus = 'checking' | 'error' | 'needs_onboarding' | 'complete';
 
+/** Users whose pending under-16 reset was already retried in this app session (a simple backoff: once per start). */
+const resetRetried = new Set<string>();
+/** Test helper: forgets the retries of the session. */
+export function resetUnderageRetryMemory(): void {
+  resetRetried.clear();
+}
+
 /**
  * Decides where the signed-in area goes (spec 001 T4, "Gate"). The device cache is read synchronously on the
  * first render, so a completed user opens to Today even offline; once the server answers it always wins.
@@ -24,10 +31,15 @@ export function useOnboardingGate(): { status: GateStatus; retry: () => void } {
       gateCache.update(uid, { onboardingCompleted: serverCompleted });
   }, [uid, serverCompleted]);
 
-  // A failed under-16 reset is retried once the profile is known.
+  // A failed under-16 reset is retried once the profile is known, at most once per app session: if it fails again
+  // the flag stays set and the next app start tries again, instead of hitting the server on every gate mount.
   const hasProfile = !!profile.data;
   useEffect(() => {
-    if (uid && hasProfile && gateCache.hasPendingUnderageReset(uid)) void resetUnderage();
+    if (!uid || !hasProfile || resetRetried.has(uid)) return;
+    if (gateCache.hasPendingUnderageReset(uid)) {
+      resetRetried.add(uid);
+      void resetUnderage();
+    }
   }, [uid, hasProfile, resetUnderage]);
 
   const refetch = profile.refetch;

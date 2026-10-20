@@ -80,9 +80,7 @@ export function Stepper({
         opacity: atLimit ? 0.45 : pressed ? 0.8 : 1,
       })}
     >
-      <RNText style={[typeScale.number, { color: c.text, fontSize: 28, lineHeight: 32 }]}>
-        {glyph}
-      </RNText>
+      <RNText style={[typeScale.numberM, { color: c.text }]}>{glyph}</RNText>
     </Pressable>
   );
 
@@ -110,10 +108,8 @@ export function Stepper({
           returnKeyType="done"
           selectTextOnFocus
           style={[
-            typeScale.numberXL,
+            typeScale.numberInput,
             {
-              fontSize: 44,
-              lineHeight: 48,
               minWidth: 120,
               textAlign: 'center',
               color: c.accentText,

@@ -74,3 +74,17 @@ describe('gateCache', () => {
     expect(gateCache.hasPendingUnderageReset('u1')).toBe(false);
   });
 });
+
+describe('gateCache.clear (sign-out and account deletion)', () => {
+  it('removes the gate value and the pending under-16 reset flag of that user only', () => {
+    gateCache.update('u1', { onboardingCompleted: true, targets });
+    gateCache.setPendingUnderageReset('u1');
+    gateCache.update('u2', { onboardingCompleted: true });
+    gateCache.setPendingUnderageReset('u2');
+    gateCache.clear('u1');
+    expect(gateCache.read('u1')).toBeNull();
+    expect(gateCache.hasPendingUnderageReset('u1')).toBe(false);
+    expect(gateCache.read('u2')).not.toBeNull();
+    expect(gateCache.hasPendingUnderageReset('u2')).toBe(true);
+  });
+});

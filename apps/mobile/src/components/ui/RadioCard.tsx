@@ -1,4 +1,4 @@
-import { radius, space } from '@ttp/ui';
+import { glyph, radius, space } from '@ttp/ui';
 import type { ReactNode } from 'react';
 import { Pressable, Text as RNText, View } from 'react-native';
 import { haptics } from '@/lib/haptics';
@@ -103,7 +103,7 @@ export function RadioCard({
           <RNText
             accessibilityElementsHidden
             importantForAccessibility="no-hide-descendants"
-            style={{ color: tone === 'warning' ? c.warningText : c.accentText, fontSize: 22 }}
+            style={{ color: tone === 'warning' ? c.warningText : c.accentText, ...glyph.sm }}
           >
             {'✓'}
           </RNText>

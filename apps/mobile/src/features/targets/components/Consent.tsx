@@ -1,4 +1,4 @@
-import { radius, space } from '@ttp/ui';
+import { badge, radius, space } from '@ttp/ui';
 import * as WebBrowser from 'expo-web-browser';
 import { Platform, Pressable, View } from 'react-native';
 import { BrandMark, Card, Text } from '@/components/ui';
@@ -17,15 +17,18 @@ function FactRow({ n, title, detail }: { n: number; title: string; detail: strin
     >
       <View
         style={{
-          width: 24,
-          height: 24,
+          width: badge.size,
+          height: badge.size,
           borderRadius: radius.badge,
           backgroundColor: c.accent,
           alignItems: 'center',
           justifyContent: 'center',
         }}
       >
-        <Text variant="number" style={{ color: c.onAccent, fontSize: 13, lineHeight: 16 }}>
+        <Text
+          variant="number"
+          style={{ color: c.onAccent, fontSize: badge.fontSize, lineHeight: badge.lineHeight }}
+        >
           {String(n).padStart(2, '0')}
         </Text>
       </View>
@@ -40,6 +43,7 @@ function FactRow({ n, title, detail }: { n: number; title: string; detail: strin
 }
 
 function openPrivacy(): void {
+  if (!privacyUrl) return;
   if (Platform.OS === 'web') {
     window.open(privacyUrl, '_blank', 'noopener,noreferrer');
   } else {
@@ -72,16 +76,20 @@ export function ConsentBody({ returning, inSheet }: { returning?: boolean; inShe
           <FactRow key={f.title} n={i + 1} title={f.title} detail={f.detail} />
         ))}
       </Card>
-      <Pressable
-        accessibilityRole="link"
-        accessibilityLabel={copy.privacyLink}
-        onPress={openPrivacy}
-        style={{ minHeight: 44, justifyContent: 'center' }}
-      >
-        <Text tone="accent" style={{ textDecorationLine: 'underline' }}>
-          {copy.privacyLink}
-        </Text>
-      </Pressable>
+      {privacyUrl ? (
+        <Pressable
+          accessibilityRole="link"
+          accessibilityLabel={copy.privacyLink}
+          onPress={openPrivacy}
+          style={{ minHeight: 44, justifyContent: 'center' }}
+        >
+          <Text tone="accent" style={{ textDecorationLine: 'underline' }}>
+            {copy.privacyLink}
+          </Text>
+        </Pressable>
+      ) : (
+        <Text tone="muted">{copy.privacyComingSoon}</Text>
+      )}
       <Text variant="small">{copy.consentStatement}</Text>
     </View>
   );

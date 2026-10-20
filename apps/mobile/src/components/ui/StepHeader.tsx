@@ -1,4 +1,4 @@
-import { minTouch, space } from '@ttp/ui';
+import { glyph, minTouch, space } from '@ttp/ui';
 import { Pressable, Text as RNText, View } from 'react-native';
 import { useColors } from '@/lib/theme';
 import { BrandMark } from './BrandMark';
@@ -43,7 +43,7 @@ export function StepHeader({
             opacity: backDisabled ? 0.45 : 1,
           }}
         >
-          <RNText style={{ color: c.text, fontSize: 32, lineHeight: 36 }}>{'‹'}</RNText>
+          <RNText style={{ color: c.text, ...glyph.lg }}>{'‹'}</RNText>
         </Pressable>
       ) : null}
       <View

@@ -34,6 +34,7 @@ describe('sign-out clears the device and query caches', () => {
     client.setQueryData(['profile', 'u1'], { display_name: 'Sam' });
     client.setQueryData(['targets', 'u1'], []);
     gateCache.update('u1', { onboardingCompleted: true });
+    gateCache.setPendingUnderageReset('u1');
 
     await render(
       <QueryClientProvider client={client}>
@@ -49,6 +50,7 @@ describe('sign-out clears the device and query caches', () => {
 
     await waitFor(() => expect(screen.getByText('signed-out')).toBeOnTheScreen());
     expect(gateCache.read('u1')).toBeNull();
+    expect(gateCache.hasPendingUnderageReset('u1')).toBe(false);
     expect(client.getQueryData(['profile', 'u1'])).toBeUndefined();
     expect(client.getQueryData(['targets', 'u1'])).toBeUndefined();
   });

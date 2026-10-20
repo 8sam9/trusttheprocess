@@ -70,7 +70,7 @@ export default function SignInScreen() {
       <View style={{ gap: space.sm, marginVertical: space.md }}>
         {promises.map((p, i) => (
           <View key={p} style={{ flexDirection: 'row', gap: space.sm, alignItems: 'center' }}>
-            <Text variant="number" tone="accent" style={{ fontSize: 18 }}>
+            <Text variant="numberS" tone="accent">
               {String(i + 1).padStart(2, '0')}
             </Text>
             <Text>{p}</Text>
