@@ -20,6 +20,7 @@ One row per pipeline stage. "Rework" = times the stage was re-run because a late
 | 2026-10-20 | 001 onboarding & targets | backend-engineer → review fixes (M2, L2–L5, tz) | sonnet | 3m28s | ~48k | 1 | 0 | 155 pgTAP ok, 66 fixture cases; flagged L3 west-travel side effect |
 | 2026-10-20 | 001 onboarding & targets | mobile-engineer → review fixes (R1, R2, L1, L6, 8 nits) | sonnet | 8m54s | ~90k | 1 | 0 | 0 lint warnings; R1 verified at 390×844 + 375×667 |
 | 2026-10-21 | 003 food search & diary | product-manager | sonnet | 7m22s | ~195k | — | 0 | 51 ACs, 16 open questions, split 003a/003b proposed; written against unmerged 002 branch |
+| 2026-10-21 | 003 food search & diary | product-designer (003a) | opus | 9m32s | ~115k | — | 0 | 10 screens, 19 mockup boards; golden day 16–18 interactions; 9 decisions for Gate 2 |
 
 ## Feature-level summary
 | Feature | Total time | Total tokens | Rework loops | Escaped bugs (30d) | Human time | Verdict |
