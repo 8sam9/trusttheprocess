@@ -1,6 +1,6 @@
 # Spec 003: Food search and diary
 
-Status: **Product section drafted (2026-10-21), awaiting Gate 1 (human spec approval).**
+Status: **Approved at Gate 1 (human, 2026-10-21) with all open-question defaults (section 8), including the split into 003a (AC 1–38, 48–51) and 003b (AC 39–47). Next: product-designer (Design section, 003a first).**
 Branch: `feat/003-food-search-diary` (spec drafted on `docs/003-food-search-diary`). Roadmap: Milestone 1, item 003. Product spec: F2 (diary by meal, daily summary), F3 (food search with serving units); N9 only as far as section 6 says (offline is 010).
 Depends on: 001 (merged: targets, effective-dated `daily_targets`, Today first landing, consent) and 002 (**not merged yet**; this section was written against the 002 documents and the access-module contract on branch `feat/002-food-db-import`; the architect re-checks every 002 detail below against what actually merges). 011 (attribution page) gates all Open Food Facts data, see AC 17.
 Sections below the Product section (Design, Technical plan, QA report, reviews) are filled in by later stages.
